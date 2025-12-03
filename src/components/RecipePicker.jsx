@@ -176,8 +176,10 @@ const RecipePicker = ({
           </div>
         </div>
 
-        {/* Recipe Grid */}
-        <div className={styles.recipeGrid}>
+        {/* Scrollable Content */}
+        <div className={styles.scrollableContent}>
+          {/* Recipe Grid */}
+          <div className={styles.recipeGrid}>
           {loading ? (
             <div className={styles.loading}>Chargement...</div>
           ) : filteredRecipes.length === 0 ? (
@@ -353,6 +355,7 @@ const RecipePicker = ({
             </div>
           </div>
         )}
+        </div> {/* End scrollableContent */}
 
         {/* Footer with action buttons */}
         <div className={styles.footer}>

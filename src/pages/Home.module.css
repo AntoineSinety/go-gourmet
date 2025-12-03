@@ -317,27 +317,9 @@
     padding-bottom: 85px; /* Space for bottom navbar */
   }
 
-  /* Hide desktop header elements */
+  /* Hide header completely on mobile */
   .header {
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid var(--border-color);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-  }
-
-  .desktopNav {
     display: none;
-  }
-
-  .logo {
-    margin: 0 auto;
-  }
-
-  .logoIcon {
-    font-size: 1.75rem;
-  }
-
-  .logoText {
-    font-size: 1.5rem;
   }
 
   /* Show mobile bottom navbar */

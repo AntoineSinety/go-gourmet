@@ -9,7 +9,11 @@
       "Bash(start ingredients-demo.html)",
       "Bash(npm run fix-category-field:*)",
       "Bash(node -e:*)",
-      "Bash(firebase auth:export:*)"
+      "Bash(firebase auth:export:*)",
+      "Bash(npm run build:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []

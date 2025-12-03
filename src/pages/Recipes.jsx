@@ -23,11 +23,14 @@ const Recipes = ({ onSelectRecipe, onCreateRecipe }) => {
 
   const deserializeFromUrl = () => {
     const params = new URLSearchParams(window.location.search);
+    const viewParam = params.get('view');
+    const viewMode = (viewParam === 'list' || viewParam === 'grid') ? viewParam : 'grid';
+
     return {
       searchTerm: params.get('search') || '',
       searchMode: params.get('mode') || 'name',
       selectedType: params.get('type') || 'all',
-      viewMode: params.get('view') || 'grid'
+      viewMode: viewMode
     };
   };
 
@@ -45,7 +48,12 @@ const Recipes = ({ onSelectRecipe, onCreateRecipe }) => {
   const [searchTerm, setSearchTerm] = useState(persistedFilters.searchTerm);
   const [searchMode, setSearchMode] = useState(persistedFilters.searchMode);
   const [selectedType, setSelectedType] = useState(persistedFilters.selectedType);
-  const [viewMode, setViewMode] = useState(persistedFilters.viewMode);
+  // Ensure viewMode is always 'grid' or 'list'
+  const [viewMode, setViewMode] = useState(
+    (persistedFilters.viewMode === 'grid' || persistedFilters.viewMode === 'list')
+      ? persistedFilters.viewMode
+      : 'grid'
+  );
 
   // Restaurer le scroll pour cette vue
   useScrollRestoration('recipes', [loading, recipes.length]);
@@ -158,9 +166,11 @@ const Recipes = ({ onSelectRecipe, onCreateRecipe }) => {
             >
               Tous ({recipes.length})
             </button>
-            {RECIPE_TYPES.map(type => {
+            {RECIPE_TYPES.filter(type => {
               const count = recipes.filter(r => r.type === type.id).length;
-              if (count === 0) return null;
+              return count > 0;
+            }).map(type => {
+              const count = recipes.filter(r => r.type === type.id).length;
               return (
                 <button
                   key={type.id}
