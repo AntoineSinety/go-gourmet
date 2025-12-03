@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import {
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   signOut as firebaseSignOut,
   onAuthStateChanged
 } from 'firebase/auth';
@@ -49,19 +48,6 @@ export const AuthProvider = ({ children }) => {
       return userDoc.data();
     };
 
-    const handleRedirectResult = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        if (result?.user) {
-          await ensureUserDocument(result.user);
-        }
-      } catch (error) {
-        console.error('Error handling redirect:', error);
-      }
-    };
-
-    handleRedirectResult();
-
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const userData = await ensureUserDocument(firebaseUser);
@@ -83,7 +69,11 @@ export const AuthProvider = ({ children }) => {
 
   const signInWithGoogle = async () => {
     try {
-      await signInWithRedirect(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      if (result?.user) {
+        // User document will be created/updated by onAuthStateChanged
+        return result.user;
+      }
     } catch (error) {
       console.error('Error signing in with Google:', error);
       throw error;
