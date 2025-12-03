@@ -105,15 +105,21 @@ const RecipeDetail = ({ recipeId, onClose, onStartCooking, onEdit }) => {
       </div>
 
       {/* Actions */}
-      <div className={styles.actionButtons}>
-        <button onClick={() => onEdit(recipe)} className={styles.editButton}>
-          <span>✏️</span>
-          <span>Modifier</span>
-        </button>
-        <button onClick={() => onStartCooking(recipe)} className={styles.cookButton}>
-          👨‍🍳 Cuisiner
-        </button>
-      </div>
+      {(onEdit || onStartCooking) && (
+        <div className={styles.actionButtons}>
+          {onEdit && (
+            <button onClick={() => onEdit(recipe)} className={styles.editButton}>
+              <span>✏️</span>
+              <span>Modifier</span>
+            </button>
+          )}
+          {onStartCooking && (
+            <button onClick={() => onStartCooking(recipe)} className={styles.cookButton}>
+              👨‍🍳 Cuisiner
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Ingredients by Category */}
       <div className={styles.section}>
