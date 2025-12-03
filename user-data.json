@@ -1,0 +1,19 @@
+{"users": [
+{
+  "localId": "be6FgLgRZ7NiO7X8ZdmUZLdzVTO2",
+  "email": "antoine.desinety@gmail.com",
+  "emailVerified": true,
+  "displayName": "Antoine de Sinety",
+  "photoUrl": "https://lh3.googleusercontent.com/a/ACg8ocIgSFNHREeYX60k7MlzwTz4Em_PD-XCcjE14SFayQt3KJkuNlIH=s96-c",
+  "lastSignedInAt": "1764596193756",
+  "createdAt": "1764596193756",
+  "providerUserInfo": [
+    {
+      "providerId": "google.com",
+      "rawId": "104441216935925897761",
+      "email": "antoine.desinety@gmail.com",
+      "displayName": "Antoine de Sinety",
+      "photoUrl": "https://lh3.googleusercontent.com/a/ACg8ocIgSFNHREeYX60k7MlzwTz4Em_PD-XCcjE14SFayQt3KJkuNlIH=s96-c"
+    }
+  ]
+}]}

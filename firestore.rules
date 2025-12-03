@@ -1,0 +1,81 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if false;
+    }
+
+    // Households collection
+    match /households/{householdId} {
+      allow read: if request.auth != null &&
+                     request.auth.uid in resource.data.members;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null &&
+                       request.auth.uid in resource.data.members;
+      allow delete: if request.auth != null &&
+                       request.auth.uid == resource.data.createdBy;
+    }
+
+    // Helper function to get user's household (with null check)
+    function getUserHousehold() {
+      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return userDoc != null && userDoc.data != null ? userDoc.data.householdId : null;
+    }
+
+    // Helper function to check if user belongs to household
+    function belongsToHousehold(householdId) {
+      let userHouseholdId = getUserHousehold();
+      return request.auth != null && userHouseholdId != null && userHouseholdId == householdId;
+    }
+
+    // Recipes collection
+    match /recipes/{recipeId} {
+      allow read: if request.auth != null &&
+                     belongsToHousehold(resource.data.householdId);
+      allow create: if request.auth != null &&
+                       belongsToHousehold(request.resource.data.householdId);
+      allow update: if request.auth != null &&
+                       belongsToHousehold(resource.data.householdId);
+      allow delete: if request.auth != null &&
+                       belongsToHousehold(resource.data.householdId);
+    }
+
+    // Ingredients collection
+    match /ingredients/{ingredientId} {
+      // Allow reading ingredients from user's household OR global ingredients
+      allow read: if request.auth != null && (
+                     belongsToHousehold(resource.data.householdId) ||
+                     resource.data.householdId == 'global'
+                  );
+      allow create: if request.auth != null &&
+                       belongsToHousehold(request.resource.data.householdId);
+      allow update: if request.auth != null &&
+                       belongsToHousehold(resource.data.householdId);
+      allow delete: if request.auth != null &&
+                       belongsToHousehold(resource.data.householdId);
+    }
+
+    // Meal plans collection
+    match /mealPlans/{planId} {
+      // Allow read for authenticated users (simplified for now)
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+      allow delete: if request.auth != null;
+    }
+
+    // Meal plan templates collection
+    match /mealPlanTemplates/{templateId} {
+      // Allow read for authenticated users (simplified for now)
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+      allow delete: if request.auth != null;
+    }
+  }
+}

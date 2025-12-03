@@ -1,0 +1,252 @@
+.container {
+  position: relative;
+}
+
+.searchBox {
+  position: relative;
+}
+
+.searchInput {
+  width: 100%;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+.categoryFilters {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.filterButton {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filterButton:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--accent-blue);
+  transform: none;
+}
+
+.filterButton.active {
+  background-color: var(--accent-blue);
+  border-color: var(--accent-blue);
+  color: white;
+}
+
+.noResults {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+}
+
+.noResults p {
+  margin-bottom: 1rem;
+}
+
+.addNewButton {
+  background-color: var(--bg-tertiary);
+  border: 1px dashed var(--border-color);
+  color: var(--accent-blue);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.addNewButton:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--accent-blue);
+  transform: none;
+}
+
+.suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 500px;
+  overflow-y: auto;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  margin-top: 0.5rem;
+  z-index: 10;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  padding: 1rem;
+}
+
+.categoryGroup {
+  margin-bottom: 1.5rem;
+}
+
+.categoryGroup:last-child {
+  margin-bottom: 0;
+}
+
+.categoryHeader {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.ingredientGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+  gap: 0.5rem;
+}
+
+.ingredientCard {
+  background-color: var(--bg-tertiary);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.2s;
+  overflow: hidden;
+  text-align: center;
+}
+
+.ingredientCard:hover:not(.selected) {
+  border-color: var(--accent-blue);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.ingredientCard.selected {
+  border-color: var(--accent-green);
+  border-width: 3px;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.5) 0%, rgba(34, 197, 94, 0.35) 100%);
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.4), 0 4px 16px rgba(34, 197, 94, 0.5);
+  cursor: pointer;
+  transform: scale(1.02);
+}
+
+.ingredientCard.selected:hover {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.6) 0%, rgba(34, 197, 94, 0.45) 100%);
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.5), 0 4px 20px rgba(34, 197, 94, 0.6);
+  transform: scale(1.03);
+}
+
+.ingredientCard:disabled {
+  cursor: not-allowed;
+}
+
+.ingredientImage {
+  position: relative;
+  width: 100%;
+  height: 70px;
+  background-color: var(--bg-secondary);
+  overflow: hidden;
+}
+
+.ingredientImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.placeholderImage {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+}
+
+.selectedBadge {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  background-color: #22c55e;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: bold;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(34, 197, 94, 0.4);
+}
+
+.ingredientInfo {
+  padding: 0.4rem 0.3rem;
+}
+
+.ingredientName {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.addForm {
+  margin-top: 1rem;
+  padding: 1.5rem;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+}
+
+.addForm h4 {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.formGroup {
+  margin-bottom: 1rem;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.formGroup input,
+.formGroup select {
+  width: 100%;
+}
+
+.formActions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.formActions button {
+  flex: 1;
+}
+
+.cancelButton {
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.cancelButton:hover {
+  background-color: var(--bg-hover);
+  transform: none;
+}

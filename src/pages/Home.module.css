@@ -1,0 +1,390 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+}
+
+/* ========== HEADER DESKTOP ========== */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: var(--bg-secondary);
+  border-bottom: 2px solid var(--border-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.logo:hover {
+  transform: translateY(-1px);
+}
+
+.logoIcon {
+  font-size: 2rem;
+}
+
+.logoText {
+  font-size: 1.75rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+}
+
+/* Navigation Desktop */
+.desktopNav {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.navButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background-color: transparent;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.navButton:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.navButton.active {
+  background-color: transparent;
+  border-color: #667eea;
+  color: #667eea;
+  box-shadow: 0 0 0 1px rgba(102, 126, 234, 0.1);
+}
+
+.navIcon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.navLabel {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* Mobile Navigation (Bottom Bar) */
+.mobileNav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: var(--bg-secondary);
+  border-top: 2px solid var(--border-color);
+  padding: 0.5rem 0.25rem 0.75rem;
+  z-index: 1000;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.mobileNavButton {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.25rem;
+  background-color: transparent;
+  border: none;
+  border-radius: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.mobileNavButton:active {
+  transform: scale(0.95);
+}
+
+.mobileNavButton.mobileActive {
+  color: #667eea;
+}
+
+.mobileNavButton.mobileActive::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 0 0 3px 3px;
+}
+
+.mobileNavIcon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.mobileNavLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* Main Content */
+.main {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.placeholder {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 3rem 2rem;
+  background-color: var(--bg-secondary);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.placeholder h2 {
+  margin-bottom: 1rem;
+}
+
+.placeholder p {
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+}
+
+.placeholder button {
+  margin-bottom: 1.5rem;
+}
+
+.welcomeCard {
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: var(--bg-secondary);
+  border-radius: 16px;
+  padding: 2rem;
+  border: 1px solid var(--border-color);
+}
+
+.welcomeCard h2 {
+  margin-bottom: 0.5rem;
+}
+
+.welcomeCard > p {
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+}
+
+.householdInfo {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.householdInfo h3 {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  color: var(--text-secondary);
+}
+
+.householdId {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.householdId code {
+  flex: 1;
+  background-color: var(--bg-primary);
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: var(--accent-blue-light);
+  word-break: break-all;
+}
+
+.copyButton {
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.comingSoon {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.comingSoon h3 {
+  font-size: 1.125rem;
+  margin-bottom: 1rem;
+}
+
+.comingSoon ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.comingSoon li {
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  background-color: var(--bg-secondary);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.comingSoon li::before {
+  content: '⏳ ';
+  margin-right: 0.5rem;
+}
+
+/* Side Modal */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.sideModal {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(600px, 90vw);
+  background-color: var(--bg-primary);
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  overflow-y: auto;
+  animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* ========== RESPONSIVE MOBILE ========== */
+@media (max-width: 768px) {
+  .container {
+    padding-bottom: 85px; /* Space for bottom navbar */
+  }
+
+  /* Hide desktop header elements */
+  .header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .desktopNav {
+    display: none;
+  }
+
+  .logo {
+    margin: 0 auto;
+  }
+
+  .logoIcon {
+    font-size: 1.75rem;
+  }
+
+  .logoText {
+    font-size: 1.5rem;
+  }
+
+  /* Show mobile bottom navbar */
+  .mobileNav {
+    display: flex;
+  }
+
+  .welcomeCard {
+    padding: 1.5rem;
+  }
+
+  .householdId {
+    flex-direction: column;
+  }
+
+  .copyButton {
+    width: 100%;
+  }
+
+  .placeholder {
+    padding: 2rem 1rem;
+  }
+
+  .sideModal {
+    width: 100vw;
+    bottom: 85px; /* Above mobile navbar */
+  }
+}
+
+@media (min-width: 769px) {
+  .mobileNav {
+    display: none;
+  }
+}
+
+/* Tablets */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .header {
+    padding: 1rem 1.5rem;
+  }
+
+  .navButton {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .navIcon {
+    font-size: 1.1rem;
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(lsof:*)",
+      "Bash(npm install:*)",
+      "Bash(firebase --version:*)",
+      "Bash(firebase login:*)",
+      "Bash(firebase deploy:*)",
+      "Bash(start ingredients-demo.html)",
+      "Bash(npm run fix-category-field:*)",
+      "Bash(node -e:*)",
+      "Bash(firebase auth:export:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

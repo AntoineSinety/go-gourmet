@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestionnaire d'Ingrédients - Go Gourmet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #1f2937;
+            margin-bottom: 1rem;
+            font-size: 2.5rem;
+        }
+
+        .stats {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: #f3f4f6;
+            border-radius: 12px;
+            color: #6b7280;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .export-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .export-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .category {
+            margin-bottom: 3rem;
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .category-icon {
+            font-size: 2rem;
+        }
+
+        .category-title {
+            font-size: 1.75rem;
+            color: #374151;
+        }
+
+        .category-count {
+            font-size: 1rem;
+            color: #6b7280;
+            margin-left: auto;
+        }
+
+        .ingredients-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .ingredient-card {
+            background: #f9fafb;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 2px solid #e5e7eb;
+            position: relative;
+        }
+
+        .ingredient-card.has-issue {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .ingredient-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            border-color: #667eea;
+        }
+
+        .ingredient-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+        }
+
+        .ingredient-name {
+            padding: 0.75rem;
+            text-align: center;
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .ingredient-name:hover {
+            background: #e5e7eb;
+        }
+
+        .ingredient-name input {
+            width: 100%;
+            text-align: center;
+            border: 2px solid #667eea;
+            border-radius: 4px;
+            padding: 0.25rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .ingredient-actions {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: white;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            flex: 1;
+            min-width: 60px;
+            padding: 0.5rem 0.25rem;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .btn-issue {
+            border-color: #f59e0b;
+            color: #d97706;
+        }
+
+        .btn-issue:hover {
+            background: #fffbeb;
+        }
+
+        .btn-issue.active {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-delete {
+            border-color: #ef4444;
+            color: #dc2626;
+        }
+
+        .btn-delete:hover {
+            background: #fef2f2;
+        }
+
+        .btn-regen {
+            border-color: #10b981;
+            color: #059669;
+        }
+
+        .btn-regen:hover {
+            background: #f0fdf4;
+        }
+
+        .issue-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #f59e0b;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal-btn.primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .modal-btn.secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .modal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .image-url-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍳 Gestionnaire d'Ingrédients</h1>
+        <div class="stats">
+            <div>
+                <strong id="total-count">0</strong> ingrédients totaux
+            </div>
+            <div>
+                <strong id="issue-count">0</strong> avec problèmes d'image
+            </div>
+            <button class="export-btn" onclick="exportJSON()">📥 Exporter en JSON</button>
+        </div>
+
+        <!-- Fruits et Légumes -->
+        <div class="category">
+            <div class="category-header">
+                <span class="category-icon">🥬</span>
+                <h2 class="category-title">Fruits et Légumes</h2>
+                <span class="category-count" data-category="fruits-legumes">0 items</span>
+            </div>
+            <div class="ingredients-grid" id="fruits-legumes"></div>
+        </div>
+
+        <!-- Viandes -->
+        <div class="category">
+            <div class="category-header">
+                <span class="category-icon">🥩</span>
+                <h2 class="category-title">Viandes</h2>
+                <span class="category-count" data-category="viandes">0 items</span>
+            </div>
+            <div class="ingredients-grid" id="viandes"></div>
+        </div>
+
+        <!-- Poissons et Fruits de Mer -->
+        <div class="category">
+            <div class="category-header">
+                <span class="category-icon">🐟</span>
+                <h2 class="category-title">Poissons et Fruits de Mer</h2>
+                <span class="category-count" data-category="poissons">0 items</span>
+            </div>
+            <div class="ingredients-grid" id="poissons"></div>
+        </div>
+
+        <!-- Produits Laitiers -->
+        <div class="category">
+            <div class="category-header">
+                <span class="category-icon">🥛</span>
+                <h2 class="category-title">Produits Laitiers</h2>
+                <span class="category-count" data-category="produits-laitiers">0 items</span>
+            </div>
+            <div class="ingredients-grid" id="produits-laitiers"></div>
+        </div>
+
+        <!-- Épicerie Salée -->
+        <div class="category">
+            <div class="category-header">
+                <span class="category-icon">🌾</span>
+                <h2 class="category-title">Épicerie Salée</h2>
+                <span class="category-count" data-category="epicerie-salee">0 items</span>
+            </div>
+            <div class="ingredients-grid" id="epicerie-salee"></div>
+        </div>
+
+        <!-- Épicerie Sucrée -->
+        <div class="category">
+            <div class="category-header">
+                <span class="category-icon">🍯</span>
+                <h2 class="category-title">Épicerie Sucrée</h2>
+                <span class="category-count" data-category="epicerie-sucree">0 items</span>
+            </div>
+            <div class="ingredients-grid" id="epicerie-sucree"></div>
+        </div>
+
+        <!-- Condiments et Sauces -->
+        <div class="category">
+            <div class="category-header">
+                <span class="category-icon">🧂</span>
+                <h2 class="category-title">Condiments et Sauces</h2>
+                <span class="category-count" data-category="condiments">0 items</span>
+            </div>
+            <div class="ingredients-grid" id="condiments"></div>
+        </div>
+
+        <!-- Herbes et Épices -->
+        <div class="category">
+            <div class="category-header">
+                <span class="category-icon">🌿</span>
+                <h2 class="category-title">Herbes et Épices</h2>
+                <span class="category-count" data-category="herbes-epices">0 items</span>
+            </div>
+            <div class="ingredients-grid" id="herbes-epices"></div>
+        </div>
+    </div>
+
+    <!-- Modal for image regeneration -->
+    <div class="modal" id="regenModal">
+        <div class="modal-content">
+            <h3>Régénérer l'image</h3>
+            <p>Entrez une nouvelle URL d'image ou laissez vide pour une image aléatoire :</p>
+            <input type="text" class="image-url-input" id="newImageUrl" placeholder="https://images.unsplash.com/...">
+            <div class="modal-actions">
+                <button class="modal-btn secondary" onclick="closeRegenModal()">Annuler</button>
+                <button class="modal-btn primary" onclick="confirmRegen()">Confirmer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentRegenItem = null;
+
+        const ingredientsData = {
+            'fruits-legumes': [
+                { name: 'Tomate', image: 'https://images.unsplash.com/photo-1546470427-227e55fced02?w=400', hasIssue: false },
+                { name: 'Pomme de terre', image: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400', hasIssue: false },
+                { name: 'Carotte', image: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400', hasIssue: false },
+                { name: 'Oignon', image: 'https://images.unsplash.com/photo-1587486913049-53fc88980cfc?w=400', hasIssue: false },
+                { name: 'Ail', image: 'https://images.unsplash.com/photo-1540804160849-8dd9b0b97e88?w=400', hasIssue: false },
+                { name: 'Courgette', image: 'https://images.unsplash.com/photo-1589927986089-35812378d58d?w=400', hasIssue: false },
+                { name: 'Aubergine', image: 'https://images.unsplash.com/photo-1659261200833-ec8761558af7?w=400', hasIssue: false },
+                { name: 'Poivron rouge', image: 'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=400', hasIssue: false },
+                { name: 'Poivron vert', image: 'https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=400', hasIssue: false },
+                { name: 'Champignon de Paris', image: 'https://images.unsplash.com/photo-1579177024837-e99e7a3b7c85?w=400', hasIssue: false },
+                { name: 'Brocoli', image: 'https://images.unsplash.com/photo-1584868049804-65c1f3c0e931?w=400', hasIssue: false },
+                { name: 'Chou-fleur', image: 'https://images.unsplash.com/photo-1568584711269-868489379449?w=400', hasIssue: false },
+                { name: 'Épinards', image: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400', hasIssue: false },
+                { name: 'Salade verte', image: 'https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=400', hasIssue: false },
+                { name: 'Concombre', image: 'https://images.unsplash.com/photo-1589621316382-008455b857cd?w=400', hasIssue: false },
+                { name: 'Haricots verts', image: 'https://images.unsplash.com/photo-1593097404924-e13a581d5db8?w=400', hasIssue: false },
+                { name: 'Petits pois', image: 'https://images.unsplash.com/photo-1587735243615-c03f25aaff15?w=400', hasIssue: false },
+                { name: 'Poireau', image: 'https://images.unsplash.com/photo-1583641984511-f7a0e76c8c40?w=400', hasIssue: false },
+                { name: 'Céleri', image: 'https://images.unsplash.com/photo-1629094901046-4da9fe0e9e95?w=400', hasIssue: false },
+                { name: 'Navet', image: 'https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=400', hasIssue: false },
+                { name: 'Pomme', image: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400', hasIssue: false },
+                { name: 'Banane', image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400', hasIssue: false },
+                { name: 'Orange', image: 'https://images.unsplash.com/photo-1580052614034-c55d20bfee3b?w=400', hasIssue: false },
+                { name: 'Citron', image: 'https://images.unsplash.com/photo-1590502593747-42a996133562?w=400', hasIssue: false },
+                { name: 'Citron vert', image: 'https://images.unsplash.com/photo-1582169296194-e4d644c48063?w=400', hasIssue: false },
+                { name: 'Fraise', image: 'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=400', hasIssue: false },
+                { name: 'Framboise', image: 'https://images.unsplash.com/photo-1577069861033-55d04cec4ef5?w=400', hasIssue: false },
+                { name: 'Myrtille', image: 'https://images.unsplash.com/photo-1498557850523-fd3d118b962e?w=400', hasIssue: false },
+                { name: 'Pêche', image: 'https://images.unsplash.com/photo-1629828874514-884f0f5f34e8?w=400', hasIssue: false },
+                { name: 'Abricot', image: 'https://images.unsplash.com/photo-1623066463831-f47d63d61b2c?w=400', hasIssue: false },
+                { name: 'Avocat', image: 'https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?w=400', hasIssue: false }
+            ],
+            'viandes': [
+                { name: 'Poulet entier', image: 'https://images.unsplash.com/photo-1587593810167-a84920ea0781?w=400', hasIssue: false },
+                { name: 'Blanc de poulet', image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=400', hasIssue: false },
+                { name: 'Cuisse de poulet', image: 'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=400', hasIssue: false },
+                { name: 'Bœuf haché', image: 'https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=400', hasIssue: false },
+                { name: 'Steak de bœuf', image: 'https://images.unsplash.com/photo-1558030006-450675393462?w=400', hasIssue: false },
+                { name: 'Rôti de bœuf', image: 'https://images.unsplash.com/photo-1588168333986-c93502a6de49?w=400', hasIssue: false },
+                { name: 'Entrecôte', image: 'https://images.unsplash.com/photo-1592095001713-bd8e5c82be8d?w=400', hasIssue: false },
+                { name: 'Côte de porc', image: 'https://images.unsplash.com/photo-1602470520998-f4a52199a3d6?w=400', hasIssue: false },
+                { name: 'Filet mignon', image: 'https://images.unsplash.com/photo-1602470520998-f4a52199a3d6?w=400', hasIssue: false },
+                { name: 'Porc haché', image: 'https://images.unsplash.com/photo-1607623488235-f1bc02792a01?w=400', hasIssue: false },
+                { name: 'Gigot d\'agneau', image: 'https://images.unsplash.com/photo-1619982757232-1e631fd4e75e?w=400', hasIssue: false },
+                { name: 'Côtelette d\'agneau', image: 'https://images.unsplash.com/photo-1606995441702-46697846cede?w=400', hasIssue: false },
+                { name: 'Lardons', image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400', hasIssue: false },
+                { name: 'Bacon', image: 'https://images.unsplash.com/photo-1528207776546-365bb710ee93?w=400', hasIssue: false },
+                { name: 'Saucisse de Toulouse', image: 'https://images.unsplash.com/photo-1624896968388-e8e634b643a5?w=400', hasIssue: false },
+                { name: 'Merguez', image: 'https://images.unsplash.com/photo-1626197846887-cdaec382921c?w=400', hasIssue: false },
+                { name: 'Dinde', image: 'https://images.unsplash.com/photo-1574672280600-4accfa5b6f98?w=400', hasIssue: false },
+                { name: 'Canard', image: 'https://images.unsplash.com/photo-1609908513819-59c29f0b733d?w=400', hasIssue: false }
+            ],
+            'poissons': [
+                { name: 'Saumon', image: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=400', hasIssue: false },
+                { name: 'Thon', image: 'https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?w=400', hasIssue: false },
+                { name: 'Cabillaud', image: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400', hasIssue: false },
+                { name: 'Dorade', image: 'https://images.unsplash.com/photo-1544943910-4c1dc44aab44?w=400', hasIssue: false },
+                { name: 'Sole', image: 'https://images.unsplash.com/photo-1574781330855-d0db8cc6a79c?w=400', hasIssue: false },
+                { name: 'Truite', image: 'https://images.unsplash.com/photo-1534604973900-c43ab4c2e0ab?w=400', hasIssue: false },
+                { name: 'Bar', image: 'https://images.unsplash.com/photo-1544943910-4c1dc44aab44?w=400', hasIssue: false },
+                { name: 'Crevettes', image: 'https://images.unsplash.com/photo-1565098772267-60af42b81ef2?w=400', hasIssue: false },
+                { name: 'Moules', image: 'https://images.unsplash.com/photo-1626200419199-391ae4be7a41?w=400', hasIssue: false },
+                { name: 'Huîtres', image: 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=400', hasIssue: false },
+                { name: 'Saint-Jacques', image: 'https://images.unsplash.com/photo-1608160595361-c4ecaa6e57fe?w=400', hasIssue: false },
+                { name: 'Calamars', image: 'https://images.unsplash.com/photo-1599084993091-1cb5c0721cc6?w=400', hasIssue: false },
+                { name: 'Homard', image: 'https://images.unsplash.com/photo-1599084993091-1cb5c0721cc6?w=400', hasIssue: false },
+                { name: 'Crabe', image: 'https://images.unsplash.com/photo-1580756091336-4a0d9f5f1b1c?w=400', hasIssue: false },
+                { name: 'Langouste', image: 'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=400', hasIssue: false }
+            ],
+            'produits-laitiers': [
+                { name: 'Lait entier', image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400', hasIssue: false },
+                { name: 'Lait demi-écrémé', image: 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400', hasIssue: false },
+                { name: 'Crème fraîche', image: 'https://images.unsplash.com/photo-1628088062854-d1870b4553da?w=400', hasIssue: false },
+                { name: 'Crème liquide', image: 'https://images.unsplash.com/photo-1587537515254-e8f0a47e60e1?w=400', hasIssue: false },
+                { name: 'Beurre doux', image: 'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=400', hasIssue: false },
+                { name: 'Beurre demi-sel', image: 'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=400', hasIssue: false },
+                { name: 'Yaourt nature', image: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400', hasIssue: false },
+                { name: 'Yaourt grec', image: 'https://images.unsplash.com/photo-1571212515416-fbb0db70eb4e?w=400', hasIssue: false },
+                { name: 'Fromage blanc', image: 'https://images.unsplash.com/photo-1626200419199-391ae4be7a41?w=400', hasIssue: false },
+                { name: 'Emmental', image: 'https://images.unsplash.com/photo-1452195100486-9cc805987862?w=400', hasIssue: false },
+                { name: 'Gruyère', image: 'https://images.unsplash.com/photo-1618164436241-4473940d1f5c?w=400', hasIssue: false },
+                { name: 'Comté', image: 'https://images.unsplash.com/photo-1452195100486-9cc805987862?w=400', hasIssue: false },
+                { name: 'Camembert', image: 'https://images.unsplash.com/photo-1559561853-08451507cbe7?w=400', hasIssue: false },
+                { name: 'Brie', image: 'https://images.unsplash.com/photo-1552767059-ce182ead6c1b?w=400', hasIssue: false },
+                { name: 'Roquefort', image: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400', hasIssue: false },
+                { name: 'Chèvre frais', image: 'https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=400', hasIssue: false },
+                { name: 'Mozzarella', image: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400', hasIssue: false },
+                { name: 'Parmesan', image: 'https://images.unsplash.com/photo-1533562859835-0a4a92be2f0a?w=400', hasIssue: false },
+                { name: 'Ricotta', image: 'https://images.unsplash.com/photo-1626200419199-391ae4be7a41?w=400', hasIssue: false },
+                { name: 'Œufs', image: 'https://images.unsplash.com/photo-1518569656558-1f25e69d93d7?w=400', hasIssue: false }
+            ],
+            'epicerie-salee': [
+                { name: 'Farine de blé', image: 'https://images.unsplash.com/photo-1556910096-6f5e72db6803?w=400', hasIssue: false },
+                { name: 'Farine complète', image: 'https://images.unsplash.com/photo-1628584912913-60d7c5f56f43?w=400', hasIssue: false },
+                { name: 'Pâtes spaghetti', image: 'https://images.unsplash.com/photo-1551892374-ecf8754cf8b0?w=400', hasIssue: false },
+                { name: 'Pâtes penne', image: 'https://images.unsplash.com/photo-1585516173136-ae33886cacc6?w=400', hasIssue: false },
+                { name: 'Pâtes tagliatelles', image: 'https://images.unsplash.com/photo-1633637237664-88c2e8e53e56?w=400', hasIssue: false },
+                { name: 'Riz blanc', image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400', hasIssue: false },
+                { name: 'Riz basmati', image: 'https://images.unsplash.com/photo-1536304929831-5e5b626b1e5b?w=400', hasIssue: false },
+                { name: 'Riz complet', image: 'https://images.unsplash.com/photo-1615485500834-bc10199bc727?w=400', hasIssue: false },
+                { name: 'Quinoa', image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400', hasIssue: false },
+                { name: 'Couscous', image: 'https://images.unsplash.com/photo-1626200419199-391ae4be7a41?w=400', hasIssue: false },
+                { name: 'Lentilles vertes', image: 'https://images.unsplash.com/photo-1558991785-f0b4e8cce9d0?w=400', hasIssue: false },
+                { name: 'Lentilles corail', image: 'https://images.unsplash.com/photo-1546695310-74021a499681?w=400', hasIssue: false },
+                { name: 'Pois chiches', image: 'https://images.unsplash.com/photo-1610235313498-5b0e8f2c3d83?w=400', hasIssue: false },
+                { name: 'Haricots rouges', image: 'https://images.unsplash.com/photo-1591814987460-c7b20e971e90?w=400', hasIssue: false },
+                { name: 'Haricots blancs', image: 'https://images.unsplash.com/photo-1594759501596-c90adc0cccf7?w=400', hasIssue: false },
+                { name: 'Conserve de tomates', image: 'https://images.unsplash.com/photo-1606914469633-1c5472d99a32?w=400', hasIssue: false },
+                { name: 'Coulis de tomates', image: 'https://images.unsplash.com/photo-1587048151234-12a71f60e0ea?w=400', hasIssue: false },
+                { name: 'Huile d\'olive', image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400', hasIssue: false },
+                { name: 'Huile de tournesol', image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400', hasIssue: false },
+                { name: 'Vinaigre balsamique', image: 'https://images.unsplash.com/photo-1549378001-47c0c2f23e37?w=400', hasIssue: false },
+                { name: 'Vinaigre de vin', image: 'https://images.unsplash.com/photo-1601910833960-fdfebbe6d7f4?w=400', hasIssue: false },
+                { name: 'Pain de mie', image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400', hasIssue: false },
+                { name: 'Baguette', image: 'https://images.unsplash.com/photo-1549931319-a545dcf3bc87?w=400', hasIssue: false },
+                { name: 'Chapelure', image: 'https://images.unsplash.com/photo-1556910096-6f5e72db6803?w=400', hasIssue: false }
+            ],
+            'epicerie-sucree': [
+                { name: 'Sucre blanc', image: 'https://images.unsplash.com/photo-1518724893385-e8a0fda0d2f5?w=400', hasIssue: false },
+                { name: 'Sucre roux', image: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=400', hasIssue: false },
+                { name: 'Cassonade', image: 'https://images.unsplash.com/photo-1556909212-d5b604d0c90d?w=400', hasIssue: false },
+                { name: 'Sucre glace', image: 'https://images.unsplash.com/photo-1587735243615-c03f25aaff15?w=400', hasIssue: false },
+                { name: 'Miel', image: 'https://images.unsplash.com/photo-1587049352846-4a222e784361?w=400', hasIssue: false },
+                { name: 'Sirop d\'érable', image: 'https://images.unsplash.com/photo-1612970198165-3c7f86af1bf0?w=400', hasIssue: false },
+                { name: 'Confiture de fraise', image: 'https://images.unsplash.com/photo-1595776613215-fe04b78de7d0?w=400', hasIssue: false },
+                { name: 'Confiture d\'abricot', image: 'https://images.unsplash.com/photo-1578507065211-1c4e99a5fd24?w=400', hasIssue: false },
+                { name: 'Nutella', image: 'https://images.unsplash.com/photo-1547583589-1d69bcfa8331?w=400', hasIssue: false },
+                { name: 'Chocolat noir', image: 'https://images.unsplash.com/photo-1511381939415-e44015466834?w=400', hasIssue: false },
+                { name: 'Chocolat au lait', image: 'https://images.unsplash.com/photo-1481391243133-f96216dcb5d2?w=400', hasIssue: false },
+                { name: 'Poudre de cacao', image: 'https://images.unsplash.com/photo-1571740046276-4895f3d539af?w=400', hasIssue: false },
+                { name: 'Pépites de chocolat', image: 'https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?w=400', hasIssue: false },
+                { name: 'Vanille en gousse', image: 'https://images.unsplash.com/photo-1602217967909-4fb46aa36cdc?w=400', hasIssue: false },
+                { name: 'Extrait de vanille', image: 'https://images.unsplash.com/photo-1604081695060-3b81c32dfe79?w=400', hasIssue: false },
+                { name: 'Levure chimique', image: 'https://images.unsplash.com/photo-1628584912913-60d7c5f56f43?w=400', hasIssue: false },
+                { name: 'Levure de boulanger', image: 'https://images.unsplash.com/photo-1628584912913-60d7c5f56f43?w=400', hasIssue: false }
+            ],
+            'condiments': [
+                { name: 'Sel fin', image: 'https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=400', hasIssue: false },
+                { name: 'Sel de Guérande', image: 'https://images.unsplash.com/photo-1608166220062-9af4664f4764?w=400', hasIssue: false },
+                { name: 'Fleur de sel', image: 'https://images.unsplash.com/photo-1585329393503-d5e8b9610fdb?w=400', hasIssue: false },
+                { name: 'Poivre noir moulu', image: 'https://images.unsplash.com/photo-1599946347371-68eb71b16afc?w=400', hasIssue: false },
+                { name: 'Poivre en grains', image: 'https://images.unsplash.com/photo-1581236460382-ee84be5c0e9f?w=400', hasIssue: false },
+                { name: 'Moutarde de Dijon', image: 'https://images.unsplash.com/photo-1623577422516-e6c91a3cff8d?w=400', hasIssue: false },
+                { name: 'Moutarde à l\'ancienne', image: 'https://images.unsplash.com/photo-1606548327736-5191b2171e4c?w=400', hasIssue: false },
+                { name: 'Ketchup', image: 'https://images.unsplash.com/photo-1598179666-6d7a2e7c5e3c?w=400', hasIssue: false },
+                { name: 'Mayonnaise', image: 'https://images.unsplash.com/photo-1472476443507-c7a5948772fc?w=400', hasIssue: false },
+                { name: 'Sauce soja', image: 'https://images.unsplash.com/photo-1553163147-622ab57be827?w=400', hasIssue: false },
+                { name: 'Sauce Worcestershire', image: 'https://images.unsplash.com/photo-1598179666-6d7a2e7c5e3c?w=400', hasIssue: false },
+                { name: 'Tabasco', image: 'https://images.unsplash.com/photo-1612275638107-f5e2fe3717df?w=400', hasIssue: false },
+                { name: 'Harissa', image: 'https://images.unsplash.com/photo-1626197846887-cdaec382921c?w=400', hasIssue: false },
+                { name: 'Pesto', image: 'https://images.unsplash.com/photo-1618241680919-c7e879a3d345?w=400', hasIssue: false },
+                { name: 'Bouillon de volaille', image: 'https://images.unsplash.com/photo-1589621316382-008455b857cd?w=400', hasIssue: false },
+                { name: 'Bouillon de légumes', image: 'https://images.unsplash.com/photo-1589621316382-008455b857cd?w=400', hasIssue: false },
+                { name: 'Concentré de tomates', image: 'https://images.unsplash.com/photo-1587048151234-12a71f60e0ea?w=400', hasIssue: false }
+            ],
+            'herbes-epices': [
+                { name: 'Basilic', image: 'https://images.unsplash.com/photo-1618164436241-4473940d1f5c?w=400', hasIssue: false },
+                { name: 'Persil plat', image: 'https://images.unsplash.com/photo-1615485500834-bc10199bc727?w=400', hasIssue: false },
+                { name: 'Persil frisé', image: 'https://images.unsplash.com/photo-1591165482682-1fdaa0fc326f?w=400', hasIssue: false },
+                { name: 'Ciboulette', image: 'https://images.unsplash.com/photo-1609652965834-2d94c3f43ca2?w=400', hasIssue: false },
+                { name: 'Coriandre', image: 'https://images.unsplash.com/photo-1565866092289-6f06063cac8f?w=400', hasIssue: false },
+                { name: 'Menthe', image: 'https://images.unsplash.com/photo-1584278502549-e33bcf95a4c8?w=400', hasIssue: false },
+                { name: 'Thym', image: 'https://images.unsplash.com/photo-1612096492226-756710d85ed3?w=400', hasIssue: false },
+                { name: 'Romarin', image: 'https://images.unsplash.com/photo-1559925393-8be0ec4767c8?w=400', hasIssue: false },
+                { name: 'Laurier', image: 'https://images.unsplash.com/photo-1591165482682-1fdaa0fc326f?w=400', hasIssue: false },
+                { name: 'Origan', image: 'https://images.unsplash.com/photo-1586084430c4e0-a4a7c0b4e3fb?w=400', hasIssue: false },
+                { name: 'Estragon', image: 'https://images.unsplash.com/photo-1591165482682-1fdaa0fc326f?w=400', hasIssue: false },
+                { name: 'Cumin', image: 'https://images.unsplash.com/photo-1596040033229-a0b29b592a46?w=400', hasIssue: false },
+                { name: 'Paprika', image: 'https://images.unsplash.com/photo-1599946347371-68eb71b16afc?w=400', hasIssue: false },
+                { name: 'Curcuma', image: 'https://images.unsplash.com/photo-1615485290161-1e94f43eb744?w=400', hasIssue: false },
+                { name: 'Curry', image: 'https://images.unsplash.com/photo-1599946347371-68eb71b16afc?w=400', hasIssue: false },
+                { name: 'Cannelle', image: 'https://images.unsplash.com/photo-1589726619862-2a3e67d57d6f?w=400', hasIssue: false },
+                { name: 'Muscade', image: 'https://images.unsplash.com/photo-1585329393503-d5e8b9610fdb?w=400', hasIssue: false },
+                { name: 'Gingembre', image: 'https://images.unsplash.com/photo-1615485290161-1e94f43eb744?w=400', hasIssue: false },
+                { name: 'Piment d\'Espelette', image: 'https://images.unsplash.com/photo-1583663299265-ddc7e5fc6874?w=400', hasIssue: false },
+                { name: 'Safran', image: 'https://images.unsplash.com/photo-1607672632445-033ea6e0c725?w=400', hasIssue: false },
+                { name: 'Herbes de Provence', image: 'https://images.unsplash.com/photo-1612096492226-756710d85ed3?w=400', hasIssue: false }
+            ]
+        };
+
+        // Toggle issue status
+        function toggleIssue(categoryId, index) {
+            const item = ingredientsData[categoryId][index];
+            item.hasIssue = !item.hasIssue;
+            renderIngredients();
+        }
+
+        // Delete ingredient
+        function deleteIngredient(categoryId, index) {
+            if (confirm(`Supprimer "${ingredientsData[categoryId][index].name}" ?`)) {
+                ingredientsData[categoryId].splice(index, 1);
+                renderIngredients();
+            }
+        }
+
+        // Show regeneration modal
+        function showRegenModal(categoryId, index) {
+            currentRegenItem = { categoryId, index };
+            document.getElementById('newImageUrl').value = '';
+            document.getElementById('regenModal').classList.add('active');
+        }
+
+        function closeRegenModal() {
+            document.getElementById('regenModal').classList.remove('active');
+            currentRegenItem = null;
+        }
+
+        function confirmRegen() {
+            if (!currentRegenItem) return;
+
+            const { categoryId, index } = currentRegenItem;
+            let newUrl = document.getElementById('newImageUrl').value.trim();
+
+            if (!newUrl) {
+                // Generate random Unsplash image URL
+                const randomId = Math.random().toString(36).substring(7);
+                newUrl = `https://images.unsplash.com/photo-${Date.now()}?w=400&random=${randomId}`;
+            }
+
+            ingredientsData[categoryId][index].image = newUrl;
+            ingredientsData[categoryId][index].hasIssue = false;
+
+            closeRegenModal();
+            renderIngredients();
+        }
+
+        // Edit ingredient name
+        function editName(categoryId, index, element) {
+            const item = ingredientsData[categoryId][index];
+            const input = document.createElement('input');
+            input.value = item.name;
+            input.onblur = () => {
+                item.name = input.value || item.name;
+                renderIngredients();
+            };
+            input.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    input.blur();
+                }
+            };
+            element.innerHTML = '';
+            element.appendChild(input);
+            input.focus();
+            input.select();
+        }
+
+        // Render ingredients
+        function renderIngredients() {
+            let totalCount = 0;
+            let issueCount = 0;
+
+            Object.keys(ingredientsData).forEach(categoryId => {
+                const container = document.getElementById(categoryId);
+                const categoryItems = ingredientsData[categoryId];
+                totalCount += categoryItems.length;
+
+                container.innerHTML = categoryItems.map((item, index) => {
+                    if (item.hasIssue) issueCount++;
+
+                    return `
+                        <div class="ingredient-card ${item.hasIssue ? 'has-issue' : ''}">
+                            ${item.hasIssue ? '<div class="issue-badge">⚠️ Problème</div>' : ''}
+                            <img src="${item.image}" alt="${item.name}" class="ingredient-image"
+                                 onerror="this.style.background='linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%)'">
+                            <div class="ingredient-name" onclick="editName('${categoryId}', ${index}, this)">${item.name}</div>
+                            <div class="ingredient-actions">
+                                <button class="action-btn btn-issue ${item.hasIssue ? 'active' : ''}"
+                                        onclick="toggleIssue('${categoryId}', ${index})"
+                                        title="Signaler un problème d'image">
+                                    ⚠️ Image
+                                </button>
+                                <button class="action-btn btn-regen"
+                                        onclick="showRegenModal('${categoryId}', ${index})"
+                                        title="Régénérer l'image">
+                                    🔄 Regen
+                                </button>
+                                <button class="action-btn btn-delete"
+                                        onclick="deleteIngredient('${categoryId}', ${index})"
+                                        title="Supprimer">
+                                    🗑️ Supp
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Update category count
+                document.querySelector(`[data-category="${categoryId}"]`).textContent =
+                    `${categoryItems.length} items`;
+            });
+
+            // Update stats
+            document.getElementById('total-count').textContent = totalCount;
+            document.getElementById('issue-count').textContent = issueCount;
+        }
+
+        // Export to JSON
+        function exportJSON() {
+            // Prepare clean data for export
+            const exportData = {};
+            Object.keys(ingredientsData).forEach(categoryId => {
+                exportData[categoryId] = ingredientsData[categoryId].map(item => ({
+                    name: item.name,
+                    image: item.image
+                }));
+            });
+
+            const jsonStr = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'ingredients-go-gourmet.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            alert(`✅ Export réussi!\n${Object.values(exportData).flat().length} ingrédients exportés`);
+        }
+
+        // Initial render
+        renderIngredients();
+    </script>
+</body>
+</html>

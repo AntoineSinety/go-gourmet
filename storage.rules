@@ -1,0 +1,22 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Images stored in household folders
+    match /households/{householdId}/{type}/{fileName} {
+      // Allow read for authenticated users
+      // (household access is controlled at the application level)
+      allow read: if request.auth != null;
+
+      // Allow write (upload/update) for authenticated users with validation
+      allow write: if request.auth != null &&
+                      (type == 'recipes' || type == 'ingredients') &&
+                      request.resource.size < 5 * 1024 * 1024 && // Max 5MB
+                      request.resource.contentType.matches('image/.*'); // Only images
+
+      // Allow delete for authenticated users
+      allow delete: if request.auth != null;
+    }
+  }
+}

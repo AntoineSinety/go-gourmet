@@ -1,0 +1,334 @@
+.slot {
+  position: relative;
+  min-height: 140px;
+  border-radius: 12px;
+  background-color: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  transition: all 0.3s ease;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+/* État vide */
+.slot.empty {
+  border-style: dashed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.slot.empty:hover {
+  border-color: var(--accent-blue);
+  background-color: var(--bg-tertiary);
+  transform: scale(1.02);
+}
+
+.emptyContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+.addIcon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.emptyLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* État passé (verrouillé) */
+.slot.past {
+  cursor: default;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.slot.past:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.slot.filled.past {
+  border-color: var(--border-color);
+}
+
+.slot.filled.past:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.pastLabel {
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+/* État rempli */
+.slot.filled {
+  border-color: var(--accent-blue);
+  cursor: pointer;
+}
+
+.slot.filled:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.mealImage {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.3;
+  z-index: 0;
+}
+
+.mealContent {
+  position: relative;
+  z-index: 1;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  height: 100%;
+}
+
+/* Nom de la recette */
+.recipeName {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Informations du meal */
+.mealInfo {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+
+.servings {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background-color: var(--accent-blue);
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.servings:hover {
+  background-color: #2563eb;
+  border-color: rgba(0, 0, 0, 0.2);
+  color: white;
+  transform: scale(1.08);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+/* Badge multi-day */
+.multiDayBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.3) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.5);
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #22c55e;
+}
+
+.multiDayIcon {
+  font-size: 0.95rem;
+}
+
+.multiDayText {
+  line-height: 1;
+}
+
+/* Boutons d'action */
+.actions {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+  opacity: 0;
+  transition: all 0.25s ease;
+}
+
+.slot.filled:hover .actions {
+  opacity: 1;
+}
+
+.actionButton {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: rgba(255, 255, 255, 0.95);
+  color: var(--text-primary);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(4px);
+}
+
+.actionButton:hover {
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.removeButton {
+  background-color: var(--error, #ef4444);
+  color: white;
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+.removeButton:hover {
+  background-color: #dc2626;
+  transform: scale(1.15);
+}
+
+/* Modal d'édition des portions */
+.servingsModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+}
+
+.servingsModalContent {
+  background-color: var(--bg-primary);
+  padding: 1rem;
+  border-radius: 10px;
+  border: 2px solid var(--accent-blue);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 140px;
+  max-width: 90%;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.servingsModalContent label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.servingsModalContent input {
+  padding: 0.5rem;
+  font-size: 1.1rem;
+  text-align: center;
+  background-color: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.2s;
+  font-weight: 600;
+}
+
+.servingsModalContent input:focus {
+  border-color: var(--accent-blue);
+}
+
+.servingsModalButtons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.servingsModalButtons button {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.servingsSaveButton {
+  background-color: var(--success, #10b981);
+  color: white;
+}
+
+.servingsSaveButton:hover {
+  background-color: #059669;
+  transform: scale(1.05);
+}
+
+.servingsCancelButton {
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.servingsCancelButton:hover {
+  background-color: var(--error, #ef4444);
+  color: white;
+  transform: scale(1.05);
+}
+
+/* Responsive mobile */
+@media (max-width: 768px) {
+  .slot {
+    min-height: 120px;
+  }
+
+  .recipeName {
+    font-size: 1rem;
+  }
+
+  .actions {
+    opacity: 1;
+  }
+
+  .mealInfo {
+    font-size: 0.8rem;
+  }
+
+  .servings,
+  .multiDayBadge {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.6rem;
+  }
+}
