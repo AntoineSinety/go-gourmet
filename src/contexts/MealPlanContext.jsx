@@ -91,6 +91,7 @@ export const MealPlanProvider = ({ children }) => {
           meals: {},
           extras: [],
           permanentItems: [],
+          checkedItems: {},
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
@@ -366,6 +367,41 @@ export const MealPlanProvider = ({ children }) => {
   };
 
   /**
+   * Met à jour l'état des items cochés dans la liste de courses
+   * @param {Object} checkedItems - Objet avec les états cochés {itemKey: true/false}
+   */
+  const updateCheckedItems = async (checkedItems) => {
+    if (!mealPlan) return;
+
+    try {
+      const planRef = doc(db, 'mealPlans', mealPlan.id);
+
+      await updateDoc(planRef, {
+        checkedItems,
+        updatedAt: new Date().toISOString(),
+      });
+
+      const updatedPlan = {
+        ...mealPlan,
+        checkedItems,
+        updatedAt: new Date().toISOString(),
+      };
+
+      setMealPlan(updatedPlan);
+
+      // Mettre à jour le cache
+      const cacheKey = `${mealPlan.year}_W${mealPlan.weekNumber}`;
+      setWeekCache(prev => ({
+        ...prev,
+        [cacheKey]: updatedPlan
+      }));
+    } catch (error) {
+      console.error('Error updating checked items:', error);
+      throw error;
+    }
+  };
+
+  /**
    * Sauvegarde le plan actuel comme modèle
    * @param {string} name - Nom du modèle
    * @param {string} description - Description du modèle
@@ -516,6 +552,7 @@ export const MealPlanProvider = ({ children }) => {
     deleteExtra,
     addPermanentItem,
     deletePermanentItem,
+    updateCheckedItems,
     createTemplate,
     getTemplates,
     applyTemplate,

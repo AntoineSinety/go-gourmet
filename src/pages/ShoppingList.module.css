@@ -348,6 +348,12 @@
   text-overflow: ellipsis;
 }
 
+.customBadge {
+  font-size: 0.7rem;
+  margin-right: 0.35rem;
+  opacity: 0.6;
+}
+
 .itemQuantity {
   font-size: 0.85rem;
   font-weight: 600;

@@ -4,7 +4,7 @@ import { useRecipes } from '../contexts/RecipeContext';
 import styles from './ShoppingList.module.css';
 
 const ShoppingList = () => {
-  const { mealPlan, loading: mealPlanLoading, addPermanentItem, deletePermanentItem } = useMealPlan();
+  const { mealPlan, loading: mealPlanLoading, addPermanentItem, deletePermanentItem, updateCheckedItems } = useMealPlan();
   const { recipes, loading: recipesLoading } = useRecipes();
   const [checkedItems, setCheckedItems] = useState({});
   const [showAddForm, setShowAddForm] = useState(false);
@@ -14,6 +14,13 @@ const ShoppingList = () => {
     quantity: '',
     unit: ''
   });
+
+  // Charger les items cochés depuis le mealPlan
+  useEffect(() => {
+    if (mealPlan?.checkedItems) {
+      setCheckedItems(mealPlan.checkedItems);
+    }
+  }, [mealPlan]);
 
   // Générer automatiquement la liste de courses basée sur les repas futurs
   const shoppingList = useMemo(() => {
@@ -96,19 +103,13 @@ const ShoppingList = () => {
       });
     });
 
-    // Convertir en tableau et grouper par catégorie
+    // Convertir en tableau
     const ingredientsList = Object.values(ingredientMap);
 
-    // Ajouter les items permanents
-    (mealPlan.permanentItems || []).forEach(item => {
-      ingredientsList.push({
-        ...item,
-        isPermanent: true,
-        fromRecipes: []
-      });
-    });
+    // Ajouter les items permanents NON cochés à leur catégorie d'origine
+    const permanentItems = mealPlan.permanentItems || [];
 
-    // Grouper par catégorie
+    // Grouper par catégorie (items from recipes + items permanents non cochés)
     const grouped = ingredientsList.reduce((acc, item) => {
       if (!acc[item.category]) {
         acc[item.category] = [];
@@ -117,23 +118,71 @@ const ShoppingList = () => {
       return acc;
     }, {});
 
+    // Ajouter les items permanents NON cochés à leurs catégories
+    permanentItems.forEach(item => {
+      const itemKey = item.id;
+      const isChecked = checkedItems[itemKey];
+
+      if (!isChecked) {
+        // Item non coché : ajouter à sa catégorie d'origine
+        if (!grouped[item.category]) {
+          grouped[item.category] = [];
+        }
+        grouped[item.category].push({
+          ...item,
+          isPermanent: true,
+          fromRecipes: []
+        });
+      }
+    });
+
+    // Créer une catégorie spéciale pour les items permanents cochés
+    const checkedPermanent = permanentItems.filter(item => checkedItems[item.id]);
+    if (checkedPermanent.length > 0) {
+      grouped['✓ Cochés'] = checkedPermanent.map(item => ({
+        ...item,
+        isPermanent: true,
+        fromRecipes: []
+      }));
+    }
+
     // Convertir en tableau de catégories avec leurs items
     return Object.entries(grouped).map(([category, items]) => ({
       category,
       items: items.sort((a, b) => a.name.localeCompare(b.name))
-    })).sort((a, b) => a.category.localeCompare(b.category));
-  }, [mealPlan, recipes]);
+    })).sort((a, b) => {
+      // Mettre "✓ Cochés" en dernier
+      if (a.category === '✓ Cochés') return 1;
+      if (b.category === '✓ Cochés') return -1;
+      return a.category.localeCompare(b.category);
+    });
+  }, [mealPlan, recipes, checkedItems]);
 
-  const toggleItem = (category, itemName, itemId) => {
+  const toggleItem = async (category, itemName, itemId) => {
     const key = itemId || `${category}_${itemName}`;
-    setCheckedItems(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
+    const newCheckedItems = {
+      ...checkedItems,
+      [key]: !checkedItems[key]
+    };
+    setCheckedItems(newCheckedItems);
+
+    // Sauvegarder dans Firestore
+    try {
+      await updateCheckedItems(newCheckedItems);
+    } catch (error) {
+      console.error('Error updating checked items:', error);
+    }
   };
 
-  const clearChecked = () => {
+  const clearChecked = async () => {
     setCheckedItems({});
+
+    // Sauvegarder dans Firestore
+    try {
+      await updateCheckedItems({});
+    } catch (error) {
+      console.error('Error clearing checked items:', error);
+    }
   };
 
   const handleAddItem = async (e) => {
@@ -197,6 +246,18 @@ const ShoppingList = () => {
 
   const totalItems = shoppingList.reduce((sum, cat) => sum + cat.items.length, 0);
   const checkedCount = Object.values(checkedItems).filter(Boolean).length;
+
+  const categoryEmojis = {
+    'Fruits & Légumes': '🥬',
+    'Viandes & Poissons': '🥩',
+    'Produits laitiers': '🥛',
+    'Épicerie': '🏪',
+    'Surgelés': '🧊',
+    'Boissons': '🥤',
+    'Boulangerie': '🥖',
+    'Autres': '📦',
+    '✓ Cochés': '✅'
+  };
 
   const categories = [
     'Fruits & Légumes',
@@ -330,7 +391,9 @@ const ShoppingList = () => {
           {shoppingList.map(({ category, items }) => (
             <div key={category} className={styles.categorySection}>
               <div className={styles.categoryHeader}>
-                <h3 className={styles.categoryTitle}>{category}</h3>
+                <h3 className={styles.categoryTitle}>
+                  {categoryEmojis[category] || '📦'} {category}
+                </h3>
                 <span className={styles.categoryCount}>{items.length}</span>
               </div>
               <div className={styles.itemsList}>
@@ -351,7 +414,10 @@ const ShoppingList = () => {
                           {isChecked && <span className={styles.checkmark}>✓</span>}
                         </div>
                         <div className={styles.itemContent}>
-                          <div className={styles.itemName}>{item.name}</div>
+                          <div className={styles.itemName}>
+                            {item.isPermanent && <span className={styles.customBadge}>✏️</span>}
+                            {item.name}
+                          </div>
                           <div className={styles.itemQuantity}>
                             {item.quantity && (
                               <>
