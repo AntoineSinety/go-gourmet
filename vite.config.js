@@ -8,32 +8,40 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      includeAssets: ['favicon.png', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
+      devOptions: {
+        enabled: true,
+        type: 'module'
+      },
       manifest: {
-        name: 'Go Gourmet',
+        name: 'Go Gourmet - Planification de repas',
         short_name: 'Go Gourmet',
         description: 'Application de gestion de recettes et planning de repas',
         theme_color: '#0a0e1a',
         background_color: '#0a0e1a',
         display: 'standalone',
+        orientation: 'portrait',
         scope: '/go-gourmet/',
         start_url: '/go-gourmet/',
+        id: '/go-gourmet/',
         icons: [
           {
             src: 'pwa-192x192.png',
             sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
             src: 'pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'any'
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
           }
         ]
       },
