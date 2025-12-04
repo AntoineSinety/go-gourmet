@@ -527,35 +527,39 @@
   }
 
   .gridHeader {
-    min-width: 600px;
+    min-width: 900px;
   }
 
   .gridRow {
-    min-width: 600px;
+    min-width: 900px;
+    gap: 0.5rem;
   }
 
   .rowLabel {
-    font-size: 0.7rem;
-    padding: 0.5rem;
-    min-width: 50px;
+    font-size: 0.85rem;
+    padding: 0.75rem;
+    min-width: 60px;
+    font-weight: 600;
   }
 
   .dayHeader {
-    padding: 0.5rem;
+    padding: 0.75rem;
   }
 
   .dayName {
-    font-size: 0.7rem;
+    font-size: 0.85rem;
+    font-weight: 600;
   }
 
   .dayNumber {
-    font-size: 0.8rem;
+    font-size: 1rem;
+    font-weight: 700;
   }
 
   .dayHeader.today::before {
-    font-size: 0.6rem;
-    padding: 1px 6px;
-    top: -6px;
+    font-size: 0.65rem;
+    padding: 2px 8px;
+    top: -8px;
   }
 
   /* Extras section */

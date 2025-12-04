@@ -311,25 +311,48 @@
 /* Responsive mobile */
 @media (max-width: 768px) {
   .slot {
-    min-height: 120px;
+    min-height: 150px;
+  }
+
+  .mealContent {
+    padding: 1rem;
   }
 
   .recipeName {
-    font-size: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 0.5rem;
   }
 
   .actions {
     opacity: 1;
   }
 
+  .actionButton {
+    width: 32px;
+    height: 32px;
+    font-size: 1.1rem;
+  }
+
   .mealInfo {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
+    gap: 0.5rem;
   }
 
   .servings,
   .multiDayBadge {
-    font-size: 0.8rem;
-    padding: 0.25rem 0.6rem;
+    font-size: 0.85rem;
+    padding: 0.35rem 0.75rem;
+    font-weight: 600;
+  }
+
+  .emptyLabel {
+    font-size: 1rem;
+  }
+
+  .addIcon {
+    font-size: 2.5rem;
   }
 }
 
