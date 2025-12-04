@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useHousehold } from '../contexts/HouseholdContext';
+import { useRecipes } from '../contexts/RecipeContext';
 import { useUrlPersistedState } from '../hooks/useScrollRestoration';
 import Recipes from './Recipes';
 import RecipeForm from './RecipeForm';
@@ -15,6 +16,7 @@ import styles from './Home.module.css';
 const Home = () => {
   const { user, signOut } = useAuth();
   const { household } = useHousehold();
+  const { deleteRecipe } = useRecipes();
 
   // Fonctions pour synchroniser la navigation avec l'URL
   const serializeToUrl = (nav) => {
@@ -235,6 +237,7 @@ const Home = () => {
                 handleEditRecipe(recipe);
                 handleCloseRecipeDetail();
               }}
+              onDelete={deleteRecipe}
             />
           </div>
         </>

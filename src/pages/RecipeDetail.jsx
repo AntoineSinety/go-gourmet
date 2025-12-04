@@ -5,13 +5,26 @@ import { getRecipeTypeById } from '../utils/recipeTypes';
 import { loadImageWithCache } from '../services/imageService';
 import styles from './RecipeDetail.module.css';
 
-const RecipeDetail = ({ recipeId, onClose, onStartCooking, onEdit }) => {
+const RecipeDetail = ({ recipeId, onClose, onStartCooking, onEdit, onDelete }) => {
   const [imageUrl, setImageUrl] = useState(null);
   const { getRecipe } = useRecipes();
   const { ingredients: allIngredients } = useIngredients();
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
   const [ingredientImages, setIngredientImages] = useState({});
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const handleDelete = async () => {
+    if (!onDelete) return;
+
+    try {
+      await onDelete(recipeId);
+      onClose();
+    } catch (error) {
+      console.error('Error deleting recipe:', error);
+      alert('Erreur lors de la suppression de la recette');
+    }
+  };
 
   useEffect(() => {
     const loadRecipe = async () => {
@@ -105,7 +118,7 @@ const RecipeDetail = ({ recipeId, onClose, onStartCooking, onEdit }) => {
       </div>
 
       {/* Actions */}
-      {(onEdit || onStartCooking) && (
+      {(onEdit || onStartCooking || onDelete) && (
         <div className={styles.actionButtons}>
           {onEdit && (
             <button onClick={() => onEdit(recipe)} className={styles.editButton}>
@@ -118,6 +131,32 @@ const RecipeDetail = ({ recipeId, onClose, onStartCooking, onEdit }) => {
               👨‍🍳 Cuisiner
             </button>
           )}
+          {onDelete && (
+            <button onClick={() => setShowDeleteConfirm(true)} className={styles.deleteButton}>
+              <span>🗑️</span>
+              <span>Supprimer</span>
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className={styles.confirmOverlay} onClick={() => setShowDeleteConfirm(false)}>
+          <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+            <h3 className={styles.confirmTitle}>Supprimer cette recette ?</h3>
+            <p className={styles.confirmMessage}>
+              Cette action est irréversible. La recette "{recipe.name}" sera définitivement supprimée.
+            </p>
+            <div className={styles.confirmButtons}>
+              <button onClick={() => setShowDeleteConfirm(false)} className={styles.confirmCancel}>
+                Annuler
+              </button>
+              <button onClick={handleDelete} className={styles.confirmDelete}>
+                🗑️ Supprimer
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

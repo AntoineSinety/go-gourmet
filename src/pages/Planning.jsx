@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useMealPlan } from '../contexts/MealPlanContext';
+import { useRecipes } from '../contexts/RecipeContext';
 import { useUrlPersistedState } from '../hooks/useScrollRestoration';
 import {
   getCurrentWeek,
@@ -16,6 +17,7 @@ import styles from './Planning.module.css';
 
 const Planning = () => {
   const { mealPlan, loading, loadMealPlan, updateMealSlot, updateMultipleMealSlots, addExtra, deleteExtra } = useMealPlan();
+  const { deleteRecipe } = useRecipes();
 
   // État de la semaine courante avec synchronisation URL
   const serializeToUrl = (state) => {
@@ -525,6 +527,7 @@ const Planning = () => {
             <RecipeDetail
               recipeId={selectedRecipeId}
               onClose={() => setSelectedRecipeId(null)}
+              onDelete={deleteRecipe}
             />
           </div>
         </>
