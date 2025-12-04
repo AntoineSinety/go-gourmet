@@ -193,42 +193,162 @@
   transform: none;
 }
 
-.stepCard {
+/* Accordion Step Styles */
+.stepAccordion {
   background-color: var(--bg-tertiary);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 1.25rem;
+  border-radius: 12px;
   margin-bottom: 1rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
 }
 
-.stepCard:last-child {
+.stepAccordion:last-child {
   margin-bottom: 0;
 }
 
-.stepHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
+.stepAccordion.expanded {
+  border-color: rgba(147, 51, 234, 0.5);
+  box-shadow: 0 4px 16px rgba(147, 51, 234, 0.2);
 }
 
-.stepHeader h3 {
+.stepAccordionHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.stepAccordionHeader:hover {
+  background-color: var(--bg-hover);
+}
+
+.stepAccordion.expanded .stepAccordionHeader {
+  background-color: rgba(147, 51, 234, 0.1);
+  border-bottom: 1px solid rgba(147, 51, 234, 0.3);
+}
+
+.stepNumber {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #9333ea 0%, #7e22ce 100%);
+  color: white;
+  font-weight: 700;
   font-size: 1.125rem;
-  margin: 0;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.4);
+}
+
+.stepHeaderContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.stepTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+}
+
+.stepPreview {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0.5rem 0;
+  opacity: 0.85;
+}
+
+.stepIngredientsBadges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.ingredientsLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.ingredientBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(126, 34, 206, 0.2) 100%);
+  border: 1px solid rgba(147, 51, 234, 0.4);
+  border-radius: 12px;
+  color: #c084fc;
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.stepAccordionBody {
+  padding: 1.5rem;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .removeStepButton {
   background-color: transparent;
   border: 1px solid var(--border-color);
-  padding: 0.5rem 0.75rem;
-  font-size: 0.85rem;
+  padding: 0.5rem;
+  font-size: 1.25rem;
   color: var(--error);
+  min-width: 36px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  flex-shrink: 0;
 }
 
 .removeStepButton:hover {
   background-color: rgba(239, 68, 68, 0.1);
   border-color: var(--error);
   transform: none;
+}
+
+.addStepButtonBottom {
+  width: 100%;
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.15) 0%, rgba(126, 34, 206, 0.15) 100%);
+  border: 2px dashed rgba(147, 51, 234, 0.4);
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #c084fc;
+  border-radius: 12px;
+  margin-top: 1rem;
+  transition: all 0.2s;
+}
+
+.addStepButtonBottom:hover {
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.25) 0%, rgba(126, 34, 206, 0.25) 100%);
+  border-color: rgba(147, 51, 234, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
 }
 
 .stepIngredients {
@@ -421,5 +541,40 @@
 
   .checked .checkboxThumb {
     border-width: 2px;
+  }
+
+  .stepAccordionHeader {
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .stepNumber {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    font-size: 1rem;
+  }
+
+  .stepTitle {
+    font-size: 0.9rem;
+  }
+
+  .stepPreview {
+    font-size: 0.85rem;
+  }
+
+  .ingredientBadge {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+  }
+
+  .stepAccordionBody {
+    padding: 1rem;
+  }
+
+  .addStepButtonBottom {
+    font-size: 0.9rem;
+    padding: 0.875rem;
   }
 }

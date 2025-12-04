@@ -16,6 +16,7 @@ const RecipeForm = ({ onCancel, onSuccess, recipeToEdit = null }) => {
   const [imageFile, setImageFile] = useState(null);
   const [removeImage, setRemoveImage] = useState(false);
   const [ingredientImages, setIngredientImages] = useState({});
+  const [expandedStep, setExpandedStep] = useState(0); // Track which step is expanded
 
   const [recipe, setRecipe] = useState(
     recipeToEdit || {
@@ -107,6 +108,8 @@ const RecipeForm = ({ onCancel, onSuccess, recipeToEdit = null }) => {
         ingredientIds: []
       }]
     }));
+    // Expand the new step
+    setExpandedStep(recipe.steps.length);
   };
 
   const handleUpdateStep = (index, field, value) => {
@@ -302,79 +305,128 @@ const RecipeForm = ({ onCancel, onSuccess, recipeToEdit = null }) => {
         </div>
 
         <div className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <h2>Étapes de préparation ({recipe.steps.length})</h2>
-            <button
-              type="button"
-              onClick={handleAddStep}
-              className={styles.addStepButton}
-            >
-              + Ajouter une étape
-            </button>
-          </div>
+          <h2 className={styles.sectionTitle}>Étapes de préparation</h2>
 
-          {recipe.steps.map((step, index) => (
-            <div key={index} className={styles.stepCard}>
-              <div className={styles.stepHeader}>
-                <h3>Étape {index + 1}</h3>
-                {recipe.steps.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveStep(index)}
-                    className={styles.removeStepButton}
-                  >
-                    Supprimer
-                  </button>
+          {recipe.steps.map((step, index) => {
+            const isExpanded = expandedStep === index;
+            const usedIngredients = recipe.ingredients.filter(ing =>
+              step.ingredientIds.includes(ing.ingredientId)
+            );
+
+            return (
+              <div
+                key={index}
+                className={`${styles.stepAccordion} ${isExpanded ? styles.expanded : styles.collapsed}`}
+              >
+                <div
+                  className={styles.stepAccordionHeader}
+                  onClick={() => setExpandedStep(index)}
+                >
+                  <div className={styles.stepNumber}>{index + 1}</div>
+                  <div className={styles.stepHeaderContent}>
+                    <h3 className={styles.stepTitle}>Étape {index + 1}</h3>
+                    {!isExpanded && step.instruction && (
+                      <p className={styles.stepPreview}>
+                        {step.instruction.substring(0, 80)}{step.instruction.length > 80 ? '...' : ''}
+                      </p>
+                    )}
+                    {!isExpanded && usedIngredients.length > 0 && (
+                      <div className={styles.stepIngredientsBadges}>
+                        <span className={styles.ingredientsLabel}>INGRÉDIENTS :</span>
+                        {usedIngredients.map((ing, idx) => (
+                          <span key={idx} className={styles.ingredientBadge}>
+                            {ing.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {recipe.steps.length > 1 && !isExpanded && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveStep(index);
+                      }}
+                      className={styles.removeStepButton}
+                      title="Supprimer cette étape"
+                    >
+                      🗑️
+                    </button>
+                  )}
+                </div>
+
+                {isExpanded && (
+                  <div className={styles.stepAccordionBody}>
+                    <div className={styles.formGroup}>
+                      <label>Instructions</label>
+                      <textarea
+                        value={step.instruction}
+                        onChange={(e) => handleUpdateStep(index, 'instruction', e.target.value)}
+                        rows={4}
+                        placeholder="Décrivez cette étape..."
+                        required
+                        autoFocus
+                      />
+                    </div>
+
+                    <div className={styles.stepIngredients}>
+                      <label>Ingrédients utilisés dans cette étape</label>
+                      <p className={styles.hint}>
+                        Sélectionnez les ingrédients nécessaires pour cette étape
+                      </p>
+                      <div className={styles.ingredientCheckboxes}>
+                        {recipe.ingredients.map((ingredient, ingIndex) => {
+                          const isUsed = step.ingredientIds.includes(ingredient.ingredientId);
+
+                          return (
+                            <label key={ingIndex} className={`${styles.checkbox} ${isUsed ? styles.checked : ''}`}>
+                              <input
+                                type="checkbox"
+                                checked={isUsed}
+                                onChange={(e) => {
+                                  const newIds = e.target.checked
+                                    ? [...step.ingredientIds, ingredient.ingredientId]
+                                    : step.ingredientIds.filter(id => id !== ingredient.ingredientId);
+                                  handleUpdateStep(index, 'ingredientIds', newIds);
+                                }}
+                              />
+                              {ingredientImages[ingredient.ingredientId] && (
+                                <img
+                                  src={ingredientImages[ingredient.ingredientId]}
+                                  alt={ingredient.name}
+                                  className={styles.checkboxThumb}
+                                />
+                              )}
+                              <span>{ingredient.name} {ingredient.quantity} {ingredient.unit}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {recipe.steps.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveStep(index)}
+                        className={styles.deleteStepButton}
+                      >
+                        🗑️ Supprimer cette étape
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
+            );
+          })}
 
-              <div className={styles.formGroup}>
-                <label>Instructions</label>
-                <textarea
-                  value={step.instruction}
-                  onChange={(e) => handleUpdateStep(index, 'instruction', e.target.value)}
-                  rows={4}
-                  placeholder="Décrivez cette étape..."
-                  required
-                />
-              </div>
-
-              <div className={styles.stepIngredients}>
-                <label>Ingrédients utilisés dans cette étape</label>
-                <p className={styles.hint}>
-                  Sélectionnez les ingrédients nécessaires pour cette étape
-                </p>
-                <div className={styles.ingredientCheckboxes}>
-                  {recipe.ingredients.map((ingredient, ingIndex) => {
-                    const isUsed = step.ingredientIds.includes(ingredient.ingredientId);
-
-                    return (
-                      <label key={ingIndex} className={`${styles.checkbox} ${isUsed ? styles.checked : ''}`}>
-                        <input
-                          type="checkbox"
-                          checked={isUsed}
-                          onChange={(e) => {
-                            const newIds = e.target.checked
-                              ? [...step.ingredientIds, ingredient.ingredientId]
-                              : step.ingredientIds.filter(id => id !== ingredient.ingredientId);
-                            handleUpdateStep(index, 'ingredientIds', newIds);
-                          }}
-                        />
-                        {ingredientImages[ingredient.ingredientId] && (
-                          <img
-                            src={ingredientImages[ingredient.ingredientId]}
-                            alt={ingredient.name}
-                            className={styles.checkboxThumb}
-                          />
-                        )}
-                        <span>{ingredient.name} {ingredient.quantity} {ingredient.unit}</span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          ))}
+          <button
+            type="button"
+            onClick={handleAddStep}
+            className={styles.addStepButtonBottom}
+          >
+            + Ajouter une étape
+          </button>
         </div>
 
         <div className={styles.formActions}>
