@@ -62,13 +62,41 @@ export const RecipeProvider = ({ children }) => {
     loadRecipes();
   }, [household]);
 
+  // Nettoyer les valeurs undefined qui ne sont pas acceptées par Firestore
+  const cleanData = (obj) => {
+    if (Array.isArray(obj)) {
+      return obj.map(item =>
+        typeof item === 'object' && item !== null ? cleanData(item) : item === undefined ? null : item
+      );
+    }
+
+    if (typeof obj === 'object' && obj !== null) {
+      const cleaned = {};
+      for (const [key, value] of Object.entries(obj)) {
+        if (value === undefined) {
+          cleaned[key] = null;
+        } else if (typeof value === 'object' && value !== null) {
+          cleaned[key] = cleanData(value);
+        } else {
+          cleaned[key] = value;
+        }
+      }
+      return cleaned;
+    }
+
+    return obj;
+  };
+
   const addRecipe = async (recipeData, imageFile = null) => {
     if (!household) return;
 
     try {
+      // Nettoyer les données pour éviter les valeurs undefined
+      const cleanedData = cleanData(recipeData);
+
       // Créer d'abord la recette pour avoir son ID
       const docRef = await addDoc(collection(db, 'recipes'), {
-        ...recipeData,
+        ...cleanedData,
         householdId: household.id,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -106,7 +134,9 @@ export const RecipeProvider = ({ children }) => {
 
     try {
       const recipeRef = doc(db, 'recipes', id);
-      let finalUpdates = { ...updates, updatedAt: new Date().toISOString() };
+      // Nettoyer les données pour éviter les valeurs undefined
+      const cleanedUpdates = cleanData(updates);
+      let finalUpdates = { ...cleanedUpdates, updatedAt: new Date().toISOString() };
 
       // Supprimer l'ancienne image si on la remplace ou la supprime
       if ((imageFile || removeImage) && updates.imageUrl) {
