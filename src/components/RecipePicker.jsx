@@ -11,6 +11,9 @@ const RecipePicker = ({
 }) => {
   const { recipes, loading } = useRecipes();
 
+  // Mode: 'recipe' ou 'custom'
+  const [mode, setMode] = useState('recipe');
+
   // Filter and search state
   const [searchTerm, setSearchTerm] = useState('');
   const [searchMode, setSearchMode] = useState('name');
@@ -20,6 +23,10 @@ const RecipePicker = ({
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [servings, setServings] = useState(2); // Default to 2 people
   const [selectedDays, setSelectedDays] = useState(currentSlotId ? [currentSlotId] : []); // Multi-day selection
+
+  // Custom meal state
+  const [customMealName, setCustomMealName] = useState('');
+  const [customMealType, setCustomMealType] = useState('plat');
 
   // Filter recipes
   const filteredRecipes = recipes.filter(recipe => {
@@ -43,14 +50,25 @@ const RecipePicker = ({
   });
 
   const handleConfirm = () => {
-    if (!selectedRecipe) return;
+    if (mode === 'recipe' && !selectedRecipe) return;
+    if (mode === 'custom' && !customMealName.trim()) return;
 
-    const mealData = {
+    const mealData = mode === 'recipe' ? {
       recipeId: selectedRecipe.id,
       recipeName: selectedRecipe.name,
       recipeType: selectedRecipe.type || 'plat',
       recipeImageUrl: selectedRecipe.imageUrl || null,
       servings: servings,
+      isMultiDay: selectedDays.length > 1,
+      multiDayMealIds: selectedDays.length > 1 ? selectedDays : null,
+      multiDayCount: selectedDays.length > 1 ? selectedDays.length : null,
+    } : {
+      // Custom meal (no recipeId)
+      recipeName: customMealName.trim(),
+      recipeType: customMealType,
+      recipeImageUrl: null,
+      servings: servings,
+      isCustom: true,
       isMultiDay: selectedDays.length > 1,
       multiDayMealIds: selectedDays.length > 1 ? selectedDays : null,
       multiDayCount: selectedDays.length > 1 ? selectedDays.length : null,
@@ -83,13 +101,30 @@ const RecipePicker = ({
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className={styles.header}>
-          <h2>Sélectionner une recette</h2>
+          <h2>{mode === 'recipe' ? 'Sélectionner une recette' : 'Repas personnalisé'}</h2>
           <button onClick={onCancel} className={styles.closeButton} title="Fermer">
             ✕
           </button>
         </div>
 
-        {/* Search and Filters */}
+        {/* Mode Toggle */}
+        <div className={styles.modeToggle}>
+          <button
+            onClick={() => setMode('recipe')}
+            className={`${styles.modeButton} ${mode === 'recipe' ? styles.activeModeButton : ''}`}
+          >
+            📖 Recettes
+          </button>
+          <button
+            onClick={() => setMode('custom')}
+            className={`${styles.modeButton} ${mode === 'custom' ? styles.activeModeButton : ''}`}
+          >
+            ✏️ Repas custom
+          </button>
+        </div>
+
+        {/* Search and Filters (only in recipe mode) */}
+        {mode === 'recipe' && (
         <div className={styles.filterSection}>
           {/* Search Bar with Mode Toggle */}
           <div className={styles.searchContainer}>
@@ -175,10 +210,12 @@ const RecipePicker = ({
             {filteredRecipes.length} recette{filteredRecipes.length > 1 ? 's' : ''}
           </div>
         </div>
+        )}
 
         {/* Scrollable Content */}
         <div className={styles.scrollableContent}>
-          {/* Recipe Grid */}
+          {/* Recipe Grid (mode recipe) */}
+          {mode === 'recipe' && (
           <div className={styles.recipeGrid}>
           {loading ? (
             <div className={styles.loading}>Chargement...</div>
@@ -231,9 +268,46 @@ const RecipePicker = ({
             })
           )}
         </div>
+          )}
 
-        {/* Configuration Section (only if recipe selected) */}
-        {selectedRecipe && (
+        {/* Custom Meal Form (mode custom) */}
+        {mode === 'custom' && (
+          <div className={styles.customForm}>
+            <div className={styles.customFormField}>
+              <label className={styles.customFormLabel}>
+                Nom du repas *
+              </label>
+              <input
+                type="text"
+                placeholder="Ex: Pizza, Restaurant, Poke Bowl..."
+                value={customMealName}
+                onChange={(e) => setCustomMealName(e.target.value)}
+                className={styles.customFormInput}
+                autoFocus
+              />
+            </div>
+
+            <div className={styles.customFormField}>
+              <label className={styles.customFormLabel}>
+                Type de repas
+              </label>
+              <div className={styles.customTypeButtons}>
+                {RECIPE_TYPES.map(type => (
+                  <button
+                    key={type.id}
+                    onClick={() => setCustomMealType(type.id)}
+                    className={`${styles.customTypeButton} ${customMealType === type.id ? styles.active : ''}`}
+                  >
+                    {type.icon} {type.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Configuration Section */}
+        {(selectedRecipe || (mode === 'custom' && customMealName.trim())) && (
           <div className={styles.configSection}>
             <div className={styles.configHeader}>
               <h3>Configuration</h3>
@@ -365,7 +439,7 @@ const RecipePicker = ({
           <button
             onClick={handleConfirm}
             className={styles.confirmButton}
-            disabled={!selectedRecipe}
+            disabled={mode === 'recipe' ? !selectedRecipe : !customMealName.trim()}
           >
             {selectedDays.length > 1
               ? `Ajouter à ${selectedDays.length} repas`

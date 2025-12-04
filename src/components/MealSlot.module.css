@@ -332,3 +332,19 @@
     padding: 0.25rem 0.6rem;
   }
 }
+
+/* Custom meal badge */
+.customBadge {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+/* Custom meal slot styling */
+.slot.customMeal {
+  border-style: dashed;
+}
+
+.slot.customMeal:hover {
+  cursor: default;
+  transform: none;
+}

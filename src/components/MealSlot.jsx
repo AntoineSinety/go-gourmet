@@ -16,7 +16,8 @@ const MealSlot = ({
   const [showServingsEdit, setShowServingsEdit] = useState(false);
   const [editedServings, setEditedServings] = useState(meal?.servings || 2);
 
-  const isEmpty = !meal || !meal.recipeId;
+  const isEmpty = !meal || !meal.recipeName;
+  const isCustomMeal = meal?.isCustom || !meal?.recipeId;
   const slotLabel = slotType === 'lunch' ? 'Midi' : 'Soir';
   const slotIcon = slotType === 'lunch' ? '🌅' : '🌙';
 
@@ -63,8 +64,8 @@ const MealSlot = ({
 
   return (
     <div
-      className={`${styles.slot} ${styles.filled} ${isPast ? styles.past : ''}`}
-      onClick={() => !isPast && onViewRecipe && onViewRecipe(meal.recipeId)}
+      className={`${styles.slot} ${styles.filled} ${isPast ? styles.past : ''} ${isCustomMeal ? styles.customMeal : ''}`}
+      onClick={() => !isPast && !isCustomMeal && onViewRecipe && onViewRecipe(meal.recipeId)}
     >
       {/* Image de fond si disponible */}
       {meal.recipeImageUrl && (
@@ -77,7 +78,10 @@ const MealSlot = ({
       {/* Contenu du meal slot */}
       <div className={styles.mealContent}>
         {/* Nom de la recette */}
-        <h4 className={styles.recipeName}>{meal.recipeName}</h4>
+        <h4 className={styles.recipeName}>
+          {isCustomMeal && <span className={styles.customBadge}>✏️ </span>}
+          {meal.recipeName}
+        </h4>
 
         {/* Informations */}
         <div className={styles.mealInfo}>
