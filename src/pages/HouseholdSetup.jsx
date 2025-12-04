@@ -47,7 +47,9 @@ const HouseholdSetup = () => {
 
   const handleJoinHousehold = async (e) => {
     e.preventDefault();
-    if (!householdId.trim()) {
+    const cleanedId = householdId.trim();
+
+    if (!cleanedId) {
       setError('Veuillez entrer un ID de foyer');
       return;
     }
@@ -56,7 +58,7 @@ const HouseholdSetup = () => {
     setError(null);
 
     try {
-      await joinHousehold(householdId);
+      await joinHousehold(cleanedId);
     } catch (err) {
       setError('Erreur lors de la connexion au foyer. Vérifiez l\'ID.');
       console.error(err);

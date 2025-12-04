@@ -194,14 +194,33 @@ const Settings = ({ onNavigate }) => {
               onClick={(e) => e.target.select()}
             />
             <button
-              onClick={() => {
+              onClick={async () => {
                 const link = `${window.location.origin}${window.location.pathname}?join=${household.id}`;
-                navigator.clipboard.writeText(link);
-                alert('Lien copié dans le presse-papiers !');
+
+                // Try to use native share API first
+                if (navigator.share) {
+                  try {
+                    await navigator.share({
+                      title: 'Invitation Go Gourmet',
+                      text: `Rejoignez mon foyer "${household.name}" sur Go Gourmet !`,
+                      url: link
+                    });
+                  } catch (err) {
+                    // User cancelled or error - fallback to clipboard
+                    if (err.name !== 'AbortError') {
+                      navigator.clipboard.writeText(link);
+                      alert('Lien copié dans le presse-papiers !');
+                    }
+                  }
+                } else {
+                  // Fallback for browsers without share API
+                  navigator.clipboard.writeText(link);
+                  alert('Lien copié dans le presse-papiers !');
+                }
               }}
-              className={styles.copyButton}
+              className={styles.shareButton}
             >
-              📋 Copier
+              🔗 Partager
             </button>
           </div>
         </div>
