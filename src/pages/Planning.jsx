@@ -64,6 +64,9 @@ const Planning = () => {
   // État du modal Templates
   const [templatesModalOpen, setTemplatesModalOpen] = useState(false);
 
+  // État pour le drag and drop
+  const [draggingSlotId, setDraggingSlotId] = useState(null);
+
   // Charger le meal plan quand la semaine change
   useEffect(() => {
     if (weekState.weekNumber && weekState.year) {
@@ -157,6 +160,39 @@ const Planning = () => {
 
   const handleRemoveExtra = async (extraId) => {
     await deleteExtra(extraId);
+  };
+
+  // Gestion du drag and drop
+  const handleDragStart = (slotId, meal) => {
+    setDraggingSlotId(slotId);
+  };
+
+  const handleDragEnd = () => {
+    setDraggingSlotId(null);
+  };
+
+  const handleDrop = async (sourceSlotId, targetSlotId) => {
+    if (!mealPlan) return;
+
+    const sourceMeal = mealPlan.meals[sourceSlotId];
+    const targetMeal = mealPlan.meals[targetSlotId];
+
+    // Échanger les repas
+    const updates = [];
+
+    if (sourceMeal) {
+      updates.push({ slotId: targetSlotId, mealData: sourceMeal });
+    } else {
+      updates.push({ slotId: targetSlotId, mealData: null });
+    }
+
+    if (targetMeal) {
+      updates.push({ slotId: sourceSlotId, mealData: targetMeal });
+    } else {
+      updates.push({ slotId: sourceSlotId, mealData: null });
+    }
+
+    await updateMultipleMealSlots(updates);
   };
 
   if (loading) {
@@ -286,11 +322,15 @@ const Planning = () => {
                   meal={meal}
                   dayName={day.dayName}
                   slotType="lunch"
+                  slotId={slotId}
                   isPast={day.isPast}
                   onAdd={() => handleAddMeal(slotId, 'lunch')}
                   onEdit={(updatedMeal) => handleEditMeal(slotId, updatedMeal)}
                   onRemove={() => handleRemoveMeal(slotId)}
                   onViewRecipe={(recipeId) => setSelectedRecipeId(recipeId)}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                  onDrop={handleDrop}
                 />
               );
             })}
@@ -308,11 +348,15 @@ const Planning = () => {
                   meal={meal}
                   dayName={day.dayName}
                   slotType="dinner"
+                  slotId={slotId}
                   isPast={day.isPast}
                   onAdd={() => handleAddMeal(slotId, 'dinner')}
                   onEdit={(updatedMeal) => handleEditMeal(slotId, updatedMeal)}
                   onRemove={() => handleRemoveMeal(slotId)}
                   onViewRecipe={(recipeId) => setSelectedRecipeId(recipeId)}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                  onDrop={handleDrop}
                 />
               );
             })}
@@ -358,11 +402,15 @@ const Planning = () => {
                         meal={lunchMeal}
                         dayName={day.dayName}
                         slotType="lunch"
+                        slotId={lunchSlotId}
                         isPast={day.isPast}
                         onAdd={() => handleAddMeal(lunchSlotId, 'lunch')}
                         onEdit={(updatedMeal) => handleEditMeal(lunchSlotId, updatedMeal)}
                         onRemove={() => handleRemoveMeal(lunchSlotId)}
                         onViewRecipe={(recipeId) => setSelectedRecipeId(recipeId)}
+                        onDragStart={handleDragStart}
+                        onDragEnd={handleDragEnd}
+                        onDrop={handleDrop}
                       />
                     </div>
                   </div>
@@ -378,11 +426,15 @@ const Planning = () => {
                         meal={dinnerMeal}
                         dayName={day.dayName}
                         slotType="dinner"
+                        slotId={dinnerSlotId}
                         isPast={day.isPast}
                         onAdd={() => handleAddMeal(dinnerSlotId, 'dinner')}
                         onEdit={(updatedMeal) => handleEditMeal(dinnerSlotId, updatedMeal)}
                         onRemove={() => handleRemoveMeal(dinnerSlotId)}
                         onViewRecipe={(recipeId) => setSelectedRecipeId(recipeId)}
+                        onDragStart={handleDragStart}
+                        onDragEnd={handleDragEnd}
+                        onDrop={handleDrop}
                       />
                     </div>
                   </div>
