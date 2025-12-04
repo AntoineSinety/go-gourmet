@@ -84,6 +84,38 @@ const Settings = ({ onNavigate }) => {
     }
   };
 
+  const handleClearCache = async () => {
+    if (!confirm('Vider le cache et recharger l\'application ? Cela permettra de récupérer la dernière version.')) {
+      return;
+    }
+
+    try {
+      // Unregister all service workers
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+          await registration.unregister();
+        }
+      }
+
+      // Clear all caches
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      }
+
+      // Clear localStorage and sessionStorage
+      localStorage.clear();
+      sessionStorage.clear();
+
+      // Reload the page
+      window.location.reload(true);
+    } catch (error) {
+      console.error('Error clearing cache:', error);
+      alert('Erreur lors du vidage du cache');
+    }
+  };
+
   if (!household) {
     return (
       <div className={styles.container}>
@@ -325,6 +357,25 @@ const Settings = ({ onNavigate }) => {
 
           <button onClick={handleLogout} className={styles.logoutButton}>
             🚪 Se déconnecter
+          </button>
+        </div>
+      </div>
+
+      {/* Application */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>📱 Application</h2>
+
+        <div className={styles.card}>
+          <div className={styles.cardRow}>
+            <div>
+              <div className={styles.label}>Vider le cache</div>
+              <p className={styles.hint}>
+                Supprime tous les fichiers en cache et recharge l'application pour récupérer la dernière version
+              </p>
+            </div>
+          </div>
+          <button onClick={handleClearCache} className={styles.logoutButton}>
+            🔄 Vider le cache et recharger
           </button>
         </div>
       </div>
