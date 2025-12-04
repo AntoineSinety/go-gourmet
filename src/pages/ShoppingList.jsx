@@ -50,6 +50,11 @@ const ShoppingList = () => {
         return;
       }
 
+      // Ignorer les repas marqués comme "j'ai déjà tout"
+      if (meal.skipShoppingList) {
+        return;
+      }
+
       // Gérer les multi-day : ne compter qu'une seule fois
       if (meal.isMultiDay) {
         const multiDayKey = meal.multiDayMealIds?.sort().join('_');

@@ -146,6 +146,23 @@ const MealSlot = ({
             <span>{meal.servings || 2}p</span>
           </div>
 
+          {/* Toggle liste de courses */}
+          {!isPast && (
+            <button
+              className={`${styles.shoppingButton} ${meal.skipShoppingList ? styles.shoppingSkipped : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit && onEdit({
+                  ...meal,
+                  skipShoppingList: !meal.skipShoppingList
+                });
+              }}
+              title={meal.skipShoppingList ? "Réactiver dans la liste de courses" : "Retirer de la liste de courses (j'ai déjà tout)"}
+            >
+              🛒
+            </button>
+          )}
+
           {/* Badge multi-day si applicable */}
           {meal.isMultiDay && (
             <div className={styles.multiDayBadge} title="Plat étalé sur plusieurs jours">
