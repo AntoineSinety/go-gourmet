@@ -351,27 +351,40 @@
 .stepsList {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
 .stepItem {
   display: flex;
   gap: 16px;
   align-items: flex-start;
+  padding: 16px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.stepItem:hover {
+  border-color: rgba(147, 51, 234, 0.3);
+  background-color: var(--bg-tertiary);
 }
 
 .stepNumber {
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--accent-blue);
+  background: linear-gradient(135deg, #9333ea 0%, #7e22ce 100%);
   color: white;
   border-radius: 50%;
-  font-weight: 600;
-  font-size: 0.9rem;
+  font-weight: 700;
+  font-size: 1.125rem;
+  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.4);
 }
 
 .stepText {
@@ -380,7 +393,7 @@
   line-height: 1.6;
   color: var(--text-primary);
   margin: 0;
-  padding-top: 5px;
+  padding-top: 8px;
 }
 
 @media (max-width: 768px) {
@@ -424,5 +437,23 @@
 
   .ingredientIconPlaceholder {
     font-size: 1.25rem;
+  }
+
+  .stepItem {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .stepNumber {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    font-size: 1rem;
+  }
+
+  .stepText {
+    font-size: 0.95rem;
+    padding-top: 6px;
   }
 }
