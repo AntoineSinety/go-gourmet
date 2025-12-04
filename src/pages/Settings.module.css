@@ -231,6 +231,54 @@
   color: var(--error);
 }
 
+/* Invite Link */
+.inviteDescription {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0 0 0.75rem 0;
+}
+
+.inviteLinkContainer {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.inviteLinkInput {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  font-family: monospace;
+}
+
+.inviteLinkInput:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+}
+
+.copyButton {
+  padding: 0.75rem 1.25rem;
+  background-color: var(--accent-blue);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.copyButton:hover {
+  background-color: var(--accent-blue-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
 /* Members */
 .addButton {
   padding: 0.5rem 0.875rem;

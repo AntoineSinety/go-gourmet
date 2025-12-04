@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useHousehold } from '../contexts/HouseholdContext';
 import styles from './HouseholdSetup.module.css';
 
@@ -9,6 +9,21 @@ const HouseholdSetup = () => {
   const [householdId, setHouseholdId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isInviteLink, setIsInviteLink] = useState(false);
+
+  // Check for invite link parameter on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const joinId = params.get('join');
+
+    if (joinId) {
+      setHouseholdId(joinId);
+      setMode('join');
+      setIsInviteLink(true);
+      // Clean up URL without reloading the page
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   const handleCreateHousehold = async (e) => {
     e.preventDefault();
@@ -127,16 +142,18 @@ const HouseholdSetup = () => {
   return (
     <div className={styles.container}>
       <div className={styles.card}>
-        <button
-          onClick={() => setMode(null)}
-          className={styles.backButton}
-        >
-          ← Retour
-        </button>
+        {!isInviteLink && (
+          <button
+            onClick={() => setMode(null)}
+            className={styles.backButton}
+          >
+            ← Retour
+          </button>
+        )}
 
         <div className={styles.header}>
           <h1>Rejoindre un foyer</h1>
-          <p>Entrez l'ID du foyer partagé par un membre</p>
+          <p>{isInviteLink ? '🎉 Vous avez été invité à rejoindre un foyer !' : 'Entrez l\'ID du foyer partagé par un membre'}</p>
         </div>
 
         {error && <div className={styles.error}>{error}</div>}
@@ -150,11 +167,11 @@ const HouseholdSetup = () => {
               value={householdId}
               onChange={(e) => setHouseholdId(e.target.value)}
               placeholder="Collez l'ID du foyer ici"
-              autoFocus
+              autoFocus={!isInviteLink}
               disabled={loading}
             />
             <small className={styles.hint}>
-              L'ID vous a été communiqué par un membre du foyer
+              {isInviteLink ? 'Cliquez sur "Rejoindre" pour accéder au foyer partagé' : 'L\'ID vous a été communiqué par un membre du foyer'}
             </small>
           </div>
 

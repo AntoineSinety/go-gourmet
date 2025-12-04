@@ -178,6 +178,35 @@ const Settings = ({ onNavigate }) => {
         </div>
       </div>
 
+      {/* Invite Link */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>🔗 Inviter des membres</h2>
+        <div className={styles.card}>
+          <p className={styles.inviteDescription}>
+            Partagez ce lien pour inviter quelqu'un à rejoindre votre foyer
+          </p>
+          <div className={styles.inviteLinkContainer}>
+            <input
+              type="text"
+              value={`${window.location.origin}${window.location.pathname}?join=${household.id}`}
+              readOnly
+              className={styles.inviteLinkInput}
+              onClick={(e) => e.target.select()}
+            />
+            <button
+              onClick={() => {
+                const link = `${window.location.origin}${window.location.pathname}?join=${household.id}`;
+                navigator.clipboard.writeText(link);
+                alert('Lien copié dans le presse-papiers !');
+              }}
+              className={styles.copyButton}
+            >
+              📋 Copier
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Members */}
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
