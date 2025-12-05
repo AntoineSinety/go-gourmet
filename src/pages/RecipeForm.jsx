@@ -3,6 +3,7 @@ import { useRecipes } from '../contexts/RecipeContext';
 import { useIngredients, INGREDIENT_CATEGORIES } from '../contexts/IngredientContext';
 import IngredientSelector from '../components/IngredientSelector';
 import ImageUpload from '../components/ImageUpload';
+import VoiceInput from '../components/VoiceInput';
 import { UNITS } from '../utils/units';
 import { RECIPE_TYPES } from '../utils/recipeTypes';
 import { loadImageWithCache } from '../services/imageService';
@@ -360,12 +361,11 @@ const RecipeForm = ({ onCancel, onSuccess, recipeToEdit = null }) => {
                   <div className={styles.stepAccordionBody}>
                     <div className={styles.formGroup}>
                       <label>Instructions</label>
-                      <textarea
+                      <VoiceInput
                         value={step.instruction}
-                        onChange={(e) => handleUpdateStep(index, 'instruction', e.target.value)}
+                        onChange={(value) => handleUpdateStep(index, 'instruction', value)}
                         rows={4}
-                        placeholder="Décrivez cette étape..."
-                        required
+                        placeholder="Décrivez cette étape ou utilisez la dictée vocale..."
                         autoFocus
                       />
                     </div>
