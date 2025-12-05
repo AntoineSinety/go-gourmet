@@ -114,56 +114,43 @@ const MealSlot = ({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      {/* Image de fond si disponible */}
-      {meal.recipeImageUrl && (
-        <div
-          className={styles.mealImage}
-          style={{ backgroundImage: `url(${meal.recipeImageUrl})` }}
-        />
-      )}
-
-      {/* Contenu du meal slot */}
-      <div className={styles.mealContent}>
-        {/* Nom de la recette */}
-        <h4 className={styles.recipeName}>
-          {isCustomMeal && <span className={styles.customBadge}>✏️ </span>}
-          {meal.recipeName}
-        </h4>
-
-        {/* Informations */}
-        <div className={styles.mealInfo}>
-          {/* Nombre de personnes */}
-          <div
-            className={styles.servings}
-            onClick={(e) => {
-              if (!isPast) {
-                e.stopPropagation();
-                setShowServingsEdit(true);
-              }
-            }}
-            title={isPast ? "" : "Cliquer pour modifier"}
-          >
-            <span>{meal.servings || 2}p</span>
+      {/* Image en haut */}
+      <div className={styles.mealImageContainer}>
+        {meal.recipeImageUrl ? (
+          <img
+            src={meal.recipeImageUrl}
+            alt={meal.recipeName}
+            className={styles.mealImage}
+          />
+        ) : (
+          <div className={styles.mealImagePlaceholder}>
+            {recipeType.icon}
           </div>
+        )}
 
-          {/* Toggle liste de courses */}
-          {!isPast && (
-            <button
-              className={`${styles.shoppingButton} ${meal.skipShoppingList ? styles.shoppingSkipped : ''}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit && onEdit({
-                  ...meal,
-                  skipShoppingList: !meal.skipShoppingList
-                });
-              }}
-              title={meal.skipShoppingList ? "Réactiver dans la liste de courses" : "Retirer de la liste de courses (j'ai déjà tout)"}
-            >
-              🛒
-            </button>
-          )}
+        {/* Bouton supprimer en haut à droite */}
+        {!isPast && (
+          <button
+            className={styles.removeButton}
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove && onRemove();
+            }}
+            title="Retirer ce repas"
+          >
+            ✕
+          </button>
+        )}
+      </div>
 
-          {/* Badge multi-day si applicable */}
+      {/* Contenu à droite */}
+      <div className={styles.mealContent}>
+        {/* En-tête avec titre et badge multi-day */}
+        <div className={styles.mealHeader}>
+          <h4 className={styles.recipeName}>
+            {isCustomMeal && <span className={styles.customBadge}>✏️ </span>}
+            {meal.recipeName}
+          </h4>
           {meal.isMultiDay && (
             <div className={styles.multiDayBadge} title="Plat étalé sur plusieurs jours">
               <span className={styles.multiDayIcon}>📌</span>
@@ -174,18 +161,34 @@ const MealSlot = ({
           )}
         </div>
 
-        {/* Boutons d'action */}
+        {/* Boutons d'action uniformes en bas */}
         {!isPast && (
-          <div className={styles.actions}>
+          <div className={styles.actionButtons}>
             <button
-              className={`${styles.actionButton} ${styles.removeButton}`}
+              className={styles.actionBtn}
               onClick={(e) => {
                 e.stopPropagation();
-                onRemove && onRemove();
+                setShowServingsEdit(true);
               }}
-              title="Retirer"
+              title="Modifier le nombre de personnes"
             >
-              ✕
+              <span className={styles.actionIcon}>👥</span>
+              <span className={styles.actionText}>{meal.servings || 2}p</span>
+            </button>
+
+            <button
+              className={`${styles.actionBtn} ${meal.skipShoppingList ? styles.actionBtnInactive : styles.actionBtnActive}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit && onEdit({
+                  ...meal,
+                  skipShoppingList: !meal.skipShoppingList
+                });
+              }}
+              title={meal.skipShoppingList ? "Réactiver dans la liste de courses" : "Retirer de la liste de courses"}
+            >
+              <span className={styles.actionIcon}>🛒</span>
+              <span className={styles.actionText}>{meal.skipShoppingList ? 'Off' : 'On'}</span>
             </button>
           </div>
         )}

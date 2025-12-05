@@ -8,6 +8,7 @@ const IngredientSelector = ({ onSelect, onDeselect, selectedIngredients = [] }) 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [ingredientImages, setIngredientImages] = useState({});
   const [newIngredient, setNewIngredient] = useState({
     name: '',
@@ -64,7 +65,19 @@ const IngredientSelector = ({ onSelect, onDeselect, selectedIngredients = [] }) 
       // Sélectionner l'ingrédient
       onSelect(ingredient);
       setSearchTerm('');
+      setShowModal(false);
     }
+  };
+
+  const handleOpenModal = () => {
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSearchTerm('');
+    setSelectedCategory('all');
+    setShowAddForm(false);
   };
 
   const handleAddNewIngredient = async () => {
@@ -76,6 +89,7 @@ const IngredientSelector = ({ onSelect, onDeselect, selectedIngredients = [] }) 
       setNewIngredient({ name: '', category: 'fruits-legumes' });
       setShowAddForm(false);
       setSearchTerm('');
+      setShowModal(false);
     } catch (error) {
       console.error('Error adding ingredient:', error);
     }
@@ -83,136 +97,167 @@ const IngredientSelector = ({ onSelect, onDeselect, selectedIngredients = [] }) 
 
   return (
     <div className={styles.container}>
-      <div className={styles.searchBox}>
-        <input
-          type="text"
-          placeholder="Rechercher un ingrédient..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className={styles.searchInput}
-        />
+      <button
+        type="button"
+        onClick={handleOpenModal}
+        className={styles.addIngredientsButton}
+      >
+        + Ajouter des ingrédients
+      </button>
 
-        <div className={styles.categoryFilters}>
-          <button
-            type="button"
-            onClick={() => setSelectedCategory('all')}
-            className={`${styles.filterButton} ${selectedCategory === 'all' ? styles.active : ''}`}
-          >
-            Tous ({ingredients.length})
-          </button>
-          {INGREDIENT_CATEGORIES.map(category => {
-            const count = ingredients.filter(ing => ing.category === category.id).length;
-            if (count === 0) return null;
-            return (
+      {showModal && (
+        <div className={styles.modalOverlay} onClick={handleCloseModal}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3>Sélectionner des ingrédients</h3>
               <button
-                key={category.id}
                 type="button"
-                onClick={() => setSelectedCategory(category.id)}
-                className={`${styles.filterButton} ${selectedCategory === category.id ? styles.active : ''}`}
+                onClick={handleCloseModal}
+                className={styles.closeButton}
               >
-                {category.icon} {count}
+                ✕
               </button>
-            );
-          })}
-        </div>
-      </div>
+            </div>
 
-      {searchTerm && filteredIngredients.length === 0 && (
-        <div className={styles.noResults}>
-          <p>Aucun ingrédient trouvé pour "{searchTerm}"</p>
-          <button
-            type="button"
-            onClick={() => {
-              setNewIngredient({ ...newIngredient, name: searchTerm });
-              setShowAddForm(true);
-            }}
-            className={styles.addNewButton}
-          >
-            + Créer "{searchTerm}"
-          </button>
-        </div>
-      )}
+            <div className={styles.searchBox}>
+              <input
+                type="text"
+                placeholder="Rechercher un ingrédient..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={styles.searchInput}
+              />
 
-      {(searchTerm || selectedCategory !== 'all') && filteredIngredients.length > 0 && (
-        <div className={styles.suggestions}>
-          {ingredientsByCategory.map(category => (
-            <div key={category.id} className={styles.categoryGroup}>
-              <h4 className={styles.categoryHeader}>
-                {category.icon} {category.label}
-              </h4>
-              <div className={styles.ingredientGrid}>
-                {category.ingredients.map(ingredient => {
-                  const isSelected = selectedIds.includes(ingredient.id);
-
+              <div className={styles.categoryFilters}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategory('all')}
+                  className={`${styles.filterButton} ${selectedCategory === 'all' ? styles.active : ''}`}
+                >
+                  Tous ({ingredients.length})
+                </button>
+                {INGREDIENT_CATEGORIES.map(category => {
+                  const count = ingredients.filter(ing => ing.category === category.id).length;
+                  if (count === 0) return null;
                   return (
                     <button
-                      key={ingredient.id}
+                      key={category.id}
                       type="button"
-                      onClick={() => handleSelectIngredient(ingredient)}
-                      className={`${styles.ingredientCard} ${isSelected ? styles.selected : ''}`}
+                      onClick={() => setSelectedCategory(category.id)}
+                      className={`${styles.filterButton} ${selectedCategory === category.id ? styles.active : ''}`}
                     >
-                      <div className={styles.ingredientImage}>
-                        {ingredientImages[ingredient.id] ? (
-                          <img src={ingredientImages[ingredient.id]} alt={ingredient.name} />
-                        ) : (
-                          <div className={styles.placeholderImage}>{category.icon}</div>
-                        )}
-                        {isSelected && <span className={styles.selectedBadge}>✓</span>}
-                      </div>
-                      <div className={styles.ingredientInfo}>
-                        <span className={styles.ingredientName}>{ingredient.name}</span>
-                      </div>
+                      {category.icon} {count}
                     </button>
                   );
                 })}
               </div>
             </div>
-          ))}
-        </div>
-      )}
 
-      {showAddForm && (
-        <div className={styles.addForm}>
-          <h4>Nouvel ingrédient</h4>
-          <div>
-            <div className={styles.formGroup}>
-              <label>Nom</label>
-              <input
-                type="text"
-                value={newIngredient.name}
-                onChange={(e) => setNewIngredient({ ...newIngredient, name: e.target.value })}
-                autoFocus
-                required
-              />
-            </div>
-            <div className={styles.formGroup}>
-              <label>Catégorie</label>
-              <select
-                value={newIngredient.category}
-                onChange={(e) => setNewIngredient({ ...newIngredient, category: e.target.value })}
-              >
-                {INGREDIENT_CATEGORIES.map(cat => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.icon} {cat.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className={styles.formActions}>
-              <button
-                type="button"
-                onClick={handleAddNewIngredient}
-              >
-                Ajouter
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowAddForm(false)}
-                className={styles.cancelButton}
-              >
-                Annuler
-              </button>
-            </div>
+            {searchTerm && filteredIngredients.length === 0 && (
+              <div className={styles.noResults}>
+                <p>Aucun ingrédient trouvé pour "{searchTerm}"</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNewIngredient({ ...newIngredient, name: searchTerm });
+                    setShowAddForm(true);
+                  }}
+                  className={styles.addNewButton}
+                >
+                  + Créer "{searchTerm}"
+                </button>
+              </div>
+            )}
+
+            {showAddForm ? (
+              <div className={styles.addForm}>
+                <h4>Nouvel ingrédient</h4>
+                <div>
+                  <div className={styles.formGroup}>
+                    <label>Nom</label>
+                    <input
+                      type="text"
+                      value={newIngredient.name}
+                      onChange={(e) => setNewIngredient({ ...newIngredient, name: e.target.value })}
+                      autoFocus
+                      required
+                    />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label>Catégorie</label>
+                    <select
+                      value={newIngredient.category}
+                      onChange={(e) => setNewIngredient({ ...newIngredient, category: e.target.value })}
+                    >
+                      {INGREDIENT_CATEGORIES.map(cat => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.icon} {cat.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className={styles.formActions}>
+                    <button
+                      type="button"
+                      onClick={handleAddNewIngredient}
+                    >
+                      Ajouter
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddForm(false)}
+                      className={styles.cancelButton}
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className={styles.ingredientsScrollArea}>
+                {(searchTerm || selectedCategory !== 'all') && filteredIngredients.length > 0 ? (
+                  <div className={styles.ingredientsList}>
+                    {ingredientsByCategory.map(category => (
+                      <div key={category.id} className={styles.categoryGroup}>
+                        <h4 className={styles.categoryHeader}>
+                          {category.icon} {category.label}
+                        </h4>
+                        <div className={styles.ingredientGrid}>
+                          {category.ingredients.map(ingredient => {
+                            const isSelected = selectedIds.includes(ingredient.id);
+
+                            return (
+                              <button
+                                key={ingredient.id}
+                                type="button"
+                                onClick={() => handleSelectIngredient(ingredient)}
+                                className={`${styles.ingredientCard} ${isSelected ? styles.selected : ''}`}
+                              >
+                                <div className={styles.ingredientImage}>
+                                  {ingredientImages[ingredient.id] ? (
+                                    <img src={ingredientImages[ingredient.id]} alt={ingredient.name} />
+                                  ) : (
+                                    <div className={styles.placeholderImage}>{category.icon}</div>
+                                  )}
+                                  {isSelected && <span className={styles.selectedBadge}>✓</span>}
+                                </div>
+                                <div className={styles.ingredientInfo}>
+                                  <span className={styles.ingredientName}>{ingredient.name}</span>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className={styles.emptyState}>
+                    <p>Recherchez ou sélectionnez une catégorie pour afficher les ingrédients</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -73,6 +73,11 @@
 .slot.filled {
   border-color: var(--accent-blue);
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
 }
 
 .slot.filled:hover {
@@ -80,28 +85,53 @@
   transform: translateY(-2px);
 }
 
-.mealImage {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  opacity: 0.3;
-  z-index: 0;
+/* Image en haut avec overlay */
+.mealImageContainer {
+  width: 100%;
+  height: 80px;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--bg-tertiary);
 }
 
+.mealImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mealImagePlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+}
+
+/* Contenu en bas */
 .mealContent {
-  position: relative;
-  z-index: 1;
-  padding: 1rem;
+  flex: 1;
+  padding: 0.75rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  height: 100%;
+  min-width: 0;
+}
+
+/* En-tête avec titre et badge */
+.mealHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: auto;
 }
 
 /* Nom de la recette */
 .recipeName {
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
@@ -111,140 +141,120 @@
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-}
-
-/* Informations du meal */
-.mealInfo {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-top: auto;
-}
-
-.servings {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  background-color: var(--accent-blue);
-  border-radius: 12px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-}
-
-.servings:hover {
-  background-color: #2563eb;
-  border-color: rgba(0, 0, 0, 0.2);
-  color: white;
-  transform: scale(1.08);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
-}
-
-/* Bouton liste de courses */
-.shoppingButton {
-  padding: 0.25rem 0.5rem;
-  background-color: rgba(34, 197, 94, 0.15);
-  border: 1px solid rgba(34, 197, 94, 0.4);
-  border-radius: 12px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.shoppingButton:hover {
-  background-color: rgba(34, 197, 94, 0.25);
-  border-color: rgba(34, 197, 94, 0.6);
-  transform: scale(1.08);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-}
-
-.shoppingButton.shoppingSkipped {
-  background-color: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  opacity: 0.6;
-}
-
-.shoppingButton.shoppingSkipped:hover {
-  background-color: rgba(239, 68, 68, 0.25);
-  border-color: rgba(239, 68, 68, 0.6);
-  opacity: 1;
+  flex: 1;
 }
 
 /* Badge multi-day */
 .multiDayBadge {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.75rem;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
   background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.3) 100%);
   border: 1px solid rgba(34, 197, 94, 0.5);
-  border-radius: 20px;
-  font-size: 0.875rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
   font-weight: 600;
   color: #22c55e;
+  flex-shrink: 0;
 }
 
 .multiDayIcon {
-  font-size: 0.95rem;
+  font-size: 0.8rem;
 }
 
 .multiDayText {
   line-height: 1;
+  font-size: 0.7rem;
 }
 
-/* Boutons d'action */
-.actions {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
+/* Boutons d'action uniformes */
+.actionButtons {
   display: flex;
-  gap: 0.5rem;
-  opacity: 0;
-  transition: all 0.25s ease;
+  gap: 0.4rem;
+  margin-top: auto;
 }
 
-.slot.filled:hover .actions {
+.actionBtn {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.6rem 0.4rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 0;
+}
+
+.actionBtn:hover {
+  transform: scale(1.03);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.actionIcon {
+  font-size: 1rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.actionText {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Variantes de boutons */
+.actionBtnActive {
+  background-color: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.actionBtnActive .actionIcon {
+  color: #22c55e;
+}
+
+.actionBtnActive:hover {
+  background-color: rgba(34, 197, 94, 0.25);
+  border-color: rgba(34, 197, 94, 0.6);
+}
+
+.actionBtnInactive {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  opacity: 0.8;
+}
+
+.actionBtnInactive .actionIcon {
+  color: #ef4444;
+}
+
+.actionBtnInactive:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
   opacity: 1;
 }
 
-.actionButton {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background-color: rgba(255, 255, 255, 0.95);
-  color: var(--text-primary);
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(4px);
+.actionBtnDanger {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
-.actionButton:hover {
-  transform: scale(1.15);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+.actionBtnDanger .actionIcon {
+  color: #ef4444;
 }
 
-.removeButton {
-  background-color: var(--error, #ef4444);
-  color: white;
-  border-color: rgba(0, 0, 0, 0.2);
-}
-
-.removeButton:hover {
-  background-color: #dc2626;
-  transform: scale(1.15);
+.actionBtnDanger:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
 }
 
 /* Modal d'édition des portions */
@@ -342,40 +352,53 @@
 /* Responsive mobile */
 @media (max-width: 768px) {
   .slot {
-    min-height: 150px;
+    min-height: 140px;
+  }
+
+  .mealImageContainer {
+    height: 70px;
+  }
+
+  .mealImagePlaceholder {
+    font-size: 2rem;
   }
 
   .mealContent {
-    padding: 1rem;
+    padding: 0.65rem;
   }
 
   .recipeName {
-    font-size: 1.1rem;
-    font-weight: 600;
-    line-height: 1.3;
-    margin-bottom: 0.5rem;
-  }
-
-  .actions {
-    opacity: 1;
-  }
-
-  .actionButton {
-    width: 32px;
-    height: 32px;
-    font-size: 1.1rem;
-  }
-
-  .mealInfo {
     font-size: 0.9rem;
-    gap: 0.5rem;
   }
 
-  .servings,
+  .actionButtons {
+    gap: 0.3rem;
+  }
+
+  .actionBtn {
+    padding: 0.5rem 0.3rem;
+    gap: 0.3rem;
+  }
+
+  .actionIcon {
+    font-size: 0.95rem;
+  }
+
+  .actionText {
+    font-size: 0.7rem;
+  }
+
   .multiDayBadge {
-    font-size: 0.85rem;
-    padding: 0.35rem 0.75rem;
-    font-weight: 600;
+    font-size: 0.65rem;
+    padding: 0.2rem 0.4rem;
+  }
+
+  .multiDayIcon {
+    font-size: 0.7rem;
+  }
+
+  .multiDayText {
+    font-size: 0.65rem;
   }
 
   .emptyLabel {
@@ -401,6 +424,41 @@
 .slot.customMeal:hover {
   cursor: default;
   transform: none;
+}
+
+/* Remove button in top-right corner of image */
+.removeButton {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  border-radius: 50%;
+  background-color: rgba(239, 68, 68, 0.9);
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s ease;
+  z-index: 10;
+  padding: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.slot.filled:hover .removeButton {
+  opacity: 1;
+}
+
+.removeButton:hover {
+  background-color: #dc2626;
+  transform: scale(1.15);
 }
 
 /* Drag and drop styling */
