@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useMealPlan } from '../contexts/MealPlanContext';
 import { useRecipes } from '../contexts/RecipeContext';
+import { ShoppingCart, X } from 'lucide-react';
 import styles from './ShoppingList.module.css';
 
 const ShoppingList = () => {
@@ -8,6 +9,7 @@ const ShoppingList = () => {
   const { recipes, loading: recipesLoading } = useRecipes();
   const [checkedItems, setCheckedItems] = useState({});
   const [showAddForm, setShowAddForm] = useState(false);
+  const [shoppingMode, setShoppingMode] = useState(false);
   const [newItem, setNewItem] = useState({
     name: '',
     category: 'Autres',
@@ -275,6 +277,92 @@ const ShoppingList = () => {
     'Autres'
   ];
 
+  // Mode Shopping Full Screen
+  if (shoppingMode) {
+    return (
+      <div className={styles.shoppingModeContainer}>
+        {/* Header Mode Course */}
+        <div className={styles.shoppingModeHeader}>
+          <div className={styles.shoppingModeTitle}>
+            <ShoppingCart size={18} strokeWidth={2} />
+            <h1>Mode Course</h1>
+          </div>
+          <button
+            onClick={() => setShoppingMode(false)}
+            className={styles.exitShoppingMode}
+            title="Quitter le mode course"
+          >
+            <X size={20} strokeWidth={2} />
+          </button>
+        </div>
+
+        {/* Progress Bar */}
+        <div className={styles.shoppingModeProgress}>
+          <div className={styles.progressText}>
+            {checkedCount} / {totalItems} articles
+          </div>
+          <div className={styles.progressBarContainer}>
+            <div
+              className={styles.progressBar}
+              style={{ width: `${totalItems > 0 ? (checkedCount / totalItems) * 100 : 0}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Liste simplifiée par catégorie */}
+        <div className={styles.shoppingModeList}>
+          {shoppingList.map(({ category, items }) => (
+            <div key={category} className={styles.shoppingModeCategory}>
+              <div className={styles.shoppingModeCategoryHeader}>
+                <span>{categoryEmojis[category] || '📦'}</span>
+                <h2>{category}</h2>
+                <span className={styles.shoppingModeCategoryCount}>
+                  {items.filter(item => {
+                    const itemKey = item.isPermanent ? item.id : `${category}_${item.name}`;
+                    return checkedItems[itemKey];
+                  }).length}/{items.length}
+                </span>
+              </div>
+              <div className={styles.shoppingModeItems}>
+                {items.map((item, index) => {
+                  const itemKey = item.isPermanent ? item.id : `${category}_${item.name}`;
+                  const isChecked = checkedItems[itemKey];
+
+                  return (
+                    <div
+                      key={index}
+                      className={`${styles.shoppingModeItem} ${isChecked ? styles.shoppingModeItemChecked : ''}`}
+                      onClick={() => toggleItem(category, item.name, item.isPermanent ? item.id : null)}
+                    >
+                      <div className={styles.shoppingModeCheckbox}>
+                        {isChecked && (
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        )}
+                      </div>
+                      <div className={styles.shoppingModeItemContent}>
+                        <div className={styles.shoppingModeItemName}>{item.name}</div>
+                        {item.quantity && (
+                          <div className={styles.shoppingModeItemQuantity}>
+                            {Number.isInteger(item.quantity)
+                              ? item.quantity
+                              : item.quantity.toFixed(1)
+                            } {item.unit}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.container}>
       {/* Header */}
@@ -286,6 +374,13 @@ const ShoppingList = () => {
           </p>
         </div>
         <div className={styles.headerButtons}>
+          <button
+            onClick={() => setShoppingMode(true)}
+            className={styles.shoppingModeButton}
+          >
+            <ShoppingCart size={18} strokeWidth={2} />
+            Mode Course
+          </button>
           <button
             onClick={() => setShowAddForm(!showAddForm)}
             className={styles.addButton}

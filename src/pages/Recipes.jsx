@@ -1,8 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useRecipes } from '../contexts/RecipeContext';
 import { getRecipeTypeById, RECIPE_TYPES } from '../utils/recipeTypes';
+import { getTagsByIds, RECIPE_TAGS } from '../utils/recipeTags';
 import { useScrollRestoration, useUrlPersistedState } from '../hooks/useScrollRestoration';
+import { Filter } from 'lucide-react';
 import styles from './Recipes.module.css';
+
+// Fonction pour obtenir la couleur du badge selon le type de recette
+const getTypeBadgeColor = (typeId) => {
+  const colors = {
+    'entree': '#14b8a6',    // Teal
+    'plat': '#f97316',      // Orange
+    'dessert': '#ec4899',   // Pink
+    'appetizer': '#8b5cf6', // Purple
+    'breakfast': '#eab308', // Yellow
+    'snack': '#22c55e'      // Green
+  };
+  return colors[typeId] || '#f97316';
+};
 
 const Recipes = ({ onSelectRecipe, onCreateRecipe }) => {
   const { recipes, loading } = useRecipes();
@@ -39,6 +54,7 @@ const Recipes = ({ onSelectRecipe, onCreateRecipe }) => {
     searchTerm: '',
     searchMode: 'name',
     selectedType: 'all',
+    selectedTags: [],
     viewMode: 'grid'
   }, {
     serializeToUrl,
@@ -48,6 +64,7 @@ const Recipes = ({ onSelectRecipe, onCreateRecipe }) => {
   const [searchTerm, setSearchTerm] = useState(persistedFilters.searchTerm);
   const [searchMode, setSearchMode] = useState(persistedFilters.searchMode);
   const [selectedType, setSelectedType] = useState(persistedFilters.selectedType);
+  const [selectedTags, setSelectedTags] = useState(persistedFilters.selectedTags || []);
   // Ensure viewMode is always 'grid' or 'list'
   const [viewMode, setViewMode] = useState(
     (persistedFilters.viewMode === 'grid' || persistedFilters.viewMode === 'list')
@@ -64,13 +81,18 @@ const Recipes = ({ onSelectRecipe, onCreateRecipe }) => {
       searchTerm,
       searchMode,
       selectedType,
+      selectedTags,
       viewMode
     });
-  }, [searchTerm, searchMode, selectedType, viewMode, setPersistedFilters]);
+  }, [searchTerm, searchMode, selectedType, selectedTags, viewMode, setPersistedFilters]);
 
   const filteredRecipes = recipes.filter(recipe => {
     // Filter by type
     const matchesType = selectedType === 'all' || recipe.type === selectedType;
+
+    // Filter by tags
+    const matchesTags = selectedTags.length === 0 ||
+      selectedTags.every(tag => recipe.tags?.includes(tag));
 
     // Filter by search term
     let matchesSearch = true;
@@ -85,15 +107,16 @@ const Recipes = ({ onSelectRecipe, onCreateRecipe }) => {
       }
     }
 
-    return matchesSearch && matchesType;
+    return matchesSearch && matchesType && matchesTags;
   });
 
   const clearAllFilters = () => {
     setSearchTerm('');
     setSelectedType('all');
+    setSelectedTags([]);
   };
 
-  const hasActiveFilters = searchTerm !== '' || selectedType !== 'all';
+  const hasActiveFilters = searchTerm !== '' || selectedType !== 'all' || selectedTags.length > 0;
 
   if (loading) {
     return (
@@ -181,6 +204,71 @@ const Recipes = ({ onSelectRecipe, onCreateRecipe }) => {
                 </button>
               );
             })}
+          </div>
+
+          {/* Tags Filter */}
+          {selectedTags.length > 0 && (
+            <div className={styles.selectedTagsContainer}>
+              <span className={styles.selectedTagsLabel}>
+                <Filter size={14} strokeWidth={2} />
+                Tags:
+              </span>
+              <div className={styles.selectedTagsList}>
+                {getTagsByIds(selectedTags).map(tag => {
+                  const TagIcon = tag.IconComponent;
+                  return (
+                    <button
+                      key={tag.id}
+                      onClick={() => setSelectedTags(selectedTags.filter(t => t !== tag.id))}
+                      className={styles.selectedTagChip}
+                      style={{
+                        backgroundColor: tag.bgColor,
+                        borderColor: tag.color,
+                        color: tag.color
+                      }}
+                    >
+                      <TagIcon size={12} strokeWidth={2.5} />
+                      {tag.label}
+                      <span className={styles.removeTagIcon}>×</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <div className={styles.tagsFilterRow}>
+            <div className={styles.tagsFilterButtons}>
+              {RECIPE_TAGS.map(tag => {
+                const isSelected = selectedTags.includes(tag.id);
+                const TagIcon = tag.IconComponent;
+                const recipesWithTag = recipes.filter(r => r.tags?.includes(tag.id)).length;
+
+                if (recipesWithTag === 0) return null;
+
+                return (
+                  <button
+                    key={tag.id}
+                    onClick={() => {
+                      if (isSelected) {
+                        setSelectedTags(selectedTags.filter(t => t !== tag.id));
+                      } else {
+                        setSelectedTags([...selectedTags, tag.id]);
+                      }
+                    }}
+                    className={`${styles.tagFilterButton} ${isSelected ? styles.tagFilterActive : ''}`}
+                    style={{
+                      borderColor: isSelected ? tag.color : 'var(--border-color)',
+                      backgroundColor: isSelected ? tag.bgColor : 'transparent',
+                      color: isSelected ? tag.color : 'var(--text-secondary)'
+                    }}
+                  >
+                    <TagIcon size={14} strokeWidth={2} />
+                    {tag.label} ({recipesWithTag})
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className={styles.rightControls}>
@@ -297,14 +385,39 @@ const Recipes = ({ onSelectRecipe, onCreateRecipe }) => {
                   }}
                 >
                   {recipeType && (
-                    <div className={styles.recipeTypeBadge}>
-                      <span className={styles.recipeTypeIcon}>{recipeType.icon}</span>
+                    <div
+                      className={styles.recipeTypeBadge}
+                      style={{ backgroundColor: getTypeBadgeColor(recipeType.id) }}
+                    >
                       <span className={styles.recipeTypeLabel}>{recipeType.label}</span>
                     </div>
                   )}
 
                   <div className={styles.recipeOverlay}>
                     <div className={styles.recipeContent}>
+                      {recipe.tags && recipe.tags.length > 0 && (
+                        <div className={styles.recipeTags}>
+                          {getTagsByIds(recipe.tags).slice(0, 2).map(tag => {
+                            const TagIcon = tag.IconComponent;
+                            return (
+                              <span
+                                key={tag.id}
+                                className={styles.recipeTag}
+                                style={{
+                                  backgroundColor: tag.color,
+                                  boxShadow: `0 2px 8px ${tag.color}40`
+                                }}
+                              >
+                                <TagIcon size={12} strokeWidth={2.5} />
+                                {tag.label}
+                              </span>
+                            );
+                          })}
+                          {recipe.tags.length > 2 && (
+                            <span className={styles.moreTagsIndicator}>+{recipe.tags.length - 2}</span>
+                          )}
+                        </div>
+                      )}
                       <h3 className={styles.recipeName}>{recipe.name}</h3>
                       <div className={styles.recipeMetaInfo}>
                         <span className={styles.servings}>

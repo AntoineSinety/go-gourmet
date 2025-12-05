@@ -6,6 +6,7 @@ import ImageUpload from '../components/ImageUpload';
 import VoiceInput from '../components/VoiceInput';
 import { UNITS } from '../utils/units';
 import { RECIPE_TYPES } from '../utils/recipeTypes';
+import { RECIPE_TAGS } from '../utils/recipeTags';
 import { loadImageWithCache } from '../services/imageService';
 import styles from './RecipeForm.module.css';
 
@@ -25,7 +26,8 @@ const RecipeForm = ({ onCancel, onSuccess, recipeToEdit = null }) => {
       type: 'plat',
       servings: 4,
       ingredients: [],
-      steps: [{ order: 0, instruction: '', ingredientIds: [] }]
+      steps: [{ order: 0, instruction: '', ingredientIds: [] }],
+      tags: []
     }
   );
 
@@ -221,6 +223,39 @@ const RecipeForm = ({ onCancel, onSuccess, recipeToEdit = null }) => {
               onChange={(e) => setRecipe({ ...recipe, servings: parseInt(e.target.value) })}
               required
             />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label>Tags (optionnel)</label>
+            <div className={styles.tagsSelector}>
+              {RECIPE_TAGS.map(tag => {
+                const isSelected = recipe.tags?.includes(tag.id);
+                const TagIcon = tag.IconComponent;
+
+                return (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => {
+                      const currentTags = recipe.tags || [];
+                      const newTags = isSelected
+                        ? currentTags.filter(t => t !== tag.id)
+                        : [...currentTags, tag.id];
+                      setRecipe({ ...recipe, tags: newTags });
+                    }}
+                    className={`${styles.tagButton} ${isSelected ? styles.tagSelected : ''}`}
+                    style={{
+                      borderColor: isSelected ? tag.color : 'var(--border-color)',
+                      backgroundColor: isSelected ? tag.bgColor : 'transparent',
+                      color: isSelected ? tag.color : 'var(--text-secondary)'
+                    }}
+                  >
+                    <TagIcon size={16} strokeWidth={2} />
+                    <span>{tag.label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 

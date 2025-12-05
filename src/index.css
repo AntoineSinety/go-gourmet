@@ -15,6 +15,15 @@
   --accent-green: #22c55e;
   --accent-green-hover: #16a34a;
 
+  --accent-purple: #8b5cf6;
+  --accent-purple-hover: #7c3aed;
+  --accent-purple-light: #a78bfa;
+
+  --accent-pink: #ec4899;
+  --accent-orange: #f97316;
+  --accent-yellow: #eab308;
+  --accent-teal: #14b8a6;
+
   --border-color: #2a3547;
   --success: #10b981;
   --error: #ef4444;

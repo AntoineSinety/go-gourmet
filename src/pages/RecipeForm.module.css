@@ -96,6 +96,36 @@
   width: 100%;
 }
 
+/* Tags Selector */
+.tagsSelector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.tagButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  border: 2px solid var(--border-color);
+  background-color: transparent;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tagButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.tagButton.tagSelected {
+  font-weight: 600;
+}
+
 .ingredientsList {
   margin-top: 1.5rem;
   display: flex;

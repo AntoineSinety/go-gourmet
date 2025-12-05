@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRecipes } from '../contexts/RecipeContext';
 import { useIngredients, INGREDIENT_CATEGORIES } from '../contexts/IngredientContext';
 import { getRecipeTypeById } from '../utils/recipeTypes';
+import { getTagsByIds } from '../utils/recipeTags';
 import { loadImageWithCache } from '../services/imageService';
 import styles from './RecipeDetail.module.css';
 
@@ -112,6 +113,29 @@ const RecipeDetail = ({ recipeId, onClose, onStartCooking, onEdit, onDelete }) =
       {/* Title & Meta */}
       <div className={styles.titleSection}>
         <h1 className={styles.title}>{recipe.name}</h1>
+
+        {recipe.tags && recipe.tags.length > 0 && (
+          <div className={styles.tagsContainer}>
+            {getTagsByIds(recipe.tags).map(tag => {
+              const TagIcon = tag.IconComponent;
+              return (
+                <span
+                  key={tag.id}
+                  className={styles.tag}
+                  style={{
+                    color: tag.color,
+                    backgroundColor: tag.bgColor,
+                    borderColor: tag.borderColor
+                  }}
+                >
+                  <TagIcon size={14} strokeWidth={2.5} />
+                  {tag.label}
+                </span>
+              );
+            })}
+          </div>
+        )}
+
         <div className={styles.metaBar}>
           <span>👥 {recipe.servings}</span>
         </div>
