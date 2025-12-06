@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import styles from './VoiceInput.module.css';
 
@@ -11,6 +11,7 @@ const VoiceInput = ({ value, onChange, placeholder, rows = 4, autoFocus = false 
   } = useSpeechRecognition();
 
   const initialValueRef = useRef('');
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (listening && transcript) {
@@ -22,20 +23,35 @@ const VoiceInput = ({ value, onChange, placeholder, rows = 4, autoFocus = false 
     }
   }, [transcript, listening]);
 
-  const startListening = () => {
-    // Sauvegarder la valeur actuelle avant de commencer
-    initialValueRef.current = value || '';
-    resetTranscript();
-    SpeechRecognition.startListening({
-      language: 'fr-FR',
-      continuous: true
-    });
+  const startListening = async () => {
+    try {
+      setError(null);
+
+      // Demander la permission du microphone explicitement
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // Sauvegarder la valeur actuelle avant de commencer
+      initialValueRef.current = value || '';
+      resetTranscript();
+
+      await SpeechRecognition.startListening({
+        language: 'fr-FR',
+        continuous: true
+      });
+    } catch (err) {
+      console.error('Erreur reconnaissance vocale:', err);
+      setError("Impossible d'accéder au microphone. Vérifiez les permissions.");
+
+      // Arrêter l'écoute en cas d'erreur
+      SpeechRecognition.stopListening();
+    }
   };
 
   const stopListening = () => {
     SpeechRecognition.stopListening();
     resetTranscript();
     initialValueRef.current = '';
+    setError(null);
   };
 
   if (!browserSupportsSpeechRecognition) {
@@ -72,6 +88,11 @@ const VoiceInput = ({ value, onChange, placeholder, rows = 4, autoFocus = false 
         <div className={styles.listeningIndicator}>
           <span className={styles.pulse}></span>
           <span className={styles.listeningText}>Dictée en cours...</span>
+        </div>
+      )}
+      {error && (
+        <div className={styles.errorMessage}>
+          {error}
         </div>
       )}
     </div>
