@@ -149,6 +149,19 @@ const Settings = ({ onNavigate }) => {
             </div>
             <span className={styles.pageArrow}>›</span>
           </button>
+          <button
+            className={styles.pageButton}
+            onClick={() => onNavigate && onNavigate('migrate')}
+          >
+            <div className={styles.pageInfo}>
+              <span className={styles.pageIcon}>🔄</span>
+              <div className={styles.pageText}>
+                <span className={styles.pageName}>Migration articles</span>
+                <span className={styles.pageDescription}>Récupérer les articles permanents</span>
+              </div>
+            </div>
+            <span className={styles.pageArrow}>›</span>
+          </button>
         </div>
       </div>
 

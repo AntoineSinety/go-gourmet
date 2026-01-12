@@ -61,6 +61,21 @@ export default defineConfig({
                 statuses: [0, 200]
               }
             }
+          },
+          {
+            // Cache Firebase Storage images (recipe/ingredient images)
+            urlPattern: /^https:\/\/firebasestorage\.googleapis\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'firebase-images-cache',
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 jours
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
           }
         ]
       }

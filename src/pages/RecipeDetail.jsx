@@ -3,16 +3,14 @@ import { useRecipes } from '../contexts/RecipeContext';
 import { useIngredients, INGREDIENT_CATEGORIES } from '../contexts/IngredientContext';
 import { getRecipeTypeById } from '../utils/recipeTypes';
 import { getTagsByIds } from '../utils/recipeTags';
-import { loadImageWithCache } from '../services/imageService';
+import OptimizedImage from '../components/OptimizedImage';
 import styles from './RecipeDetail.module.css';
 
 const RecipeDetail = ({ recipeId, onClose, onStartCooking, onEdit, onDelete }) => {
-  const [imageUrl, setImageUrl] = useState(null);
   const { getRecipe } = useRecipes();
   const { ingredients: allIngredients } = useIngredients();
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [ingredientImages, setIngredientImages] = useState({});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleDelete = async () => {
@@ -27,31 +25,17 @@ const RecipeDetail = ({ recipeId, onClose, onStartCooking, onEdit, onDelete }) =
     }
   };
 
+  // Helper pour obtenir l'image d'un ingrédient
+  const getIngredientImageUrl = (ingredientId) => {
+    const fullIngredient = allIngredients.find(ing => ing.id === ingredientId);
+    return fullIngredient?.imageUrl || null;
+  };
+
   useEffect(() => {
     const loadRecipe = async () => {
       try {
         const data = await getRecipe(recipeId);
         setRecipe(data);
-
-        if (data?.imageUrl) {
-          const cachedUrl = await loadImageWithCache(data.imageUrl);
-          setImageUrl(cachedUrl);
-        }
-
-        // Charger les images des ingrédients
-        if (data?.ingredients) {
-          const images = {};
-          for (const recipeIngredient of data.ingredients) {
-            const fullIngredient = allIngredients.find(
-              ing => ing.id === recipeIngredient.ingredientId
-            );
-            if (fullIngredient?.imageUrl) {
-              const cachedUrl = await loadImageWithCache(fullIngredient.imageUrl);
-              images[recipeIngredient.ingredientId] = cachedUrl;
-            }
-          }
-          setIngredientImages(images);
-        }
       } catch (error) {
         console.error('Error loading recipe:', error);
       } finally {
@@ -60,7 +44,7 @@ const RecipeDetail = ({ recipeId, onClose, onStartCooking, onEdit, onDelete }) =
     };
 
     loadRecipe();
-  }, [recipeId, getRecipe, allIngredients]);
+  }, [recipeId, getRecipe]);
 
   if (loading) {
     return (
@@ -95,13 +79,12 @@ const RecipeDetail = ({ recipeId, onClose, onStartCooking, onEdit, onDelete }) =
 
       {/* Header avec image */}
       <div className={styles.heroSection}>
-        {imageUrl ? (
-          <img src={imageUrl} alt={recipe.name} className={styles.heroImage} />
-        ) : (
-          <div className={styles.heroPlaceholder}>
-            <span className={styles.heroIcon}>🍳</span>
-          </div>
-        )}
+        <OptimizedImage
+          src={recipe.imageUrl}
+          alt={recipe.name}
+          className={styles.heroImage}
+          fallbackIcon="🍳"
+        />
         {recipeType && (
           <div className={styles.typeBadge}>
             <span>{recipeType.icon}</span>
@@ -196,17 +179,12 @@ const RecipeDetail = ({ recipeId, onClose, onStartCooking, onEdit, onDelete }) =
             <div className={styles.ingredientsList}>
               {category.ingredients.map((ingredient, index) => (
                 <div key={index} className={styles.ingredientItem}>
-                  {ingredientImages[ingredient.ingredientId] ? (
-                    <img
-                      src={ingredientImages[ingredient.ingredientId]}
-                      alt={ingredient.name}
-                      className={styles.ingredientImage}
-                    />
-                  ) : (
-                    <div className={styles.ingredientIconPlaceholder}>
-                      {category.icon}
-                    </div>
-                  )}
+                  <OptimizedImage
+                    src={getIngredientImageUrl(ingredient.ingredientId)}
+                    alt={ingredient.name}
+                    className={styles.ingredientImage}
+                    fallbackIcon={category.icon}
+                  />
                   <span className={styles.ingredientName}>{ingredient.name}</span>
                   <span className={styles.ingredientQuantity}>
                     {ingredient.quantity} {ingredient.unit}

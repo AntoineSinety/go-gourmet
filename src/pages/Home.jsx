@@ -11,6 +11,7 @@ import Ingredients from './Ingredients';
 import Planning from './Planning';
 import ShoppingList from './ShoppingList';
 import Settings from './Settings';
+import MigratePermanentItems from './MigratePermanentItems';
 import styles from './Home.module.css';
 
 const Home = () => {
@@ -191,6 +192,8 @@ const Home = () => {
         {currentView === 'shopping' && <ShoppingList />}
 
         {currentView === 'settings' && <Settings onNavigate={setCurrentView} />}
+
+        {currentView === 'migrate' && <MigratePermanentItems />}
 
         {currentView === 'createRecipe' && (
           <RecipeForm

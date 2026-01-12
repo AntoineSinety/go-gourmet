@@ -1,12 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useMealPlan } from '../contexts/MealPlanContext';
 import { useRecipes } from '../contexts/RecipeContext';
+import { usePermanentItems } from '../contexts/PermanentItemsContext';
 import { ShoppingCart, X } from 'lucide-react';
 import styles from './ShoppingList.module.css';
 
 const ShoppingList = () => {
-  const { mealPlan, loading: mealPlanLoading, addPermanentItem, deletePermanentItem, updateCheckedItems } = useMealPlan();
+  const { mealPlan, loading: mealPlanLoading, updateCheckedItems } = useMealPlan();
   const { recipes, loading: recipesLoading } = useRecipes();
+  const { permanentItems, loading: permanentItemsLoading, addPermanentItem, deletePermanentItem } = usePermanentItems();
   const [checkedItems, setCheckedItems] = useState({});
   const [showAddForm, setShowAddForm] = useState(false);
   const [shoppingMode, setShoppingMode] = useState(false);
@@ -114,7 +116,7 @@ const ShoppingList = () => {
     const ingredientsList = Object.values(ingredientMap);
 
     // Ajouter les items permanents NON cochés à leur catégorie d'origine
-    const permanentItems = mealPlan.permanentItems || [];
+    const permanentItemsList = permanentItems || [];
 
     // Grouper par catégorie (items from recipes + items permanents non cochés)
     const grouped = ingredientsList.reduce((acc, item) => {
@@ -126,7 +128,7 @@ const ShoppingList = () => {
     }, {});
 
     // Ajouter les items permanents NON cochés à leurs catégories
-    permanentItems.forEach(item => {
+    permanentItemsList.forEach(item => {
       const itemKey = item.id;
       const isChecked = checkedItems[itemKey];
 
@@ -144,7 +146,7 @@ const ShoppingList = () => {
     });
 
     // Créer une catégorie spéciale pour les items permanents cochés
-    const checkedPermanent = permanentItems.filter(item => checkedItems[item.id]);
+    const checkedPermanent = permanentItemsList.filter(item => checkedItems[item.id]);
     if (checkedPermanent.length > 0) {
       grouped['✓ Cochés'] = checkedPermanent.map(item => ({
         ...item,
@@ -163,7 +165,7 @@ const ShoppingList = () => {
       if (b.category === '✓ Cochés') return -1;
       return a.category.localeCompare(b.category);
     });
-  }, [mealPlan, recipes, checkedItems]);
+  }, [mealPlan, recipes, checkedItems, permanentItems]);
 
   const toggleItem = async (category, itemName, itemId) => {
     const key = itemId || `${category}_${itemName}`;
@@ -230,7 +232,7 @@ const ShoppingList = () => {
     }
   };
 
-  const loading = mealPlanLoading || recipesLoading;
+  const loading = mealPlanLoading || recipesLoading || permanentItemsLoading;
 
   if (loading) {
     return (

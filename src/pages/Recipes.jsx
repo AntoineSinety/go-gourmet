@@ -4,6 +4,7 @@ import { getRecipeTypeById, RECIPE_TYPES } from '../utils/recipeTypes';
 import { getTagsByIds, RECIPE_TAGS } from '../utils/recipeTags';
 import { useScrollRestoration, useUrlPersistedState } from '../hooks/useScrollRestoration';
 import { Filter } from 'lucide-react';
+import OptimizedImage from '../components/OptimizedImage';
 import styles from './Recipes.module.css';
 
 // Fonction pour obtenir la couleur du badge selon le type de recette
@@ -333,18 +334,12 @@ const Recipes = ({ onSelectRecipe, onCreateRecipe }) => {
                   className={styles.recipeListItem}
                   onClick={() => onSelectRecipe(recipe.id)}
                 >
-                  <div
+                  <OptimizedImage
+                    src={recipe.imageUrl}
                     className={styles.recipeListImage}
-                    style={{
-                      backgroundImage: recipe.imageUrl
-                        ? `url(${recipe.imageUrl})`
-                        : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                    }}
-                  >
-                    {!recipe.imageUrl && (
-                      <div className={styles.placeholderIconSmall}>🍳</div>
-                    )}
-                  </div>
+                    asBackground
+                    fallbackIcon="🍳"
+                  />
 
                   <div className={styles.recipeListContent}>
                     <div className={styles.recipeListHeader}>
@@ -376,13 +371,11 @@ const Recipes = ({ onSelectRecipe, onCreateRecipe }) => {
                 className={styles.recipeCard}
                 onClick={() => onSelectRecipe(recipe.id)}
               >
-                <div
+                <OptimizedImage
+                  src={recipe.imageUrl}
                   className={styles.recipeCardInner}
-                  style={{
-                    backgroundImage: recipe.imageUrl
-                      ? `url(${recipe.imageUrl})`
-                      : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                  }}
+                  asBackground
+                  fallbackIcon="🍳"
                 >
                   {recipeType && (
                     <div
@@ -427,11 +420,7 @@ const Recipes = ({ onSelectRecipe, onCreateRecipe }) => {
                       </div>
                     </div>
                   </div>
-
-                  {!recipe.imageUrl && (
-                    <div className={styles.placeholderIcon}>🍳</div>
-                  )}
-                </div>
+                </OptimizedImage>
               </div>
             );
           })}

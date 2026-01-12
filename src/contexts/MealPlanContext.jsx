@@ -54,6 +54,38 @@ export const MealPlanProvider = ({ children }) => {
   };
 
   /**
+   * Récupère les permanentItems du plan le plus récent du household
+   * @returns {Array} Les permanentItems trouvés ou un tableau vide
+   */
+  const getLatestPermanentItems = async () => {
+    if (!household) return [];
+
+    try {
+      // Chercher les plans existants pour ce household, triés par date
+      const q = query(
+        collection(db, 'mealPlans'),
+        where('householdId', '==', household.id),
+        orderBy('updatedAt', 'desc')
+      );
+
+      const querySnapshot = await getDocs(q);
+
+      // Parcourir les plans pour trouver des permanentItems
+      for (const docSnap of querySnapshot.docs) {
+        const data = docSnap.data();
+        if (data.permanentItems && data.permanentItems.length > 0) {
+          return data.permanentItems;
+        }
+      }
+
+      return [];
+    } catch (error) {
+      console.error('Error fetching latest permanent items:', error);
+      return [];
+    }
+  };
+
+  /**
    * Charge un meal plan depuis Firestore (ou depuis le cache)
    * @param {number} weekNumber
    * @param {number} year
@@ -80,8 +112,12 @@ export const MealPlanProvider = ({ children }) => {
           [cacheKey]: data
         }));
       } else {
-        // Créer un plan vide
+        // Créer un plan vide mais copier les permanentItems du plan le plus récent
         const { startDate, endDate } = getWeekDates(weekNumber, year);
+
+        // Récupérer les permanentItems existants
+        const existingPermanentItems = await getLatestPermanentItems();
+
         const emptyPlan = {
           householdId: household.id,
           weekNumber,
@@ -90,7 +126,7 @@ export const MealPlanProvider = ({ children }) => {
           endDate,
           meals: {},
           extras: [],
-          permanentItems: [],
+          permanentItems: existingPermanentItems,
           checkedItems: {},
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),

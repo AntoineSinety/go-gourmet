@@ -3,6 +3,7 @@ import { HouseholdProvider, useHousehold } from './contexts/HouseholdContext';
 import { IngredientProvider } from './contexts/IngredientContext';
 import { RecipeProvider } from './contexts/RecipeContext';
 import { MealPlanProvider } from './contexts/MealPlanContext';
+import { PermanentItemsProvider } from './contexts/PermanentItemsContext';
 import Login from './pages/Login';
 import HouseholdSetup from './pages/HouseholdSetup';
 import Home from './pages/Home';
@@ -43,7 +44,9 @@ function App() {
         <IngredientProvider>
           <RecipeProvider>
             <MealPlanProvider>
-              <AppContent />
+              <PermanentItemsProvider>
+                <AppContent />
+              </PermanentItemsProvider>
             </MealPlanProvider>
           </RecipeProvider>
         </IngredientProvider>
