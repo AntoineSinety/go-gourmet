@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useHousehold } from '../contexts/HouseholdContext';
 import { useRecipes } from '../contexts/RecipeContext';
 import { useUrlPersistedState } from '../hooks/useScrollRestoration';
+import { BookOpen, Calendar, ShoppingCart, MoreHorizontal } from 'lucide-react';
 import Recipes from './Recipes';
 import RecipeForm from './RecipeForm';
 import RecipeDetail from './RecipeDetail';
@@ -108,7 +109,6 @@ const Home = () => {
     <div className={styles.container}>
       <header className={styles.header}>
         <div className={styles.logo} onClick={() => setCurrentView('recipes')}>
-          <span className={styles.logoIcon}>🍽️</span>
           <span className={styles.logoText}>Go Gourmet</span>
         </div>
 
@@ -118,28 +118,28 @@ const Home = () => {
             onClick={() => setCurrentView('recipes')}
             className={`${styles.navButton} ${currentView === 'recipes' ? styles.active : ''}`}
           >
-            <span className={styles.navIcon}>📖</span>
+            <BookOpen size={20} strokeWidth={2} />
             <span className={styles.navLabel}>Recettes</span>
           </button>
           <button
             onClick={() => setCurrentView('planning')}
             className={`${styles.navButton} ${currentView === 'planning' ? styles.active : ''}`}
           >
-            <span className={styles.navIcon}>📅</span>
+            <Calendar size={20} strokeWidth={2} />
             <span className={styles.navLabel}>Planning</span>
           </button>
           <button
             onClick={() => setCurrentView('shopping')}
             className={`${styles.navButton} ${currentView === 'shopping' ? styles.active : ''}`}
           >
-            <span className={styles.navIcon}>🛒</span>
+            <ShoppingCart size={20} strokeWidth={2} />
             <span className={styles.navLabel}>Courses</span>
           </button>
           <button
             onClick={() => setCurrentView('settings')}
             className={`${styles.navButton} ${currentView === 'settings' ? styles.active : ''}`}
           >
-            <span className={styles.navIcon}>⚙️</span>
+            <MoreHorizontal size={20} strokeWidth={2} />
             <span className={styles.navLabel}>Plus</span>
           </button>
         </nav>
@@ -151,28 +151,28 @@ const Home = () => {
           onClick={() => setCurrentView('recipes')}
           className={`${styles.mobileNavButton} ${currentView === 'recipes' ? styles.mobileActive : ''}`}
         >
-          <span className={styles.mobileNavIcon}>📖</span>
+          <BookOpen size={22} strokeWidth={currentView === 'recipes' ? 2.5 : 1.5} />
           <span className={styles.mobileNavLabel}>Recettes</span>
         </button>
         <button
           onClick={() => setCurrentView('planning')}
           className={`${styles.mobileNavButton} ${currentView === 'planning' ? styles.mobileActive : ''}`}
         >
-          <span className={styles.mobileNavIcon}>📅</span>
+          <Calendar size={22} strokeWidth={currentView === 'planning' ? 2.5 : 1.5} />
           <span className={styles.mobileNavLabel}>Planning</span>
         </button>
         <button
           onClick={() => setCurrentView('shopping')}
           className={`${styles.mobileNavButton} ${currentView === 'shopping' ? styles.mobileActive : ''}`}
         >
-          <span className={styles.mobileNavIcon}>🛒</span>
+          <ShoppingCart size={22} strokeWidth={currentView === 'shopping' ? 2.5 : 1.5} />
           <span className={styles.mobileNavLabel}>Courses</span>
         </button>
         <button
           onClick={() => setCurrentView('settings')}
           className={`${styles.mobileNavButton} ${currentView === 'settings' ? styles.mobileActive : ''}`}
         >
-          <span className={styles.mobileNavIcon}>⚙️</span>
+          <MoreHorizontal size={22} strokeWidth={currentView === 'settings' ? 2.5 : 1.5} />
           <span className={styles.mobileNavLabel}>Plus</span>
         </button>
       </nav>

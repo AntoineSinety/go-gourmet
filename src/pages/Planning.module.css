@@ -58,9 +58,9 @@
 }
 
 .navButton:hover {
-  background-color: var(--accent-blue);
-  border-color: var(--accent-blue);
-  color: white;
+  background-color: var(--bg-hover);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
   transform: scale(1.05);
 }
 
@@ -113,9 +113,9 @@
 }
 
 .viewButton.activeView {
-  background-color: var(--accent-blue);
-  color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: var(--bg-hover);
+  color: var(--accent-primary);
+  border: 1px solid var(--accent-primary);
 }
 
 /* Extras Section */
@@ -156,9 +156,9 @@
 }
 
 .addExtraButton:hover {
-  background-color: var(--accent-blue);
-  border-color: var(--accent-blue);
-  color: white;
+  background-color: var(--bg-hover);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
   transform: translateY(-1px);
 }
 
@@ -193,11 +193,6 @@
   background-color: var(--bg-hover);
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.extraIcon {
-  font-size: 1.1rem;
-  line-height: 1;
 }
 
 .extraName {
@@ -259,20 +254,21 @@
 }
 
 .dayHeader.today {
-  background-color: rgba(59, 130, 246, 0.1);
-  border-color: var(--accent-blue);
-  border-width: 2px;
+  background-color: var(--bg-tertiary);
+  border-color: var(--accent-primary);
+  border-width: 1px;
 }
 
 .dayHeader.today::before {
   content: "Aujourd'hui";
   position: absolute;
   top: -8px;
-  background-color: var(--accent-blue);
-  color: white;
+  background-color: var(--bg-tertiary);
+  color: var(--accent-primary);
   font-size: 0.7rem;
   padding: 2px 8px;
   border-radius: 10px;
+  border: 1px solid var(--accent-primary);
   font-weight: 600;
 }
 
@@ -286,7 +282,7 @@
 .dayNumber {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--accent-blue);
+  color: var(--text-primary);
 }
 
 .gridRow {
@@ -332,9 +328,8 @@
 }
 
 .todayCard {
-  border-color: var(--accent-blue);
-  border-width: 2px;
-  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
+  border-color: var(--accent-primary);
+  border-width: 1px;
 }
 
 .dayCardHeader {
@@ -366,21 +361,22 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  background-color: var(--accent-blue);
-  color: white;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
   font-size: 1rem;
   font-weight: 700;
   border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+  border: 1px solid var(--border-color);
 }
 
 .todayBadge {
   padding: 0.35rem 0.75rem;
-  background-color: var(--accent-blue);
-  color: white;
+  background-color: var(--bg-tertiary);
+  color: var(--accent-primary);
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
   border-radius: 20px;
+  border: 1px solid var(--accent-primary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -400,10 +396,8 @@
 
 .mealRowLabel {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
   min-width: 70px;
   padding: 0.75rem 0.5rem;
   background-color: var(--bg-tertiary);
@@ -413,11 +407,6 @@
   font-weight: 600;
   color: var(--text-primary);
   text-align: center;
-}
-
-.mealRowIcon {
-  font-size: 1.5rem;
-  line-height: 1;
 }
 
 .mealRowContent {
@@ -449,11 +438,10 @@
 }
 
 .actionButton:hover {
-  background-color: var(--accent-blue);
-  border-color: var(--accent-blue);
-  color: white;
+  background-color: var(--bg-tertiary);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 /* États de chargement */
@@ -664,16 +652,10 @@
   }
 
   .mealRowLabel {
-    flex-direction: row;
     min-width: auto;
     width: 100%;
     padding: 0.5rem;
-    justify-content: flex-start;
-    gap: 0.5rem;
-  }
-
-  .mealRowIcon {
-    font-size: 1.25rem;
+    justify-content: center;
   }
 }
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useIngredients, INGREDIENT_CATEGORIES } from '../contexts/IngredientContext';
 import { loadImageWithCache } from '../services/imageService';
+import { X, Users, FileText, Check, ChevronLeft, ChevronRight, Package } from 'lucide-react';
 import styles from './CookingMode.module.css';
 
 const CookingMode = ({ recipe, onExit }) => {
@@ -58,6 +59,7 @@ const CookingMode = ({ recipe, onExit }) => {
     <div className={styles.container}>
       {/* Sticky Exit Button */}
       <button onClick={onExit} className={styles.exitButton}>
+        <X size={18} />
         Quitter
       </button>
 
@@ -65,8 +67,8 @@ const CookingMode = ({ recipe, onExit }) => {
       <div className={styles.header}>
         <h1 className={styles.title}>{recipe.name}</h1>
         <div className={styles.meta}>
-          <span>👥 {recipe.servings} pers.</span>
-          <span>📝 {totalSteps} étapes</span>
+          <span><Users size={16} style={{ verticalAlign: 'middle', marginRight: '4px' }} />{recipe.servings} pers.</span>
+          <span><FileText size={16} style={{ verticalAlign: 'middle', marginRight: '4px' }} />{totalSteps} étapes</span>
         </div>
       </div>
 
@@ -110,7 +112,7 @@ const CookingMode = ({ recipe, onExit }) => {
                         />
                       ) : (
                         <div className={styles.ingredientIconPlaceholder}>
-                          {category?.icon || '📦'}
+                          <Package size={24} />
                         </div>
                       )}
                       <span className={styles.ingredientName}>{ing.name}</span>
@@ -132,14 +134,18 @@ const CookingMode = ({ recipe, onExit }) => {
             disabled={currentStep === 0}
             className={`${styles.navButton} ${styles.prevButton}`}
           >
-            ← Précédent
+            <ChevronLeft size={18} style={{ verticalAlign: 'middle' }} /> Précédent
           </button>
           <button
             onClick={handleNext}
             disabled={currentStep === totalSteps - 1}
             className={`${styles.navButton} ${styles.nextButton}`}
           >
-            {currentStep === totalSteps - 1 ? 'Terminer ✓' : 'Suivant →'}
+            {currentStep === totalSteps - 1 ? (
+              <>Terminer <Check size={18} style={{ verticalAlign: 'middle' }} /></>
+            ) : (
+              <>Suivant <ChevronRight size={18} style={{ verticalAlign: 'middle' }} /></>
+            )}
           </button>
         </div>
 
@@ -161,7 +167,7 @@ const CookingMode = ({ recipe, onExit }) => {
                   {step.instruction.length > 60 ? '...' : ''}
                 </span>
                 {completedSteps.includes(index) && (
-                  <span className={styles.checkmark}>✓</span>
+                  <span className={styles.checkmark}><Check size={18} /></span>
                 )}
               </button>
             ))}

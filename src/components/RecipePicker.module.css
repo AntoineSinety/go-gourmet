@@ -108,9 +108,9 @@
 }
 
 .searchModeButton.activeModeButton {
-  background-color: var(--accent-blue);
-  color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: var(--bg-hover);
+  color: var(--accent-primary);
+  border: 1px solid var(--accent-primary);
 }
 
 .searchInputWrapper {
@@ -140,8 +140,8 @@
 
 .searchInput:focus {
   outline: none;
-  border-color: var(--accent-blue);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
 }
 
 .clearSearchButton {
@@ -199,9 +199,9 @@
 }
 
 .typeFilterButton.active {
-  background-color: var(--accent-blue);
-  border-color: var(--accent-blue);
-  color: white;
+  background-color: var(--bg-hover);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
 }
 
 .clearFiltersButton {
@@ -220,9 +220,9 @@
 }
 
 .clearFiltersButton:hover {
-  background-color: var(--accent-blue);
-  border-color: var(--accent-blue);
-  color: white;
+  background-color: rgba(249, 115, 22, 0.1);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
   transform: scale(1.05);
 }
 
@@ -274,8 +274,8 @@
 }
 
 .recipeCard.selected {
-  border-color: var(--accent-blue);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
 }
 
 .recipeCardInner {
@@ -346,14 +346,15 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background-color: var(--accent-blue);
-  color: white;
+  background-color: var(--bg-tertiary);
+  border: 2px solid var(--accent-primary);
+  color: var(--accent-primary);
   font-size: 1.25rem;
   font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
 }
 
 /* Configuration Section */
@@ -410,9 +411,9 @@
 }
 
 .servingsButton:hover {
-  background-color: var(--accent-blue);
-  border-color: var(--accent-blue);
-  color: white;
+  background-color: rgba(249, 115, 22, 0.1);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
   transform: scale(1.05);
 }
 
@@ -431,8 +432,8 @@
 
 .servingsInput:focus {
   outline: none;
-  border-color: var(--accent-blue);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
 }
 
 .daysGrid {
@@ -459,9 +460,9 @@
 }
 
 .dayCheckbox.checked {
-  background-color: var(--accent-blue);
-  border-color: var(--accent-blue);
-  color: white;
+  background-color: rgba(249, 115, 22, 0.1);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
 }
 
 .dayCheckbox input[type="checkbox"] {
@@ -570,18 +571,19 @@
 }
 
 .multiDayCheckbox:hover .checkmark {
-  border-color: var(--accent-blue);
+  border-color: var(--accent-primary);
   transform: scale(1.1);
 }
 
 .multiDayCheckbox.checked .checkmark {
-  background-color: var(--accent-blue);
-  border-color: var(--accent-blue);
+  background-color: rgba(249, 115, 22, 0.15);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
 }
 
 .multiDayCheckbox.checked .checkmark::after {
   content: '✓';
-  color: white;
+  color: var(--accent-primary);
   font-size: 0.9rem;
   font-weight: 700;
 }
@@ -591,8 +593,8 @@
   color: var(--text-secondary);
   margin: 0.5rem 0 0 0;
   padding: 0.75rem;
-  background-color: rgba(59, 130, 246, 0.1);
-  border-left: 3px solid var(--accent-blue);
+  background-color: rgba(249, 115, 22, 0.1);
+  border-left: 3px solid var(--accent-primary);
   border-radius: 4px;
 }
 
@@ -632,16 +634,15 @@
 }
 
 .confirmButton {
-  border: 1px solid var(--accent-blue);
-  background-color: var(--accent-blue);
-  color: white;
+  border: 1px solid var(--accent-primary);
+  background-color: var(--bg-tertiary);
+  color: var(--accent-primary);
 }
 
 .confirmButton:hover:not(:disabled) {
-  background-color: #2563eb;
-  border-color: #2563eb;
+  background-color: rgba(249, 115, 22, 0.1);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.15);
 }
 
 .confirmButton:disabled {
@@ -737,13 +738,13 @@
 
 .modeButton:hover {
   background-color: var(--bg-hover);
-  border-color: var(--primary-color);
+  border-color: var(--accent-primary);
 }
 
 .modeButton.activeModeButton {
-  background-color: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
+  background-color: var(--bg-hover);
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
 }
 
 /* Custom Meal Form */
@@ -778,8 +779,8 @@
 
 .customFormInput:focus {
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
 }
 
 .customFormInput::placeholder {
@@ -805,11 +806,11 @@
 
 .customTypeButton:hover {
   background-color: var(--bg-hover);
-  border-color: var(--primary-color);
+  border-color: var(--accent-primary);
 }
 
 .customTypeButton.active {
-  background-color: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
+  background-color: var(--bg-hover);
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
 }

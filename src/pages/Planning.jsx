@@ -13,6 +13,7 @@ import MealSlot from '../components/MealSlot';
 import RecipePicker from '../components/RecipePicker';
 import RecipeDetail from './RecipeDetail';
 import TemplatesModal from '../components/TemplatesModal';
+import { ChevronLeft, ChevronRight, LayoutGrid, List, Calendar, Lightbulb, Plus, X, Users, BookOpen } from 'lucide-react';
 import styles from './Planning.module.css';
 
 const Planning = () => {
@@ -257,18 +258,18 @@ const Planning = () => {
               className={styles.navButton}
               title="Semaine précédente"
             >
-              ‹
+              <ChevronLeft size={20} />
             </button>
             <div className={styles.weekInfo}>
               <div className={styles.weekNumber}>Semaine {mealPlan.weekNumber}</div>
-              <div className={styles.weekDates}>📅 {weekLabel}</div>
+              <div className={styles.weekDates}><Calendar size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} />{weekLabel}</div>
             </div>
             <button
               onClick={() => handleNavigateWeek(1)}
               className={styles.navButton}
               title="Semaine suivante"
             >
-              ›
+              <ChevronRight size={20} />
             </button>
           </div>
         </div>
@@ -281,14 +282,14 @@ const Planning = () => {
               className={`${styles.viewButton} ${viewMode === 'grid' ? styles.activeView : ''}`}
               title="Vue grille"
             >
-              ⊞
+              <LayoutGrid size={18} />
             </button>
             <button
               onClick={() => handleViewModeChange('list')}
               className={`${styles.viewButton} ${viewMode === 'list' ? styles.activeView : ''}`}
               title="Vue liste"
             >
-              ☰
+              <List size={18} />
             </button>
           </div>
         </div>
@@ -314,7 +315,7 @@ const Planning = () => {
 
           {/* Ligne des midis */}
           <div className={styles.gridRow}>
-            <div className={styles.rowLabel}>🌅 Midi</div>
+            <div className={styles.rowLabel}>Midi</div>
             {weekDays.map(day => {
               const slotId = getMealSlotId(day.dayKey, 'lunch');
               const meal = mealPlan.meals[slotId];
@@ -340,7 +341,7 @@ const Planning = () => {
 
           {/* Ligne des soirs */}
           <div className={styles.gridRow}>
-            <div className={styles.rowLabel}>🌙 Soir</div>
+            <div className={styles.rowLabel}>Soir</div>
             {weekDays.map(day => {
               const slotId = getMealSlotId(day.dayKey, 'dinner');
               const meal = mealPlan.meals[slotId];
@@ -396,7 +397,6 @@ const Planning = () => {
                   {/* Midi */}
                   <div className={styles.mealRow}>
                     <div className={styles.mealRowLabel}>
-                      <span className={styles.mealRowIcon}>🌅</span>
                       <span>Midi</span>
                     </div>
                     <div className={styles.mealRowContent}>
@@ -420,7 +420,6 @@ const Planning = () => {
                   {/* Soir */}
                   <div className={styles.mealRow}>
                     <div className={styles.mealRowLabel}>
-                      <span className={styles.mealRowIcon}>🌙</span>
                       <span>Soir</span>
                     </div>
                     <div className={styles.mealRowContent}>
@@ -450,9 +449,9 @@ const Planning = () => {
       {/* Extras de la semaine */}
       <div className={styles.extrasSection}>
         <div className={styles.extrasHeader}>
-          <h3>💡 Extras de la semaine</h3>
+          <h3><Lightbulb size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} />Extras de la semaine</h3>
           <button className={styles.addExtraButton} onClick={handleAddExtra}>
-            + Ajouter un extra
+            <Plus size={16} style={{ verticalAlign: 'middle', marginRight: '4px' }} />Ajouter
           </button>
         </div>
         {mealPlan.extras.length === 0 ? (
@@ -465,11 +464,8 @@ const Planning = () => {
                 className={styles.extraItem}
                 onClick={() => setSelectedRecipeId(extra.recipeId)}
               >
-                <span className={styles.extraIcon}>
-                  {getRecipeTypeById(extra.recipeType)?.icon || '🍽️'}
-                </span>
                 <span className={styles.extraName}>{extra.recipeName}</span>
-                <span className={styles.extraServings}>👥 {extra.servings}</span>
+                <span className={styles.extraServings}><Users size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} />{extra.servings}</span>
                 <button
                   className={styles.removeExtraButton}
                   onClick={(e) => {
@@ -478,7 +474,7 @@ const Planning = () => {
                   }}
                   title="Retirer"
                 >
-                  ✕
+                  <X size={14} />
                 </button>
               </div>
             ))}
@@ -492,7 +488,7 @@ const Planning = () => {
           className={styles.actionButton}
           onClick={() => setTemplatesModalOpen(true)}
         >
-          📚 Modèles de planning
+          <BookOpen size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} />Modèles de planning
         </button>
       </div>
 

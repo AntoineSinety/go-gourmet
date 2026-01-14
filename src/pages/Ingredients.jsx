@@ -3,6 +3,7 @@ import { useIngredients, INGREDIENT_CATEGORIES } from '../contexts/IngredientCon
 import { useScrollRestoration, usePersistedState } from '../hooks/useScrollRestoration';
 import ImageUpload from '../components/ImageUpload';
 import { loadImageWithCache } from '../services/imageService';
+import { Plus, Pencil, Trash2, BookOpen, LayoutGrid, List, Package, Users } from 'lucide-react';
 import styles from './Ingredients.module.css';
 
 const Ingredients = () => {
@@ -191,7 +192,7 @@ const Ingredients = () => {
             <img src={cachedImageUrl || ingredient.imageUrl} alt={ingredient.name} />
           ) : (
             <div className={styles.placeholderImage}>
-              <span className={styles.placeholderIcon}>{category?.icon || '📦'}</span>
+              <span className={styles.placeholderIcon}><Package size={32} /></span>
             </div>
           )}
         </div>
@@ -204,7 +205,7 @@ const Ingredients = () => {
             className={styles.recipeCount}
             title="Voir les recettes"
           >
-            📖 {recipeCount}
+            <BookOpen size={14} style={{ marginRight: '4px' }} />{recipeCount}
           </button>
           <div className={styles.ingredientActions}>
             <button
@@ -212,14 +213,14 @@ const Ingredients = () => {
               className={styles.editBtn}
               title="Modifier"
             >
-              ✏️
+              <Pencil size={14} />
             </button>
             <button
               onClick={() => handleDeleteClick(ingredient)}
               className={styles.deleteBtn}
               title="Supprimer"
             >
-              🗑️
+              <Trash2 size={14} />
             </button>
           </div>
         </div>
@@ -241,7 +242,7 @@ const Ingredients = () => {
           }}
           className={styles.addButton}
         >
-          + Ajouter un ingrédient
+          <Plus size={18} style={{ verticalAlign: 'middle', marginRight: '6px' }} />Ajouter
         </button>
       </div>
 
@@ -271,14 +272,14 @@ const Ingredients = () => {
             className={viewMode === 'grid' ? styles.active : ''}
             title="Vue grille"
           >
-            ⊞
+            <LayoutGrid size={18} />
           </button>
           <button
             onClick={() => setViewMode('category')}
             className={viewMode === 'category' ? styles.active : ''}
             title="Vue par catégorie"
           >
-            ☰
+            <List size={18} />
           </button>
         </div>
       </div>
@@ -405,7 +406,7 @@ const Ingredients = () => {
                       <span className={styles.recipeName}>{recipe.name}</span>
                       {recipe.servings && (
                         <span className={styles.recipeServings}>
-                          👥 {recipe.servings} pers.
+                          <Users size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} />{recipe.servings} pers.
                         </span>
                       )}
                     </li>

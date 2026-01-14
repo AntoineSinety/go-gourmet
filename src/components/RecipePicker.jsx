@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRecipes } from '../contexts/RecipeContext';
 import { getRecipeTypeById, RECIPE_TYPES } from '../utils/recipeTypes';
+import { X, BookOpen, Pencil, FileText, Carrot, Search, RotateCcw, Users, Check, Pin, Info, ChefHat, Sunrise, Moon } from 'lucide-react';
 import styles from './RecipePicker.module.css';
 
 const RecipePicker = ({
@@ -103,7 +104,7 @@ const RecipePicker = ({
         <div className={styles.header}>
           <h2>{mode === 'recipe' ? 'Sélectionner une recette' : 'Repas personnalisé'}</h2>
           <button onClick={onCancel} className={styles.closeButton} title="Fermer">
-            ✕
+            <X size={18} />
           </button>
         </div>
 
@@ -113,13 +114,13 @@ const RecipePicker = ({
             onClick={() => setMode('recipe')}
             className={`${styles.modeButton} ${mode === 'recipe' ? styles.activeModeButton : ''}`}
           >
-            📖 Recettes
+            <BookOpen size={16} style={{ marginRight: '6px' }} />Recettes
           </button>
           <button
             onClick={() => setMode('custom')}
             className={`${styles.modeButton} ${mode === 'custom' ? styles.activeModeButton : ''}`}
           >
-            ✏️ Repas custom
+            <Pencil size={16} style={{ marginRight: '6px' }} />Repas custom
           </button>
         </div>
 
@@ -134,19 +135,19 @@ const RecipePicker = ({
                 className={`${styles.searchModeButton} ${searchMode === 'name' ? styles.activeModeButton : ''}`}
                 title="Rechercher par nom"
               >
-                📝 Nom
+                <FileText size={14} style={{ marginRight: '4px' }} />Nom
               </button>
               <button
                 onClick={() => setSearchMode('ingredient')}
                 className={`${styles.searchModeButton} ${searchMode === 'ingredient' ? styles.activeModeButton : ''}`}
                 title="Rechercher par ingrédient"
               >
-                🥬 Ingrédient
+                <Carrot size={14} style={{ marginRight: '4px' }} />Ingrédient
               </button>
             </div>
 
             <div className={styles.searchInputWrapper}>
-              <span className={styles.searchIcon}>🔍</span>
+              <span className={styles.searchIcon}><Search size={18} /></span>
               <input
                 type="text"
                 placeholder={
@@ -164,7 +165,7 @@ const RecipePicker = ({
                   className={styles.clearSearchButton}
                   title="Effacer"
                 >
-                  ✕
+                  <X size={14} />
                 </button>
               )}
             </div>
@@ -200,7 +201,7 @@ const RecipePicker = ({
                 className={styles.clearFiltersButton}
                 title="Réinitialiser les filtres"
               >
-                🔄
+                <RotateCcw size={16} />
               </button>
             )}
           </div>
@@ -251,16 +252,16 @@ const RecipePicker = ({
                     <div className={styles.recipeOverlay}>
                       <h3 className={styles.recipeName}>{recipe.name}</h3>
                       <div className={styles.recipeInfo}>
-                        <span>👥 {recipe.servings} pers.</span>
+                        <span><Users size={12} style={{ marginRight: '4px', verticalAlign: 'middle' }} />{recipe.servings} pers.</span>
                       </div>
                     </div>
 
                     {!recipe.imageUrl && (
-                      <div className={styles.placeholderIcon}>🍳</div>
+                      <div className={styles.placeholderIcon}><ChefHat size={48} /></div>
                     )}
 
                     {isSelected && (
-                      <div className={styles.selectedBadge}>✓</div>
+                      <div className={styles.selectedBadge}><Check size={18} /></div>
                     )}
                   </div>
                 </div>
@@ -317,7 +318,7 @@ const RecipePicker = ({
               {/* Servings */}
               <div className={styles.configRow}>
                 <label className={styles.configLabel}>
-                  👥 Nombre de personnes :
+                  <Users size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />Nombre de personnes :
                 </label>
                 <div className={styles.servingsControl}>
                   <button
@@ -363,7 +364,7 @@ const RecipePicker = ({
                 return (
                   <div className={styles.configRow}>
                     <label className={styles.configLabel}>
-                      📌 Étaler sur plusieurs jours :
+                      <Pin size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />Étaler sur plusieurs jours :
                     </label>
                     <div className={styles.multiDayGrid}>
                       {/* Header avec les noms des jours */}
@@ -378,7 +379,7 @@ const RecipePicker = ({
 
                       {/* Ligne Midi */}
                       <div className={styles.multiDayRow}>
-                        <div className={styles.multiDayLabel}>🌅 Midi</div>
+                        <div className={styles.multiDayLabel}><Sunrise size={12} style={{ marginRight: '4px' }} />Midi</div>
                         {days.map(([dayKey, dayData]) => (
                           <div key={`${dayKey}-lunch`} className={styles.multiDaySlot}>
                             {dayData.lunch && (
@@ -399,7 +400,7 @@ const RecipePicker = ({
 
                       {/* Ligne Soir */}
                       <div className={styles.multiDayRow}>
-                        <div className={styles.multiDayLabel}>🌙 Soir</div>
+                        <div className={styles.multiDayLabel}><Moon size={12} style={{ marginRight: '4px' }} />Soir</div>
                         {days.map(([dayKey, dayData]) => (
                           <div key={`${dayKey}-dinner`} className={styles.multiDaySlot}>
                             {dayData.dinner && (
@@ -420,7 +421,7 @@ const RecipePicker = ({
                     </div>
                     {selectedDays.length > 1 && (
                       <p className={styles.multiDayHint}>
-                        ℹ️ Les quantités ne seront comptées qu'une seule fois dans la liste de courses
+                        <Info size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} />Les quantités ne seront comptées qu'une seule fois dans la liste de courses
                       </p>
                     )}
                   </div>

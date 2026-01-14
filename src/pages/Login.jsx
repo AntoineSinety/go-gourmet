@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { Utensils } from 'lucide-react';
 import styles from './Login.module.css';
 
 const Login = () => {
@@ -24,6 +25,9 @@ const Login = () => {
     <div className={styles.loginContainer}>
       <div className={styles.loginCard}>
         <div className={styles.logo}>
+          <div className={styles.logoIcon}>
+            <Utensils size={40} />
+          </div>
           <h1>Go Gourmet</h1>
           <p>Organisez vos recettes et repas</p>
         </div>

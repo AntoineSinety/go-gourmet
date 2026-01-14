@@ -3,7 +3,7 @@ import { useRecipes } from '../contexts/RecipeContext';
 import { getRecipeTypeById, RECIPE_TYPES } from '../utils/recipeTypes';
 import { getTagsByIds, RECIPE_TAGS } from '../utils/recipeTags';
 import { useScrollRestoration, useUrlPersistedState } from '../hooks/useScrollRestoration';
-import { Filter } from 'lucide-react';
+import { Filter, Search, X, RotateCcw, LayoutGrid, List, FileText, Carrot, Users, Package, Plus } from 'lucide-react';
 import OptimizedImage from '../components/OptimizedImage';
 import styles from './Recipes.module.css';
 
@@ -132,7 +132,8 @@ const Recipes = ({ onSelectRecipe, onCreateRecipe }) => {
       <div className={styles.header}>
         <h1>Mes Recettes</h1>
         <button onClick={onCreateRecipe} className={styles.addButton}>
-          + Nouvelle recette
+          <Plus size={18} strokeWidth={2.5} />
+          <span>Nouvelle recette</span>
         </button>
       </div>
 
@@ -145,19 +146,21 @@ const Recipes = ({ onSelectRecipe, onCreateRecipe }) => {
               className={`${styles.searchModeButton} ${searchMode === 'name' ? styles.activeModeButton : ''}`}
               title="Rechercher par nom"
             >
-              📝 Nom
+              <FileText size={14} strokeWidth={2} />
+              <span>Nom</span>
             </button>
             <button
               onClick={() => setSearchMode('ingredient')}
               className={`${styles.searchModeButton} ${searchMode === 'ingredient' ? styles.activeModeButton : ''}`}
               title="Rechercher par ingrédient"
             >
-              🥬 Ingrédient
+              <Carrot size={14} strokeWidth={2} />
+              <span>Ingrédient</span>
             </button>
           </div>
 
           <div className={styles.searchInputWrapper}>
-            <span className={styles.searchIcon}>🔍</span>
+            <Search size={18} strokeWidth={2} className={styles.searchIcon} />
             <input
               type="text"
               placeholder={
@@ -175,7 +178,7 @@ const Recipes = ({ onSelectRecipe, onCreateRecipe }) => {
                 className={styles.clearSearchButton}
                 title="Effacer"
               >
-                ✕
+                <X size={14} strokeWidth={2.5} />
               </button>
             )}
           </div>
@@ -279,7 +282,8 @@ const Recipes = ({ onSelectRecipe, onCreateRecipe }) => {
                 className={styles.clearFiltersButton}
                 title="Réinitialiser les filtres"
               >
-                🔄 Réinitialiser
+                <RotateCcw size={14} strokeWidth={2} />
+                <span>Réinitialiser</span>
               </button>
             )}
 
@@ -289,14 +293,14 @@ const Recipes = ({ onSelectRecipe, onCreateRecipe }) => {
                 className={`${styles.viewButton} ${viewMode === 'grid' ? styles.activeView : ''}`}
                 title="Vue grille"
               >
-                ⊞
+                <LayoutGrid size={18} strokeWidth={2} />
               </button>
               <button
                 onClick={() => setViewMode('list')}
                 className={`${styles.viewButton} ${viewMode === 'list' ? styles.activeView : ''}`}
                 title="Vue liste"
               >
-                ☰
+                <List size={18} strokeWidth={2} />
               </button>
             </div>
           </div>
@@ -353,10 +357,12 @@ const Recipes = ({ onSelectRecipe, onCreateRecipe }) => {
 
                     <div className={styles.recipeListMeta}>
                       <span className={styles.recipeListServings}>
-                        👥 {recipe.servings} pers.
+                        <Users size={14} strokeWidth={2} />
+                        {recipe.servings} pers.
                       </span>
                       <span className={styles.recipeListIngredientCount}>
-                        📦 {recipe.ingredients?.length || 0} ingrédient{(recipe.ingredients?.length || 0) > 1 ? 's' : ''}
+                        <Package size={14} strokeWidth={2} />
+                        {recipe.ingredients?.length || 0} ingrédient{(recipe.ingredients?.length || 0) > 1 ? 's' : ''}
                       </span>
                     </div>
                   </div>
@@ -414,7 +420,7 @@ const Recipes = ({ onSelectRecipe, onCreateRecipe }) => {
                       <h3 className={styles.recipeName}>{recipe.name}</h3>
                       <div className={styles.recipeMetaInfo}>
                         <span className={styles.servings}>
-                          <span className={styles.metaIcon}>👥</span>
+                          <Users size={14} strokeWidth={2} />
                           {recipe.servings} pers.
                         </span>
                       </div>

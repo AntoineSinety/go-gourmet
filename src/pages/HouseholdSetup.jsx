@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useHousehold } from '../contexts/HouseholdContext';
+import { Plus, ArrowRight, ArrowLeft, Home, Users, PartyPopper } from 'lucide-react';
 import styles from './HouseholdSetup.module.css';
 
 const HouseholdSetup = () => {
@@ -81,7 +82,7 @@ const HouseholdSetup = () => {
               onClick={() => setMode('create')}
               className={styles.optionButton}
             >
-              <div className={styles.optionIcon}>+</div>
+              <div className={styles.optionIcon}><Plus size={24} /></div>
               <h3>Créer un nouveau foyer</h3>
               <p>Commencez avec votre propre collection de recettes</p>
             </button>
@@ -90,7 +91,7 @@ const HouseholdSetup = () => {
               onClick={() => setMode('join')}
               className={styles.optionButton}
             >
-              <div className={styles.optionIcon}>→</div>
+              <div className={styles.optionIcon}><Users size={24} /></div>
               <h3>Rejoindre un foyer</h3>
               <p>Partagez les recettes avec d'autres personnes</p>
             </button>
@@ -108,10 +109,11 @@ const HouseholdSetup = () => {
             onClick={() => setMode(null)}
             className={styles.backButton}
           >
-            ← Retour
+            <ArrowLeft size={16} style={{ marginRight: '6px' }} />Retour
           </button>
 
           <div className={styles.header}>
+            <div className={styles.headerIcon}><Home size={32} /></div>
             <h1>Créer un foyer</h1>
             <p>Donnez un nom à votre foyer</p>
           </div>
@@ -149,13 +151,14 @@ const HouseholdSetup = () => {
             onClick={() => setMode(null)}
             className={styles.backButton}
           >
-            ← Retour
+            <ArrowLeft size={16} style={{ marginRight: '6px' }} />Retour
           </button>
         )}
 
         <div className={styles.header}>
+          <div className={styles.headerIcon}><Users size={32} /></div>
           <h1>Rejoindre un foyer</h1>
-          <p>{isInviteLink ? '🎉 Vous avez été invité à rejoindre un foyer !' : 'Entrez l\'ID du foyer partagé par un membre'}</p>
+          <p>{isInviteLink ? <><PartyPopper size={16} style={{ verticalAlign: 'middle', marginRight: '6px' }} />Vous avez été invité à rejoindre un foyer !</> : 'Entrez l\'ID du foyer partagé par un membre'}</p>
         </div>
 
         {error && <div className={styles.error}>{error}</div>}

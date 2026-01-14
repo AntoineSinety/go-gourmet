@@ -25,10 +25,20 @@
 }
 
 .addButton {
-  background-color: var(--accent-blue);
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--accent-primary);
+  color: var(--accent-primary);
   padding: 0.625rem 1.25rem;
   font-size: 0.95rem;
   white-space: nowrap;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.addButton:hover {
+  background-color: rgba(249, 115, 22, 0.1);
+  transform: translateY(-1px);
 }
 
 .filters {
@@ -86,8 +96,9 @@
 }
 
 .viewToggle button.active {
-  background-color: var(--accent-blue);
-  color: var(--text-primary);
+  background-color: var(--bg-hover);
+  color: var(--accent-primary);
+  border: 1px solid var(--accent-primary);
 }
 
 .formCard {
@@ -133,8 +144,17 @@
 }
 
 .saveButton {
-  background-color: var(--accent-blue);
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--accent-primary);
+  color: var(--accent-primary);
   padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.saveButton:hover {
+  background-color: rgba(249, 115, 22, 0.1);
 }
 
 .cancelButton {
@@ -172,7 +192,7 @@
 }
 
 .ingredientCard:hover {
-  border-color: var(--accent-blue);
+  border-color: var(--accent-primary);
 }
 
 .ingredientImage {
@@ -242,9 +262,9 @@
 }
 
 .recipeCount:hover {
-  background-color: var(--accent-blue);
-  border-color: var(--accent-blue);
-  color: var(--text-primary);
+  background-color: var(--bg-hover);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
   transform: none;
 }
 
@@ -267,8 +287,8 @@
 }
 
 .editBtn:hover {
-  background-color: var(--accent-blue);
-  border-color: var(--accent-blue);
+  background-color: var(--bg-hover);
+  border-color: var(--text-secondary);
   transform: none;
 }
 
@@ -400,13 +420,18 @@
 }
 
 .closeButton {
-  background-color: var(--accent-blue);
+  background-color: var(--bg-tertiary);
   padding: 0.75rem 1.5rem;
-  border: none;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
 .closeButton:hover {
-  background-color: #2563eb;
+  background-color: var(--bg-hover);
+  border-color: var(--text-secondary);
 }
 
 .recipeInfo {

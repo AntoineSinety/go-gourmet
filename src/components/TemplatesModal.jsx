@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useMealPlan } from '../contexts/MealPlanContext';
+import { BookOpen, X, Save, Check, Trash2, UtensilsCrossed, Plus } from 'lucide-react';
 import styles from './TemplatesModal.module.css';
 
 const TemplatesModal = ({ isOpen, onClose }) => {
@@ -83,8 +84,8 @@ const TemplatesModal = ({ isOpen, onClose }) => {
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className={styles.header}>
-          <h2>📚 Modèles de Planning</h2>
-          <button onClick={onClose} className={styles.closeButton}>✕</button>
+          <h2><BookOpen size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />Modèles de Planning</h2>
+          <button onClick={onClose} className={styles.closeButton}><X size={18} /></button>
         </div>
 
         {/* Content */}
@@ -98,7 +99,7 @@ const TemplatesModal = ({ isOpen, onClose }) => {
                 disabled={!hasMeals}
                 title={!hasMeals ? 'Ajoutez des repas avant de sauvegarder' : ''}
               >
-                💾 Sauvegarder le planning actuel
+                <Save size={16} style={{ marginRight: '6px' }} />Sauvegarder le planning actuel
               </button>
             ) : (
               <form onSubmit={handleSaveTemplate} className={styles.saveForm}>
@@ -167,11 +168,11 @@ const TemplatesModal = ({ isOpen, onClose }) => {
                       )}
                       <div className={styles.templateMeta}>
                         <span className={styles.metaItem}>
-                          🍽️ {Object.keys(template.meals || {}).length} repas
+                          <UtensilsCrossed size={14} style={{ marginRight: '4px', verticalAlign: 'middle' }} />{Object.keys(template.meals || {}).length} repas
                         </span>
                         {template.extras?.length > 0 && (
                           <span className={styles.metaItem}>
-                            ➕ {template.extras.length} extra{template.extras.length > 1 ? 's' : ''}
+                            <Plus size={14} style={{ marginRight: '4px', verticalAlign: 'middle' }} />{template.extras.length} extra{template.extras.length > 1 ? 's' : ''}
                           </span>
                         )}
                       </div>
@@ -189,14 +190,14 @@ const TemplatesModal = ({ isOpen, onClose }) => {
                         className={styles.applyButton}
                         title="Appliquer ce modèle"
                       >
-                        ✓ Appliquer
+                        <Check size={14} style={{ marginRight: '4px' }} />Appliquer
                       </button>
                       <button
                         onClick={() => handleDeleteTemplate(template.id, template.name)}
                         className={styles.deleteButton}
                         title="Supprimer ce modèle"
                       >
-                        🗑️
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </div>

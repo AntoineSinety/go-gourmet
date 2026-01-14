@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useHousehold } from '../contexts/HouseholdContext';
 import { useAuth } from '../contexts/AuthContext';
+import { Settings as SettingsIcon, Smartphone, Carrot, RefreshCw, Home, Link, Users, User, Utensils, LogOut, Save, Pencil, Check, X, Plus, Trash2, ChevronRight, Minus } from 'lucide-react';
 import styles from './Settings.module.css';
 
 const Settings = ({ onNavigate }) => {
@@ -128,46 +129,46 @@ const Settings = ({ onNavigate }) => {
     <div className={styles.container}>
       {/* Header */}
       <div className={styles.header}>
-        <h1>⚙️ Plus</h1>
+        <h1>Plus</h1>
         <p className={styles.subtitle}>Paramètres et options supplémentaires</p>
       </div>
 
       {/* Pages Section */}
       <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>📱 Pages</h2>
+        <h2 className={styles.sectionTitle}><Smartphone size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} />Pages</h2>
         <div className={styles.card}>
           <button
             className={styles.pageButton}
             onClick={() => onNavigate && onNavigate('ingredients')}
           >
             <div className={styles.pageInfo}>
-              <span className={styles.pageIcon}>🥕</span>
+              <span className={styles.pageIcon}><Carrot size={24} /></span>
               <div className={styles.pageText}>
                 <span className={styles.pageName}>Ingrédients</span>
                 <span className={styles.pageDescription}>Gérer vos ingrédients</span>
               </div>
             </div>
-            <span className={styles.pageArrow}>›</span>
+            <span className={styles.pageArrow}><ChevronRight size={20} /></span>
           </button>
           <button
             className={styles.pageButton}
             onClick={() => onNavigate && onNavigate('migrate')}
           >
             <div className={styles.pageInfo}>
-              <span className={styles.pageIcon}>🔄</span>
+              <span className={styles.pageIcon}><RefreshCw size={24} /></span>
               <div className={styles.pageText}>
                 <span className={styles.pageName}>Migration articles</span>
                 <span className={styles.pageDescription}>Récupérer les articles permanents</span>
               </div>
             </div>
-            <span className={styles.pageArrow}>›</span>
+            <span className={styles.pageArrow}><ChevronRight size={20} /></span>
           </button>
         </div>
       </div>
 
       {/* Household Info */}
       <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>🏠 Informations du foyer</h2>
+        <h2 className={styles.sectionTitle}><Home size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} />Informations du foyer</h2>
 
         <div className={styles.card}>
           <div className={styles.cardRow}>
@@ -182,7 +183,7 @@ const Settings = ({ onNavigate }) => {
                   }}
                   className={styles.editButton}
                 >
-                  ✏️ Modifier
+                  <Pencil size={14} style={{ marginRight: '6px' }} />Modifier
                 </button>
               </div>
             ) : (
@@ -195,7 +196,7 @@ const Settings = ({ onNavigate }) => {
                   autoFocus
                 />
                 <button onClick={handleSaveName} className={styles.saveButton}>
-                  ✓ Sauvegarder
+                  <Check size={14} style={{ marginRight: '4px' }} />Sauvegarder
                 </button>
                 <button
                   onClick={() => {
@@ -204,7 +205,7 @@ const Settings = ({ onNavigate }) => {
                   }}
                   className={styles.cancelButton}
                 >
-                  ✕
+                  <X size={16} />
                 </button>
               </div>
             )}
@@ -225,7 +226,7 @@ const Settings = ({ onNavigate }) => {
 
       {/* Invite Link */}
       <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>🔗 Inviter des membres</h2>
+        <h2 className={styles.sectionTitle}><Link size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} />Inviter des membres</h2>
         <div className={styles.card}>
           <p className={styles.inviteDescription}>
             Partagez ce lien pour inviter quelqu'un à rejoindre votre foyer
@@ -265,7 +266,7 @@ const Settings = ({ onNavigate }) => {
               }}
               className={styles.shareButton}
             >
-              🔗 Partager
+              <Link size={16} style={{ marginRight: '6px' }} />Partager
             </button>
           </div>
         </div>
@@ -274,12 +275,12 @@ const Settings = ({ onNavigate }) => {
       {/* Members */}
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>👥 Membres du foyer</h2>
+          <h2 className={styles.sectionTitle}><Users size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} />Membres du foyer</h2>
           <button
             onClick={() => setShowAddMember(!showAddMember)}
             className={styles.addButton}
           >
-            {showAddMember ? '✕ Annuler' : '+ Ajouter'}
+            {showAddMember ? <><X size={14} style={{ marginRight: '4px' }} />Annuler</> : <><Plus size={14} style={{ marginRight: '4px' }} />Ajouter</>}
           </button>
         </div>
 
@@ -308,7 +309,7 @@ const Settings = ({ onNavigate }) => {
             members.map(member => (
               <div key={member.id} className={styles.memberCard}>
                 <div className={styles.memberInfo}>
-                  <span className={styles.memberIcon}>👤</span>
+                  <span className={styles.memberIcon}><User size={20} /></span>
                   <span className={styles.memberName}>{member.name}</span>
                 </div>
                 <button
@@ -316,7 +317,7 @@ const Settings = ({ onNavigate }) => {
                   className={styles.removeButton}
                   title="Retirer ce membre"
                 >
-                  🗑️
+                  <Trash2 size={16} />
                 </button>
               </div>
             ))
@@ -326,7 +327,7 @@ const Settings = ({ onNavigate }) => {
 
       {/* Default Settings */}
       <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>🍽️ Paramètres par défaut</h2>
+        <h2 className={styles.sectionTitle}><Utensils size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} />Paramètres par défaut</h2>
 
         <div className={styles.card}>
           <div className={styles.cardRow}>
@@ -353,14 +354,14 @@ const Settings = ({ onNavigate }) => {
             </div>
           </div>
           <button onClick={handleSaveDefaultServings} className={styles.saveSettingsButton}>
-            💾 Sauvegarder les paramètres
+            <Save size={16} style={{ marginRight: '6px' }} />Sauvegarder les paramètres
           </button>
         </div>
       </div>
 
       {/* Account */}
       <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>👤 Compte</h2>
+        <h2 className={styles.sectionTitle}><User size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} />Compte</h2>
 
         <div className={styles.card}>
           <div className={styles.cardRow}>
@@ -369,14 +370,14 @@ const Settings = ({ onNavigate }) => {
           </div>
 
           <button onClick={handleLogout} className={styles.logoutButton}>
-            🚪 Se déconnecter
+            <LogOut size={16} style={{ marginRight: '6px' }} />Se déconnecter
           </button>
         </div>
       </div>
 
       {/* Application */}
       <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>📱 Application</h2>
+        <h2 className={styles.sectionTitle}><Smartphone size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} />Application</h2>
 
         <div className={styles.card}>
           <div className={styles.cardRow}>
@@ -388,14 +389,14 @@ const Settings = ({ onNavigate }) => {
             </div>
           </div>
           <button onClick={handleClearCache} className={styles.logoutButton}>
-            🔄 Vider le cache et recharger
+            <RefreshCw size={16} style={{ marginRight: '6px' }} />Vider le cache et recharger
           </button>
         </div>
       </div>
 
       {/* App Info */}
       <div className={styles.footer}>
-        <p className={styles.appName}>🍽️ Go Gourmet</p>
+        <p className={styles.appName}><Utensils size={16} style={{ verticalAlign: 'middle', marginRight: '6px' }} />Go Gourmet</p>
         <p className={styles.version}>Version 1.0.0</p>
       </div>
     </div>

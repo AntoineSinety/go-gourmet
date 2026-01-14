@@ -3,6 +3,7 @@ import { useRecipes } from '../contexts/RecipeContext';
 import { useIngredients, INGREDIENT_CATEGORIES } from '../contexts/IngredientContext';
 import { getRecipeTypeById } from '../utils/recipeTypes';
 import { getTagsByIds } from '../utils/recipeTags';
+import { X, Users, Pencil, ChefHat, Trash2 } from 'lucide-react';
 import OptimizedImage from '../components/OptimizedImage';
 import styles from './RecipeDetail.module.css';
 
@@ -74,7 +75,8 @@ const RecipeDetail = ({ recipeId, onClose, onStartCooking, onEdit, onDelete }) =
     <div className={styles.container}>
       {/* Sticky Close Button */}
       <button onClick={onClose} className={styles.closeButton}>
-        Fermer
+        <X size={14} strokeWidth={2} />
+        <span>Fermer</span>
       </button>
 
       {/* Header avec image */}
@@ -120,7 +122,7 @@ const RecipeDetail = ({ recipeId, onClose, onStartCooking, onEdit, onDelete }) =
         )}
 
         <div className={styles.metaBar}>
-          <span>👥 {recipe.servings}</span>
+          <span><Users size={16} strokeWidth={2} /> {recipe.servings} personnes</span>
         </div>
       </div>
 
@@ -129,18 +131,19 @@ const RecipeDetail = ({ recipeId, onClose, onStartCooking, onEdit, onDelete }) =
         <div className={styles.actionButtons}>
           {onEdit && (
             <button onClick={() => onEdit(recipe)} className={styles.editButton}>
-              <span>✏️</span>
+              <Pencil size={16} strokeWidth={2} />
               <span>Modifier</span>
             </button>
           )}
           {onStartCooking && (
             <button onClick={() => onStartCooking(recipe)} className={styles.cookButton}>
-              👨‍🍳 Cuisiner
+              <ChefHat size={16} strokeWidth={2} />
+              <span>Cuisiner</span>
             </button>
           )}
           {onDelete && (
             <button onClick={() => setShowDeleteConfirm(true)} className={styles.deleteButton}>
-              <span>🗑️</span>
+              <Trash2 size={16} strokeWidth={2} />
               <span>Supprimer</span>
             </button>
           )}
@@ -160,7 +163,8 @@ const RecipeDetail = ({ recipeId, onClose, onStartCooking, onEdit, onDelete }) =
                 Annuler
               </button>
               <button onClick={handleDelete} className={styles.confirmDelete}>
-                🗑️ Supprimer
+                <Trash2 size={14} strokeWidth={2} />
+                Supprimer
               </button>
             </div>
           </div>

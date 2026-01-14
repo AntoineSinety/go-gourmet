@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useMealPlan } from '../contexts/MealPlanContext';
 import { useRecipes } from '../contexts/RecipeContext';
 import { usePermanentItems } from '../contexts/PermanentItemsContext';
-import { ShoppingCart, X } from 'lucide-react';
+import { ShoppingCart, X, Plus, Trash2, Check, ClipboardList, CheckCircle, Package } from 'lucide-react';
 import styles from './ShoppingList.module.css';
 
 const ShoppingList = () => {
@@ -246,7 +246,7 @@ const ShoppingList = () => {
     return (
       <div className={styles.container}>
         <div className={styles.empty}>
-          <h2>📋 Aucun planning disponible</h2>
+          <h2><ClipboardList size={24} style={{ verticalAlign: 'middle', marginRight: '8px' }} />Aucun planning disponible</h2>
           <p>Créez un planning pour générer votre liste de courses automatiquement.</p>
         </div>
       </div>
@@ -370,7 +370,7 @@ const ShoppingList = () => {
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>
-          <h1>📋 Liste de Courses</h1>
+          <h1>Liste de Courses</h1>
           <p className={styles.subtitle}>
             Générée automatiquement à partir de votre planning
           </p>
@@ -387,7 +387,7 @@ const ShoppingList = () => {
             onClick={() => setShowAddForm(!showAddForm)}
             className={styles.addButton}
           >
-            {showAddForm ? '✕ Annuler' : '+ Ajouter item'}
+            {showAddForm ? <><X size={16} style={{ verticalAlign: 'middle', marginRight: '4px' }} />Annuler</> : <><Plus size={16} style={{ verticalAlign: 'middle', marginRight: '4px' }} />Ajouter</>}
           </button>
           {checkedCount > 0 && (
             <button onClick={clearChecked} className={styles.clearButton}>
@@ -459,21 +459,21 @@ const ShoppingList = () => {
       {totalItems > 0 && (
         <div className={styles.stats}>
           <div className={styles.statCard}>
-            <div className={styles.statIcon}>🛒</div>
+            <div className={styles.statIcon}><ShoppingCart size={24} /></div>
             <div className={styles.statContent}>
               <div className={styles.statValue}>{totalItems}</div>
               <div className={styles.statLabel}>Articles</div>
             </div>
           </div>
           <div className={styles.statCard}>
-            <div className={styles.statIcon}>✓</div>
+            <div className={styles.statIcon}><CheckCircle size={24} /></div>
             <div className={styles.statContent}>
               <div className={styles.statValue}>{checkedCount}</div>
               <div className={styles.statLabel}>Cochés</div>
             </div>
           </div>
           <div className={styles.statCard}>
-            <div className={styles.statIcon}>📦</div>
+            <div className={styles.statIcon}><Package size={24} /></div>
             <div className={styles.statContent}>
               <div className={styles.statValue}>{shoppingList.length}</div>
               <div className={styles.statLabel}>Catégories</div>
@@ -485,7 +485,7 @@ const ShoppingList = () => {
       {/* Liste des ingrédients par catégorie */}
       {shoppingList.length === 0 ? (
         <div className={styles.empty}>
-          <h2>🍽️ Aucun article</h2>
+          <h2>Aucun article</h2>
           <p>Ajoutez des repas à votre planning ou des articles permanents.</p>
         </div>
       ) : (
@@ -513,11 +513,10 @@ const ShoppingList = () => {
                         onClick={() => toggleItem(category, item.name, item.isPermanent ? item.id : null)}
                       >
                         <div className={styles.checkbox}>
-                          {isChecked && <span className={styles.checkmark}>✓</span>}
+                          {isChecked && <span className={styles.checkmark}><Check size={16} /></span>}
                         </div>
                         <div className={styles.itemContent}>
                           <div className={styles.itemName}>
-                            {item.isPermanent && <span className={styles.customBadge}>✏️</span>}
                             {item.name}
                           </div>
                           <div className={styles.itemQuantity}>
@@ -538,7 +537,7 @@ const ShoppingList = () => {
                           className={styles.deleteButton}
                           title="Supprimer définitivement"
                         >
-                          🗑️
+                          <Trash2 size={16} />
                         </button>
                       )}
                     </div>
