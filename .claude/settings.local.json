@@ -23,7 +23,8 @@
       "Bash(git remote add:*)",
       "Bash(findstr:*)",
       "Bash(dir:*)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(npm run lint)"
     ],
     "deny": [],
     "ask": []
