@@ -1,25 +1,25 @@
 :root {
-  /* Backgrounds - Bleu sombre */
-  --bg-primary: #0d1117;
-  --bg-secondary: #161b22;
-  --bg-tertiary: #21262d;
-  --bg-hover: #30363d;
+  /* Backgrounds - Bleu dark moins sombre */
+  --bg-primary: #1a2332;
+  --bg-secondary: #243447;
+  --bg-tertiary: #2d3f56;
+  --bg-hover: #364a65;
 
   /* Textes */
   --text-primary: #f0f6fc;
-  --text-secondary: #8b949e;
-  --text-muted: #484f58;
+  --text-secondary: #9ba9be;
+  --text-muted: #5a6a85;
 
-  /* Accent principal - Orange */
-  --accent-primary: #f97316;
-  --accent-primary-hover: #ea580c;
-  --accent-primary-light: #fb923c;
-  --accent-primary-glow: rgba(249, 115, 22, 0.15);
+  /* Accent principal - Orange flashy */
+  --accent-primary: #ff7300;
+  --accent-primary-hover: #ff8c1a;
+  --accent-primary-light: #ffa347;
+  --accent-primary-glow: rgba(255, 115, 0, 0.2);
 
   /* Accent secondaire - Bleu (pour compatibilité) */
-  --accent-blue: #f97316;
-  --accent-blue-hover: #ea580c;
-  --accent-blue-light: #fb923c;
+  --accent-blue: #ff7300;
+  --accent-blue-hover: #ff8c1a;
+  --accent-blue-light: #ffa347;
 
   /* Couleurs sémantiques */
   --accent-green: #22c55e;
@@ -28,13 +28,13 @@
   --accent-purple-hover: #7c3aed;
   --accent-purple-light: #a78bfa;
   --accent-pink: #ec4899;
-  --accent-orange: #f97316;
+  --accent-orange: #ff7300;
   --accent-yellow: #eab308;
   --accent-teal: #14b8a6;
 
   /* Bordures */
-  --border-color: #30363d;
-  --border-subtle: #21262d;
+  --border-color: #3a4d66;
+  --border-subtle: #2d3f56;
 
   /* États */
   --success: #22c55e;

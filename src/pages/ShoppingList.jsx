@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useMealPlan } from '../contexts/MealPlanContext';
 import { useRecipes } from '../contexts/RecipeContext';
 import { usePermanentItems } from '../contexts/PermanentItemsContext';
-import { ShoppingCart, X, Plus, Trash2, Check, ClipboardList, CheckCircle, Package } from 'lucide-react';
+import { ShoppingCart, X, Plus, Trash2, Check, ClipboardList, CheckCircle, Package, CheckSquare, Square, MoreVertical } from 'lucide-react';
 import styles from './ShoppingList.module.css';
 
 const ShoppingList = () => {
@@ -18,6 +18,7 @@ const ShoppingList = () => {
     quantity: '',
     unit: ''
   });
+  const [showActionsMenu, setShowActionsMenu] = useState(false);
 
   // Charger les items cochés depuis le mealPlan
   useEffect(() => {
@@ -191,6 +192,75 @@ const ShoppingList = () => {
       await updateCheckedItems({});
     } catch (error) {
       console.error('Error clearing checked items:', error);
+    }
+  };
+
+  // Tout cocher
+  const checkAll = async () => {
+    const newCheckedItems = { ...checkedItems };
+
+    shoppingList.forEach(({ category, items }) => {
+      items.forEach(item => {
+        const itemKey = item.isPermanent ? item.id : `${category}_${item.name}`;
+        newCheckedItems[itemKey] = true;
+      });
+    });
+
+    setCheckedItems(newCheckedItems);
+    setShowActionsMenu(false);
+
+    try {
+      await updateCheckedItems(newCheckedItems);
+    } catch (error) {
+      console.error('Error checking all items:', error);
+    }
+  };
+
+  // Tout décocher
+  const uncheckAll = async () => {
+    setCheckedItems({});
+    setShowActionsMenu(false);
+
+    try {
+      await updateCheckedItems({});
+    } catch (error) {
+      console.error('Error unchecking all items:', error);
+    }
+  };
+
+  // Cocher tous les items custom (permanents)
+  const checkAllCustom = async () => {
+    const newCheckedItems = { ...checkedItems };
+
+    permanentItems?.forEach(item => {
+      newCheckedItems[item.id] = true;
+    });
+
+    setCheckedItems(newCheckedItems);
+    setShowActionsMenu(false);
+
+    try {
+      await updateCheckedItems(newCheckedItems);
+    } catch (error) {
+      console.error('Error checking custom items:', error);
+    }
+  };
+
+  // Décocher tous les items custom (permanents)
+  const uncheckAllCustom = async () => {
+    const newCheckedItems = { ...checkedItems };
+
+    permanentItems?.forEach(item => {
+      delete newCheckedItems[item.id];
+    });
+
+    setCheckedItems(newCheckedItems);
+    setShowActionsMenu(false);
+
+    try {
+      await updateCheckedItems(newCheckedItems);
+    } catch (error) {
+      console.error('Error unchecking custom items:', error);
     }
   };
 
@@ -389,11 +459,38 @@ const ShoppingList = () => {
           >
             {showAddForm ? <><X size={16} style={{ verticalAlign: 'middle', marginRight: '4px' }} />Annuler</> : <><Plus size={16} style={{ verticalAlign: 'middle', marginRight: '4px' }} />Ajouter</>}
           </button>
-          {checkedCount > 0 && (
-            <button onClick={clearChecked} className={styles.clearButton}>
-              Effacer coches ({checkedCount})
+          <div className={styles.actionsMenuWrapper}>
+            <button
+              onClick={() => setShowActionsMenu(!showActionsMenu)}
+              className={styles.actionsMenuButton}
+            >
+              <MoreVertical size={18} strokeWidth={2} />
             </button>
-          )}
+            {showActionsMenu && (
+              <>
+                <div className={styles.actionsMenuOverlay} onClick={() => setShowActionsMenu(false)} />
+                <div className={styles.actionsMenu}>
+                  <button onClick={checkAll} className={styles.actionsMenuItem}>
+                    <CheckSquare size={16} />
+                    Tout cocher
+                  </button>
+                  <button onClick={uncheckAll} className={styles.actionsMenuItem}>
+                    <Square size={16} />
+                    Tout décocher
+                  </button>
+                  <div className={styles.actionsMenuDivider} />
+                  <button onClick={checkAllCustom} className={styles.actionsMenuItem}>
+                    <CheckSquare size={16} />
+                    Cocher items perso
+                  </button>
+                  <button onClick={uncheckAllCustom} className={styles.actionsMenuItem}>
+                    <Square size={16} />
+                    Décocher items perso
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
