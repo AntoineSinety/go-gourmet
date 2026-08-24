@@ -34,7 +34,7 @@ const APP_VERSION = '1.0.0';
 
 const Settings = ({ onNavigate }) => {
   const { household, updateHousehold } = useHousehold();
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const { ingredients } = useIngredients();
   const { permanentItems } = usePermanentItems();
   const toast = useToast();
@@ -383,7 +383,7 @@ const Settings = ({ onNavigate }) => {
             <Button variant="secondary" fullWidth onClick={() => setConfirmLogout(false)}>
               Annuler
             </Button>
-            <Button variant="danger" fullWidth icon={LogOut} onClick={logout}>
+            <Button variant="danger" fullWidth icon={LogOut} onClick={signOut}>
               Se déconnecter
             </Button>
           </>
