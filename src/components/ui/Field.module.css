@@ -1,0 +1,143 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.label {
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.hasError .label {
+  color: var(--accent-red-text);
+}
+
+.required {
+  color: var(--accent-primary);
+}
+
+/* ---------- Contrôle ---------- */
+.control {
+  width: 100%;
+  min-height: var(--tap-target);
+  padding: 0 var(--space-4);
+  background-color: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-field);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  transition:
+    border-color var(--dur) var(--ease-out),
+    background-color var(--dur) var(--ease-out),
+    box-shadow var(--dur) var(--ease-out);
+}
+
+.control:hover:not(:disabled):not(:focus) {
+  border-color: var(--bg-hover);
+}
+
+.control:focus {
+  border-color: var(--accent-primary);
+  box-shadow: var(--focus-ring);
+}
+
+.control:disabled {
+  background-color: var(--surface-inset);
+  border-style: dashed;
+  border-color: var(--border-dashed);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.invalid {
+  background-color: var(--error-soft);
+  border-color: var(--error);
+}
+
+.invalid:focus {
+  border-color: var(--error);
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.18);
+}
+
+.textarea {
+  min-height: 96px;
+  padding: var(--space-3) var(--space-4);
+  line-height: 1.55;
+}
+
+/* ---------- Champ avec icône ---------- */
+.withIcon {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-4);
+}
+
+.withIcon:focus-within {
+  border-color: var(--accent-primary);
+  box-shadow: var(--focus-ring);
+}
+
+.withIcon:focus-within .icon {
+  color: var(--accent-primary-light);
+}
+
+.icon {
+  flex: none;
+  color: var(--text-muted);
+  transition: color var(--dur) var(--ease-out);
+}
+
+.bare {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+}
+
+/* ---------- Select ---------- */
+.selectWrap {
+  position: relative;
+  display: flex;
+  min-width: 0;
+}
+
+.select {
+  appearance: none;
+  padding-right: var(--space-10);
+  cursor: pointer;
+}
+
+.select option {
+  background-color: var(--surface);
+  color: var(--text-primary);
+}
+
+.chevron {
+  position: absolute;
+  right: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+/* ---------- Messages ---------- */
+.hint {
+  font: var(--text-body-sm);
+  color: var(--text-muted);
+}
+
+.error {
+  font: var(--text-body-sm);
+  color: var(--accent-red-text);
+}

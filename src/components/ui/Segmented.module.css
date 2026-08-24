@@ -1,0 +1,48 @@
+.track {
+  display: inline-flex;
+  flex: none;
+  gap: 2px;
+  padding: 3px;
+  background-color: var(--bg-primary);
+  border-radius: var(--radius-field);
+}
+
+.option {
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--dur) var(--ease-out),
+    color var(--dur) var(--ease-out);
+}
+
+.option:hover:not(.selected) {
+  color: var(--text-primary);
+}
+
+.option:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.selected {
+  background-color: var(--accent-primary);
+  color: var(--text-on-accent);
+  font-weight: 700;
+}
+
+.sm .option {
+  padding: 5px 10px;
+  font-size: 0.71875rem;
+}
+
+.md .option {
+  min-height: 34px;
+  padding: 0 var(--space-4);
+  font-size: 0.8125rem;
+}

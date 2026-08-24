@@ -1,0 +1,54 @@
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex: none;
+  padding: 4px;
+  background-color: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-field);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 8px;
+  background-color: var(--surface-raised);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease-out), color var(--dur) var(--ease-out);
+}
+
+.button:hover:not(:disabled) {
+  background-color: var(--accent-primary);
+  color: var(--text-on-accent);
+}
+
+.button:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.value {
+  min-width: 56px;
+  padding: 0 var(--space-1);
+  font-family: var(--font-mono);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  text-align: center;
+  color: var(--text-primary);
+}
+
+.suffix {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}

@@ -1,0 +1,37 @@
+.box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  background-color: var(--surface);
+  border: 2px solid var(--border-color);
+  color: #0f1f14;
+  transition:
+    background-color var(--dur) var(--ease-out),
+    border-color var(--dur) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.md {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+}
+
+.lg {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+}
+
+.checked {
+  background-color: var(--success);
+  border-color: var(--success);
+  animation: pop var(--dur) var(--ease-out);
+}
+
+@keyframes pop {
+  50% {
+    transform: scale(1.12);
+  }
+}

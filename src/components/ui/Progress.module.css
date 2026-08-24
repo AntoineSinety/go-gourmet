@@ -1,0 +1,40 @@
+.wrap {
+  min-width: 0;
+}
+
+.track {
+  width: 100%;
+  overflow: hidden;
+  background-color: var(--surface-raised);
+  border-radius: var(--radius-pill);
+}
+
+.sm {
+  height: 6px;
+}
+
+.md {
+  height: 8px;
+}
+
+.lg {
+  height: 12px;
+}
+
+.bar {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background-color: var(--accent-primary);
+  transition: width var(--dur-slow) var(--ease-out), background-color var(--dur) var(--ease-out);
+}
+
+.success {
+  background-color: var(--success);
+}
+
+.caption {
+  margin-top: var(--space-2);
+  font: var(--text-numeric);
+  font-size: 0.6875rem;
+  color: var(--text-secondary);
+}

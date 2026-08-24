@@ -1,0 +1,79 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex: none;
+  max-width: 100%;
+  border: 1px solid transparent;
+  border-radius: var(--radius-chip);
+  background-color: var(--tone-soft);
+  color: var(--tone-text);
+  font-family: var(--font-body);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 2px;
+  background-color: var(--tone-base);
+}
+
+/* ---------- Tailles ---------- */
+.sm {
+  padding: 4px 8px;
+  border-radius: 7px;
+  font-size: 0.65625rem;
+}
+
+.sm .dot {
+  width: 5px;
+  height: 5px;
+}
+
+.md {
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.71875rem;
+}
+
+/* ---------- Variantes ---------- */
+.overlay {
+  background-color: rgba(19, 27, 39, 0.82);
+  backdrop-filter: blur(6px);
+}
+
+.outlined {
+  border-color: var(--tone-border);
+}
+
+button.badge {
+  cursor: pointer;
+  transition:
+    background-color var(--dur) var(--ease-out),
+    border-color var(--dur) var(--ease-out);
+}
+
+button.badge:hover {
+  border-color: var(--tone-base);
+}
+
+button.badge:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--tone-soft);
+  border-color: var(--tone-base);
+}
+
+.remove {
+  flex: none;
+  opacity: 0.8;
+  margin-left: 2px;
+}

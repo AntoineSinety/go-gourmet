@@ -1,0 +1,50 @@
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+  padding: var(--space-4);
+  background-color: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  box-shadow: var(--elev-1);
+}
+
+.stats {
+  display: flex;
+  gap: var(--space-6);
+  flex: none;
+}
+
+.stat {
+  min-width: 0;
+}
+
+.value {
+  font-family: var(--font-mono);
+  font-size: 1.375rem;
+  font-weight: 500;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.accent {
+  color: var(--accent-primary-light);
+}
+
+.success {
+  color: var(--success);
+}
+
+.label {
+  margin-top: var(--space-1);
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.progress {
+  flex: 1;
+  min-width: 160px;
+}

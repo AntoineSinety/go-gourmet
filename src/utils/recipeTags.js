@@ -1,88 +1,33 @@
-import { Leaf, Heart, Flame, Clock, Award, Utensils, Wheat, Droplets } from 'lucide-react';
+import { Leaf, Sprout, Heart, Flame, Clock, Award, Utensils, Wheat, Droplets } from 'lucide-react';
+import { getTone } from './palette';
 
-export const RECIPE_TAGS = [
-  {
-    id: 'vegetarian',
-    label: 'Végétarien',
-    icon: 'Leaf',
-    IconComponent: Leaf,
-    color: '#22c55e',
-    bgColor: 'rgba(34, 197, 94, 0.1)',
-    borderColor: 'rgba(34, 197, 94, 0.3)'
-  },
-  {
-    id: 'vegan',
-    label: 'Vegan',
-    icon: 'Leaf',
-    IconComponent: Leaf,
-    color: '#10b981',
-    bgColor: 'rgba(16, 185, 129, 0.1)',
-    borderColor: 'rgba(16, 185, 129, 0.3)'
-  },
-  {
-    id: 'healthy',
-    label: 'Équilibré',
-    icon: 'Heart',
-    IconComponent: Heart,
-    color: '#ec4899',
-    bgColor: 'rgba(236, 72, 153, 0.1)',
-    borderColor: 'rgba(236, 72, 153, 0.3)'
-  },
-  {
-    id: 'spicy',
-    label: 'Épicé',
-    icon: 'Flame',
-    IconComponent: Flame,
-    color: '#f97316',
-    bgColor: 'rgba(249, 115, 22, 0.1)',
-    borderColor: 'rgba(249, 115, 22, 0.3)'
-  },
-  {
-    id: 'quick',
-    label: 'Rapide',
-    icon: 'Clock',
-    IconComponent: Clock,
-    color: '#3b82f6',
-    bgColor: 'rgba(59, 130, 246, 0.1)',
-    borderColor: 'rgba(59, 130, 246, 0.3)'
-  },
-  {
-    id: 'gourmet',
-    label: 'Gastronomique',
-    icon: 'Award',
-    IconComponent: Award,
-    color: '#eab308',
-    bgColor: 'rgba(234, 179, 8, 0.1)',
-    borderColor: 'rgba(234, 179, 8, 0.3)'
-  },
-  {
-    id: 'comfort',
-    label: 'Réconfortant',
-    icon: 'Utensils',
-    IconComponent: Utensils,
-    color: '#f59e0b',
-    bgColor: 'rgba(245, 158, 11, 0.1)',
-    borderColor: 'rgba(245, 158, 11, 0.3)'
-  },
-  {
-    id: 'glutenfree',
-    label: 'Sans gluten',
-    icon: 'Wheat',
-    IconComponent: Wheat,
-    color: '#a855f7',
-    bgColor: 'rgba(168, 85, 247, 0.1)',
-    borderColor: 'rgba(168, 85, 247, 0.3)'
-  },
-  {
-    id: 'lowcarb',
-    label: 'Faible en glucides',
-    icon: 'Droplets',
-    IconComponent: Droplets,
-    color: '#14b8a6',
-    bgColor: 'rgba(20, 184, 166, 0.1)',
-    borderColor: 'rgba(20, 184, 166, 0.3)'
-  }
+/**
+ * Tags de recette. Les couleurs sont alignées sur les tonalités du design system
+ * (voir utils/palette.js) : chaque tag porte un `tone`, et expose en plus les
+ * valeurs résolues pour les usages en style inline.
+ */
+const TAGS = [
+  { id: 'vegetarian', label: 'Végétarien', icon: 'Leaf', IconComponent: Leaf, tone: 'green' },
+  { id: 'vegan', label: 'Vegan', icon: 'Sprout', IconComponent: Sprout, tone: 'emerald' },
+  { id: 'healthy', label: 'Équilibré', icon: 'Heart', IconComponent: Heart, tone: 'pink' },
+  { id: 'spicy', label: 'Épicé', icon: 'Flame', IconComponent: Flame, tone: 'accent' },
+  { id: 'quick', label: 'Rapide', icon: 'Clock', IconComponent: Clock, tone: 'sky' },
+  { id: 'gourmet', label: 'Gastronomique', icon: 'Award', IconComponent: Award, tone: 'yellow' },
+  { id: 'comfort', label: 'Réconfortant', icon: 'Utensils', IconComponent: Utensils, tone: 'amber' },
+  { id: 'glutenfree', label: 'Sans gluten', icon: 'Wheat', IconComponent: Wheat, tone: 'purple' },
+  { id: 'lowcarb', label: 'Faible en glucides', icon: 'Droplets', IconComponent: Droplets, tone: 'teal' }
 ];
+
+export const RECIPE_TAGS = TAGS.map(tag => {
+  const tone = getTone(tag.tone);
+  return {
+    ...tag,
+    color: tone.base,
+    textColor: tone.text,
+    bgColor: tone.soft,
+    borderColor: tone.border
+  };
+});
 
 export const getTagById = (id) => {
   return RECIPE_TAGS.find(tag => tag.id === id);

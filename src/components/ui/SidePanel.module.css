@@ -1,0 +1,49 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  background-color: rgba(9, 13, 20, 0.68);
+  backdrop-filter: blur(4px);
+  animation: fade var(--dur) var(--ease-out);
+}
+
+.panel {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-panel);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background-color: var(--bg-canvas);
+  animation: slideUp var(--dur-slow) var(--ease-out);
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(3%);
+    opacity: 0;
+  }
+}
+
+@media (min-width: 769px) {
+  .panel {
+    left: auto;
+    width: min(520px, 92vw);
+    border-left: 1px solid var(--border-color);
+    box-shadow: var(--elev-3);
+    animation: slideIn var(--dur-slow) var(--ease-out);
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+    }
+  }
+}

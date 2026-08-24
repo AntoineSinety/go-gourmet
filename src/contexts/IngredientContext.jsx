@@ -24,17 +24,17 @@ export const useIngredients = () => {
 };
 
 export const INGREDIENT_CATEGORIES = [
-  { id: 'fruits-legumes', label: 'Fruits & Légumes', icon: '🥬' },
-  { id: 'viandes-poissons', label: 'Viandes & Poissons', icon: '🥩' },
-  { id: 'produits-laitiers', label: 'Produits laitiers', icon: '🧀' },
-  { id: 'epicerie-salee', label: 'Épicerie salée', icon: '🍝' },
-  { id: 'epicerie-sucree', label: 'Épicerie sucrée', icon: '🍪' },
-  { id: 'surgeles', label: 'Surgelés', icon: '❄️' },
-  { id: 'boissons', label: 'Boissons', icon: '🥤' },
-  { id: 'pain-viennoiserie', label: 'Pain & Viennoiserie', icon: '🥖' },
-  { id: 'condiments', label: 'Condiments & Sauces', icon: '🧂' },
-  { id: 'conserves', label: 'Conserves', icon: '🥫' },
-  { id: 'autres', label: 'Autres', icon: '📦' }
+  { id: 'fruits-legumes', label: 'Fruits & Légumes', icon: '🥬', tone: 'green' },
+  { id: 'viandes-poissons', label: 'Viandes & Poissons', icon: '🥩', tone: 'red' },
+  { id: 'produits-laitiers', label: 'Produits laitiers', icon: '🧀', tone: 'yellow' },
+  { id: 'epicerie-salee', label: 'Épicerie salée', icon: '🍝', tone: 'amber' },
+  { id: 'epicerie-sucree', label: 'Épicerie sucrée', icon: '🍪', tone: 'pink' },
+  { id: 'surgeles', label: 'Surgelés', icon: '❄️', tone: 'teal' },
+  { id: 'boissons', label: 'Boissons', icon: '🥤', tone: 'sky' },
+  { id: 'pain-viennoiserie', label: 'Pain & Viennoiserie', icon: '🥖', tone: 'purple' },
+  { id: 'condiments', label: 'Condiments & Sauces', icon: '🧂', tone: 'accent' },
+  { id: 'conserves', label: 'Conserves', icon: '🥫', tone: 'emerald' },
+  { id: 'autres', label: 'Autres', icon: '📦', tone: 'neutral' }
 ];
 
 export const IngredientProvider = ({ children }) => {

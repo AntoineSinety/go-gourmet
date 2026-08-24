@@ -1,0 +1,144 @@
+/* ==========================================================================
+   Go Gourmet — tokens de design
+   Source : canvas « Go Gourmet Refonte », planche 00 « Fondations ».
+   ADN conservé : bleu nuit + orange, dark only.
+   ========================================================================== */
+
+:root {
+  /* ---------- Fonds & surfaces (3 niveaux d'élévation) ---------- */
+  --bg-canvas: #131b27;        /* fond de page, sous les surfaces */
+  --bg-primary: #1a2332;       /* chrome : header, nav, sheets */
+  --surface: #223046;          /* cartes, champs */
+  --surface-raised: #2b3c53;   /* survol de carte, pastilles, pistes */
+  --surface-inset: #1e2a3c;    /* champs désactivés, placeholders photo */
+  --bg-hover: #364a65;
+
+  /* Alias de compatibilité (ancienne nomenclature) */
+  --bg-secondary: var(--surface);
+  --bg-tertiary: var(--surface-raised);
+
+  /* ---------- Bordures ---------- */
+  --border-color: #33465e;
+  --border-subtle: #26374d;
+  --border-dashed: #2d3f56;
+
+  /* ---------- Textes ---------- */
+  --text-primary: #f0f6fc;
+  --text-secondary: #9ba9be;   /* AA sur --bg-primary et --surface */
+  --text-muted: #5a6a85;       /* labels >= 600/12px et icônes décoratives */
+  --text-on-accent: #1a2332;   /* texte sombre sur aplat orange */
+
+  /* ---------- Accent ---------- */
+  --accent-primary: #ff7300;
+  --accent-primary-hover: #ff8c1a;
+  --accent-primary-active: #e56700;
+  --accent-primary-light: #ffa347;
+  --accent-primary-glow: rgba(255, 115, 0, 0.2);
+  --accent-primary-soft: rgba(255, 115, 0, 0.14);
+  --accent-primary-border: rgba(255, 115, 0, 0.35);
+
+  /* Alias de compatibilité */
+  --accent-blue: var(--accent-primary);
+  --accent-blue-hover: var(--accent-primary-hover);
+  --accent-blue-light: var(--accent-primary-light);
+  --accent-orange: var(--accent-primary);
+
+  /* ---------- Palette sémantique (base + variante texte) ---------- */
+  --accent-green: #22c55e;
+  --accent-green-text: #4ade80;
+  --accent-emerald: #10b981;
+  --accent-emerald-text: #34d399;
+  --accent-purple: #8b5cf6;
+  --accent-purple-text: #a78bfa;
+  --accent-purple-light: #a78bfa;
+  --accent-pink: #ec4899;
+  --accent-pink-text: #f472b6;
+  --accent-yellow: #eab308;
+  --accent-yellow-text: #fbbf24;
+  --accent-amber: #f59e0b;
+  --accent-amber-text: #fbbf24;
+  --accent-teal: #14b8a6;
+  --accent-teal-text: #2dd4bf;
+  --accent-sky: #3b82f6;
+  --accent-sky-text: #93c5fd;
+  --accent-red: #ef4444;
+  --accent-red-text: #f87171;
+
+  --success: #22c55e;
+  --error: #ef4444;
+  --warning: #f59e0b;
+
+  --success-soft: rgba(34, 197, 94, 0.14);
+  --success-border: rgba(34, 197, 94, 0.35);
+  --error-soft: rgba(239, 68, 68, 0.1);
+  --error-border: rgba(239, 68, 68, 0.4);
+
+  /* ---------- Familles ---------- */
+  --font-display: 'Bricolage Grotesque', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --font-mono: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* ---------- Échelle typographique ---------- */
+  --text-display-lg: 700 2.125rem/1.06 var(--font-display);   /* 34 */
+  --text-display-md: 700 1.625rem/1.15 var(--font-display);   /* 26 */
+  --text-display-sm: 600 1.25rem/1.3 var(--font-display);     /* 20 */
+  --text-body-lg: 600 1.0625rem/1.4 var(--font-body);         /* 17 */
+  --text-body: 400 0.9375rem/1.55 var(--font-body);           /* 15 */
+  --text-body-sm: 400 0.8125rem/1.5 var(--font-body);         /* 13 */
+  --text-label: 600 0.6875rem/1 var(--font-body);             /* 11 */
+  --text-numeric: 500 0.8125rem/1 var(--font-mono);           /* 13 */
+
+  --tracking-display: -0.025em;
+  --tracking-display-sm: -0.015em;
+  --tracking-label: 0.08em;
+
+  /* ---------- Rythme d'espacement 4/8 ---------- */
+  --space-1: 0.25rem;   /* 4  — icône ↔ label */
+  --space-2: 0.5rem;    /* 8  — intra-carte */
+  --space-3: 0.75rem;   /* 12 — padding compact */
+  --space-4: 1rem;      /* 16 — gouttière mobile */
+  --space-5: 1.25rem;   /* 20 */
+  --space-6: 1.5rem;    /* 24 — entre blocs */
+  --space-8: 2rem;      /* 32 — entre sections */
+  --space-10: 2.5rem;   /* 40 */
+  --space-12: 3rem;     /* 48 — en-tête desktop */
+
+  /* ---------- Rayons ---------- */
+  --radius-chip: 6px;
+  --radius-field: 10px;
+  --radius-control: 12px;
+  --radius-card: 14px;
+  --radius-card-lg: 16px;
+  --radius-sheet: 20px;
+  --radius-pill: 999px;
+
+  /* ---------- Élévation ---------- */
+  --elev-1: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --elev-2: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --elev-3: 0 20px 48px rgba(0, 0, 0, 0.55);
+  --elev-accent: 0 6px 18px rgba(255, 115, 0, 0.28);
+  --focus-ring: 0 0 0 4px var(--accent-primary-glow);
+
+  /* ---------- Cibles & chrome ---------- */
+  --tap-target: 44px;
+  --header-height: 68px;
+  --bottom-nav-height: 60px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+
+  /* ---------- Mouvement ---------- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur: 200ms;
+  --dur-slow: 280ms;
+
+  /* ---------- Z-index ---------- */
+  --z-nav: 100;
+  --z-sticky: 200;
+  --z-overlay: 900;
+  --z-panel: 1000;
+  --z-modal: 1100;
+  --z-toast: 1200;
+  --z-fullscreen: 1300;
+}

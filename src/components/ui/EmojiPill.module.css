@@ -1,0 +1,45 @@
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  background-color: var(--tone-soft);
+  border: 1px solid var(--tone-border);
+  line-height: 1;
+  user-select: none;
+}
+
+.xs {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+}
+
+.sm {
+  width: 26px;
+  height: 26px;
+  border-radius: 9px;
+  font-size: 0.8125rem;
+}
+
+.md {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-field);
+  font-size: 0.9375rem;
+}
+
+.lg {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-card);
+  font-size: 1.1875rem;
+}
+
+.xl {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-card-lg);
+  font-size: 1.375rem;
+}

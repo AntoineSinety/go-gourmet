@@ -1,0 +1,44 @@
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.headings {
+  min-width: 0;
+}
+
+.title {
+  font: var(--text-display-lg);
+  font-size: 1.875rem;
+  letter-spacing: var(--tracking-display);
+}
+
+.subtitle {
+  margin-top: 2px;
+  font: var(--text-body-sm);
+  color: var(--text-secondary);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: none;
+}
+
+@media (min-width: 769px) {
+  .header {
+    align-items: flex-end;
+  }
+
+  .title {
+    font-size: 2.125rem;
+  }
+
+  .subtitle {
+    margin-top: var(--space-1);
+    font-size: 0.875rem;
+  }
+}
