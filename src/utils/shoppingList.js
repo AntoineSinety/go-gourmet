@@ -1,4 +1,4 @@
-import { AISLE_NAMES, CHECKED_AISLE } from './shoppingAisles';
+import { AISLE_NAMES } from './shoppingAisles';
 
 const DAY_KEYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
@@ -10,8 +10,8 @@ const DAY_KEYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'satur
  * - un repas marqué `skipShoppingList` est ignoré ;
  * - un plat étalé sur plusieurs jours n'est compté qu'une fois ;
  * - les quantités sont ajustées au ratio de portions du créneau ;
- * - les items permanents non cochés rejoignent leur rayon, les cochés vont
- *   dans la section « Cochés » en fin de liste.
+ * - les items permanents rejoignent leur rayon ; le tri entre cochés et non
+ *   cochés est fait à l'affichage.
  *
  * @returns {Array<{ category: string, items: Array }>} rayons triés dans l'ordre du magasin
  */
@@ -83,21 +83,10 @@ export const buildShoppingList = (mealPlan, recipes, permanentItems, checkedItem
   const permanent = permanentItems || [];
 
   permanent.forEach(item => {
-    if (checkedItems[item.id]) return;
     (grouped[item.category] ||= []).push({ ...item, isPermanent: true, fromRecipes: [] });
   });
 
-  const checkedPermanent = permanent.filter(item => checkedItems[item.id]);
-  if (checkedPermanent.length > 0) {
-    grouped[CHECKED_AISLE.id] = checkedPermanent.map(item => ({
-      ...item,
-      isPermanent: true,
-      fromRecipes: []
-    }));
-  }
-
   const orderOf = (category) => {
-    if (category === CHECKED_AISLE.id) return Number.MAX_SAFE_INTEGER;
     const index = AISLE_NAMES.indexOf(category);
     return index === -1 ? AISLE_NAMES.length : index;
   };
@@ -118,8 +107,10 @@ export const itemKey = (category, item) =>
 export const countRemaining = (list, checkedItems = {}) =>
   list.reduce(
     (total, { category, items }) =>
-      category === CHECKED_AISLE.id
-        ? total
-        : total + items.filter(item => !checkedItems[itemKey(category, item)]).length,
+      total + items.filter(item => !checkedItems[itemKey(category, item)]).length,
     0
   );
+
+/** Nombre total d'articles de la liste, cochés compris. */
+export const countTotal = (list) =>
+  list.reduce((total, { items }) => total + items.length, 0);

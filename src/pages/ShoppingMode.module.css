@@ -1,0 +1,324 @@
+/* ==========================================================================
+   Mode Course — écran signature : une main, en marchant, en magasin.
+   Fond plus sourd et contrastes plus marqués que le reste de l'app.
+   ========================================================================== */
+
+.screen {
+  --shopping-bg: #101825;
+  --shopping-item: #1c2836;
+  --shopping-item-done: #161f2c;
+
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-fullscreen);
+  display: flex;
+  flex-direction: column;
+  background-color: var(--shopping-bg);
+}
+
+/* ---------- En-tête collant ---------- */
+.header {
+  flex: none;
+  padding: calc(var(--safe-top) + var(--space-2)) var(--space-3) var(--space-3);
+  background-color: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.headerTop {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0 var(--space-3);
+}
+
+.exit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  background-color: var(--surface);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+
+.exit:hover {
+  background-color: var(--surface-raised);
+}
+
+.exit:active {
+  transform: scale(0.94);
+}
+
+.exit:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.headerText {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 1.3125rem;
+  font-weight: 700;
+  letter-spacing: var(--tracking-display);
+  color: var(--text-primary);
+}
+
+.subtitle {
+  margin-top: 1px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.subtitleDone {
+  color: var(--success);
+}
+
+.percent {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 1.875rem;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--accent-primary);
+}
+
+.percentDone {
+  color: var(--success);
+}
+
+.percentSign {
+  font-size: 1rem;
+}
+
+.track {
+  height: 12px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background-color: var(--surface-raised);
+}
+
+.bar {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-primary-light));
+  transition: width var(--dur-slow) var(--ease-out);
+}
+
+.barDone {
+  background: var(--success);
+}
+
+/* ---------- Corps ---------- */
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: var(--space-6);
+}
+
+.section + .section {
+  margin-top: var(--space-5);
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4) var(--space-2);
+}
+
+.sectionTitle {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: var(--tracking-display-sm);
+  color: var(--text-primary);
+}
+
+.sectionCount {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 0 var(--space-3);
+  list-style: none;
+}
+
+/* ---------- Article ---------- */
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  min-height: 68px;
+  padding: var(--space-4);
+  background-color: var(--shopping-item);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card-lg);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--dur) var(--ease-out),
+    border-color var(--dur) var(--ease-out),
+    opacity var(--dur) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.item:active {
+  transform: scale(0.985);
+}
+
+.item:focus-visible {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: var(--focus-ring);
+}
+
+.itemName {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-body);
+  font-size: 1.1875rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text-primary);
+}
+
+.itemQuantity {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 1.1875rem;
+  font-weight: 500;
+  color: var(--accent-primary-light);
+  white-space: nowrap;
+}
+
+.itemDone {
+  background-color: var(--shopping-item-done);
+  border-color: var(--border-subtle);
+  opacity: 0.5;
+}
+
+.itemDone .itemName,
+.itemDone .itemQuantity {
+  color: var(--text-secondary);
+  text-decoration: line-through;
+}
+
+.itemDone .itemQuantity {
+  color: var(--text-muted);
+}
+
+/* ---------- Fin de liste ---------- */
+.done {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-8) var(--space-8);
+  text-align: center;
+}
+
+.doneBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 88px;
+  height: 88px;
+  border-radius: 28px;
+  background-color: var(--success-soft);
+  border: 1px solid var(--success-border);
+  color: var(--success);
+}
+
+.doneTitle {
+  margin-top: var(--space-3);
+  font: var(--text-display-md);
+  font-size: 1.5rem;
+  letter-spacing: var(--tracking-display);
+}
+
+.doneText {
+  font-size: 0.90625rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  max-width: 34ch;
+}
+
+/* ---------- Pied ---------- */
+.footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: none;
+  padding: var(--space-3) var(--space-3) calc(var(--space-5) + var(--safe-bottom));
+  background-color: var(--bg-primary);
+  border-top: 1px solid var(--border-color);
+}
+
+.nextAisle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 0.78125rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.finishButton {
+  flex: none;
+  height: 48px;
+  border-radius: var(--radius-card);
+}
+
+.exitButton {
+  height: 52px;
+  border-radius: var(--radius-card);
+}
+
+/* ==========================================================================
+   Desktop — le mode course reste centré sur une colonne étroite
+   ========================================================================== */
+@media (min-width: 769px) {
+  .header,
+  .body,
+  .footer {
+    padding-left: max(var(--space-6), calc((100% - 640px) / 2));
+    padding-right: max(var(--space-6), calc((100% - 640px) / 2));
+  }
+
+  .items,
+  .sectionHead {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
