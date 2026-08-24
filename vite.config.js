@@ -18,7 +18,7 @@ export default defineConfig({
         short_name: 'Go Gourmet',
         description: 'Application de gestion de recettes et planning de repas',
         theme_color: '#1a2332',
-        background_color: '#1a2332',
+        background_color: '#131b27',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/go-gourmet/',

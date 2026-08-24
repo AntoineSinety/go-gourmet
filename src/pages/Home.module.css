@@ -14,11 +14,6 @@
   padding-bottom: calc(var(--bottom-nav-height) + var(--safe-bottom));
 }
 
-/* Les vues plein écran (Mode Cuisson, Mode Course) sortent de la coque. */
-.fullscreen .main {
-  padding-bottom: 0;
-}
-
 @media (min-width: 769px) {
   .main {
     padding-bottom: 0;
