@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { Mic } from 'lucide-react';
 import styles from './VoiceInput.module.css';
 
 /**
@@ -164,20 +165,19 @@ const VoiceInput = ({ value, onChange, placeholder, rows = 4, autoFocus = false 
     ? `${value}${value ? ' ' : ''}${interimText}`
     : value;
 
-  // Fallback si non supporté
+  // Fallback si le navigateur ne supporte pas la Web Speech API
   if (!isSupported) {
     return (
       <div className={styles.container}>
         <textarea
+          className={styles.textarea}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           rows={rows}
           placeholder={placeholder}
           autoFocus={autoFocus}
         />
-        <div className={styles.notSupported}>
-          Dictée vocale non supportée par ce navigateur
-        </div>
+        <p className={styles.unsupported}>Dictée vocale non disponible sur ce navigateur</p>
       </div>
     );
   }
@@ -185,9 +185,10 @@ const VoiceInput = ({ value, onChange, placeholder, rows = 4, autoFocus = false 
   return (
     <div className={styles.container}>
       <textarea
+        className={`${styles.textarea} ${isListening ? styles.listening : ''}`}
         value={displayValue}
         onChange={(e) => {
-          // Si on tape pendant la dictée, mettre à jour la base
+          // Si on tape pendant la dictée, la saisie clavier devient la nouvelle base.
           if (isListening) {
             baseValueRef.current = e.target.value;
             finalTranscriptRef.current = '';
@@ -197,34 +198,34 @@ const VoiceInput = ({ value, onChange, placeholder, rows = 4, autoFocus = false 
         rows={rows}
         placeholder={placeholder}
         autoFocus={autoFocus}
-        className={isListening ? styles.listening : ''}
       />
 
-      <button
-        type="button"
-        onClick={toggleListening}
-        className={`${styles.micButton} ${isListening ? styles.active : ''}`}
-        title={isListening ? "Arrêter la dictée" : "Commencer la dictée vocale"}
-        aria-label={isListening ? "Arrêter la dictée" : "Commencer la dictée vocale"}
-      >
-        {isListening ? '⏹' : '🎤'}
-      </button>
+      <div className={styles.toolbar}>
+        <button
+          type="button"
+          onClick={toggleListening}
+          className={`${styles.micButton} ${isListening ? styles.micActive : ''}`}
+          aria-pressed={isListening}
+        >
+          {isListening ? (
+            <>
+              <span className={styles.pulse} aria-hidden="true" />
+              Écoute en cours…
+            </>
+          ) : (
+            <>
+              <Mic size={16} strokeWidth={2} />
+              Dicter
+            </>
+          )}
+        </button>
 
-      {isListening && (
-        <div className={styles.listeningIndicator}>
-          <span className={styles.pulse}></span>
-          <span className={styles.listeningText}>
-            Dictée en cours...
-            {interimText && <span className={styles.interimPreview}> "{interimText}"</span>}
-          </span>
-        </div>
-      )}
+        {isListening && interimText && (
+          <span className={styles.interim}>« {interimText} »</span>
+        )}
+      </div>
 
-      {error && (
-        <div className={styles.errorMessage}>
-          {error}
-        </div>
-      )}
+      {error && <p className={styles.error} role="alert">{error}</p>}
     </div>
   );
 };

@@ -1,62 +1,84 @@
 .container {
-  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
 }
 
 .label {
-  display: block;
-  margin-bottom: 0.5rem;
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
   color: var(--text-secondary);
-  font-size: 0.9rem;
-}
-
-.uploadArea {
-  position: relative;
-  width: 100%;
-  max-width: 400px;
 }
 
 .fileInput {
   display: none;
 }
 
-.uploadButton {
-  width: 100%;
-  aspect-ratio: 16 / 9;
+/* ---------- Dropzone ---------- */
+.dropzone {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  background-color: var(--bg-tertiary);
-  border: 2px dashed var(--border-color);
-  border-radius: 12px;
+  gap: var(--space-1);
+  width: 100%;
+  min-height: 132px;
+  padding: var(--space-5);
+  background-color: var(--surface-inset);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-card);
   cursor: pointer;
-  transition: all 0.2s;
-  padding: 2rem;
+  transition:
+    background-color var(--dur) var(--ease-out),
+    border-color var(--dur) var(--ease-out);
 }
 
-.uploadButton:hover {
-  border-color: var(--accent-blue);
-  background-color: var(--bg-secondary);
-  transform: none;
+.dropzone:hover,
+.dragging {
+  background-color: var(--surface);
+  border-color: var(--accent-primary);
 }
 
-.uploadIcon {
-  font-size: 3rem;
+.dropzone:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
-.uploadHint {
-  font-size: 0.85rem;
+.dropIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: var(--space-1);
+  border-radius: var(--radius-card);
+  background-color: var(--surface-raised);
   color: var(--text-muted);
 }
 
+.dropTitle {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dropHint {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+/* ---------- Aperçu ---------- */
 .preview {
   position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  border-radius: 12px;
   overflow: hidden;
-  background-color: var(--bg-tertiary);
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  background-color: var(--surface-inset);
 }
 
 .previewImage {
@@ -65,70 +87,56 @@
   object-fit: cover;
 }
 
-.previewOverlay {
+.previewActions {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+  top: var(--space-3);
+  right: var(--space-3);
   display: flex;
+  gap: var(--space-2);
+}
+
+.previewButton {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.preview:hover .previewOverlay {
-  opacity: 1;
-}
-
-.changeButton,
-.removeButton {
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.changeButton {
-  background-color: var(--accent-blue);
+  gap: var(--space-2);
+  height: 36px;
+  padding: 0 var(--space-3);
   border: none;
+  border-radius: var(--radius-field);
+  background-color: rgba(19, 27, 39, 0.82);
+  backdrop-filter: blur(6px);
   color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.78125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease-out);
 }
 
-.changeButton:hover {
-  background-color: #2563eb;
+.previewButton:hover {
+  background-color: rgba(19, 27, 39, 0.95);
 }
 
-.removeButton {
-  background-color: #dc2626;
-  border: none;
-  color: white;
+.previewButton:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
-.removeButton:hover {
-  background-color: #b91c1c;
+.previewRemove {
+  width: 36px;
+  padding: 0;
+  justify-content: center;
+  color: var(--accent-red-text);
 }
 
-@media (max-width: 768px) {
-  .uploadArea {
-    max-width: 100%;
-  }
-
-  .uploadButton {
-    padding: 1.5rem;
-  }
-
-  .uploadIcon {
-    font-size: 2.5rem;
-  }
-
-  .changeButton,
-  .removeButton {
-    padding: 0.6rem 1.2rem;
-    font-size: 0.85rem;
-  }
+.caption {
+  position: absolute;
+  left: var(--space-3);
+  bottom: var(--space-3);
+  padding: 5px 8px;
+  border-radius: var(--radius-chip);
+  background-color: rgba(19, 27, 39, 0.75);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--text-secondary);
 }

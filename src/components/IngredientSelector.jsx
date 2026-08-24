@@ -1,264 +1,193 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { Search, Plus, Check } from 'lucide-react';
 import { useIngredients, INGREDIENT_CATEGORIES } from '../contexts/IngredientContext';
-import { loadImageWithCache } from '../services/imageService';
+import { useToast } from '../contexts/ToastContext';
+import { getUnitLabel } from '../utils/units';
+import EmojiPill from './ui/EmojiPill';
+import { Select } from './ui/Field';
+import Button from './ui/Button';
 import styles from './IngredientSelector.module.css';
 
+const MAX_RESULTS = 8;
+
+const normalize = (value) =>
+  value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '');
+
+/**
+ * Recherche dans le catalogue d'ingrédients du foyer, avec création à la volée.
+ * Le champ reste dans le flux du formulaire : pas de modale intercalée.
+ */
 const IngredientSelector = ({ onSelect, onDeselect, selectedIngredients = [] }) => {
   const { ingredients, addIngredient } = useIngredients();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [ingredientImages, setIngredientImages] = useState({});
-  const [newIngredient, setNewIngredient] = useState({
-    name: '',
-    category: 'fruits-legumes'
-  });
+  const toast = useToast();
 
-  // Load ingredient images
+  const [searchTerm, setSearchTerm] = useState('');
+  const [open, setOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newCategory, setNewCategory] = useState('fruits-legumes');
+  const [saving, setSaving] = useState(false);
+  const wrapRef = useRef(null);
+
+  const selectedIds = useMemo(
+    () => selectedIngredients.map((ing) => ing.ingredientId || ing.id),
+    [selectedIngredients]
+  );
+
+  const results = useMemo(() => {
+    const query = normalize(searchTerm.trim());
+    if (!query) return [];
+    return ingredients
+      .filter((ing) => normalize(ing.name).includes(query))
+      .slice(0, MAX_RESULTS);
+  }, [ingredients, searchTerm]);
+
+  const exactMatch = useMemo(
+    () =>
+      ingredients.some((ing) => normalize(ing.name) === normalize(searchTerm.trim())),
+    [ingredients, searchTerm]
+  );
+
+  const canCreate = searchTerm.trim().length >= 2 && !exactMatch;
+
+  // Referme la liste quand on clique ailleurs.
   useEffect(() => {
-    const loadImages = async () => {
-      const images = {};
-      for (const ingredient of ingredients) {
-        if (ingredient.imageUrl) {
-          try {
-            const cachedUrl = await loadImageWithCache(ingredient.imageUrl);
-            images[ingredient.id] = cachedUrl;
-          } catch (error) {
-            console.error(`Error loading image for ${ingredient.name}:`, error);
-          }
-        }
+    if (!open) return undefined;
+
+    const onPointerDown = (e) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) {
+        setOpen(false);
+        setCreating(false);
       }
-      setIngredientImages(images);
     };
 
-    if (ingredients.length > 0) {
-      loadImages();
-    }
-  }, [ingredients]);
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [open]);
 
-  // Filter ingredients
-  const filteredIngredients = ingredients.filter(ingredient => {
-    const matchesSearch = ingredient.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || ingredient.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
-
-  const selectedIds = selectedIngredients.map(ing => ing.ingredientId || ing.id);
-
-  // Group filtered ingredients by category for better display
-  const ingredientsByCategory = INGREDIENT_CATEGORIES.map(category => ({
-    ...category,
-    ingredients: filteredIngredients.filter(ing => ing.category === category.id)
-  })).filter(cat => cat.ingredients.length > 0);
-
-  const handleSelectIngredient = (ingredient) => {
+  const handleToggle = (ingredient) => {
     if (selectedIds.includes(ingredient.id)) {
-      // Déselectionner l'ingrédient
-      if (onDeselect) {
-        const selectedIngredient = selectedIngredients.find(
-          ing => (ing.ingredientId || ing.id) === ingredient.id
-        );
-        onDeselect(selectedIngredient);
-      }
-    } else {
-      // Sélectionner l'ingrédient
-      onSelect(ingredient);
-      setSearchTerm('');
-      setShowModal(false);
+      const selected = selectedIngredients.find(
+        (ing) => (ing.ingredientId || ing.id) === ingredient.id
+      );
+      onDeselect?.(selected);
+      return;
     }
-  };
 
-  const handleOpenModal = () => {
-    setShowModal(true);
-  };
-
-  const handleCloseModal = () => {
-    setShowModal(false);
+    onSelect(ingredient);
     setSearchTerm('');
-    setSelectedCategory('all');
-    setShowAddForm(false);
+    setOpen(false);
   };
 
-  const handleAddNewIngredient = async () => {
-    if (!newIngredient.name.trim()) return;
+  const handleCreate = async () => {
+    const name = searchTerm.trim();
+    if (!name) return;
 
+    setSaving(true);
     try {
-      const created = await addIngredient(newIngredient);
+      const created = await addIngredient({ name, category: newCategory });
       onSelect(created);
-      setNewIngredient({ name: '', category: 'fruits-legumes' });
-      setShowAddForm(false);
+      toast.success(`« ${name} » ajouté au catalogue du foyer`);
       setSearchTerm('');
-      setShowModal(false);
+      setCreating(false);
+      setOpen(false);
     } catch (error) {
       console.error('Error adding ingredient:', error);
+      toast.error("Impossible de créer l'ingrédient");
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
-    <div className={styles.container}>
-      <button
-        type="button"
-        onClick={handleOpenModal}
-        className={styles.addIngredientsButton}
-      >
-        + Ajouter des ingrédients
-      </button>
+    <div className={styles.wrap} ref={wrapRef}>
+      <div className={`${styles.field} ${open ? styles.fieldOpen : ''}`}>
+        <Search size={18} strokeWidth={2} className={styles.icon} />
+        <input
+          type="text"
+          className={styles.input}
+          placeholder="Rechercher dans le catalogue du foyer…"
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setOpen(true);
+            setCreating(false);
+          }}
+          onFocus={() => setOpen(true)}
+        />
+        {canCreate && !creating && (
+          <button type="button" className={styles.createHint} onClick={() => setCreating(true)}>
+            <Plus size={13} strokeWidth={2.5} />
+            créer « {searchTerm.trim()} »
+          </button>
+        )}
+      </div>
 
-      {showModal && (
-        <div className={styles.modalOverlay} onClick={handleCloseModal}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h3>Sélectionner des ingrédients</h3>
-              <button
-                type="button"
-                onClick={handleCloseModal}
-                className={styles.closeButton}
+      {open && (creating || searchTerm.trim()) && (
+        <div className={styles.dropdown}>
+          {creating ? (
+            <div className={styles.createForm}>
+              <div className={styles.createTitle}>
+                Nouvel ingrédient · <strong>{searchTerm.trim()}</strong>
+              </div>
+              <Select
+                value={newCategory}
+                onChange={(e) => setNewCategory(e.target.value)}
+                aria-label="Catégorie de l'ingrédient"
               >
-                ✕
-              </button>
-            </div>
-
-            <div className={styles.searchBox}>
-              <input
-                type="text"
-                placeholder="Rechercher un ingrédient..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className={styles.searchInput}
-              />
-
-              <div className={styles.categoryFilters}>
-                <button
-                  type="button"
-                  onClick={() => setSelectedCategory('all')}
-                  className={`${styles.filterButton} ${selectedCategory === 'all' ? styles.active : ''}`}
-                >
-                  Tous ({ingredients.length})
-                </button>
-                {INGREDIENT_CATEGORIES.map(category => {
-                  const count = ingredients.filter(ing => ing.category === category.id).length;
-                  if (count === 0) return null;
-                  return (
-                    <button
-                      key={category.id}
-                      type="button"
-                      onClick={() => setSelectedCategory(category.id)}
-                      className={`${styles.filterButton} ${selectedCategory === category.id ? styles.active : ''}`}
-                    >
-                      {category.icon} {count}
-                    </button>
-                  );
-                })}
+                {INGREDIENT_CATEGORIES.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.icon} {cat.label}
+                  </option>
+                ))}
+              </Select>
+              <div className={styles.createActions}>
+                <Button variant="ghost" size="sm" onClick={() => setCreating(false)} disabled={saving}>
+                  Annuler
+                </Button>
+                <Button variant="primary" size="sm" loading={saving} onClick={handleCreate}>
+                  Créer et ajouter
+                </Button>
               </div>
             </div>
+          ) : results.length > 0 ? (
+            <ul className={styles.results}>
+              {results.map((ingredient) => {
+                const category =
+                  INGREDIENT_CATEGORIES.find((c) => c.id === ingredient.category) ||
+                  INGREDIENT_CATEGORIES[INGREDIENT_CATEGORIES.length - 1];
+                const isSelected = selectedIds.includes(ingredient.id);
 
-            {searchTerm && filteredIngredients.length === 0 && (
-              <div className={styles.noResults}>
-                <p>Aucun ingrédient trouvé pour "{searchTerm}"</p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setNewIngredient({ ...newIngredient, name: searchTerm });
-                    setShowAddForm(true);
-                  }}
-                  className={styles.addNewButton}
-                >
-                  + Créer "{searchTerm}"
-                </button>
-              </div>
-            )}
-
-            {showAddForm ? (
-              <div className={styles.addForm}>
-                <h4>Nouvel ingrédient</h4>
-                <div>
-                  <div className={styles.formGroup}>
-                    <label>Nom</label>
-                    <input
-                      type="text"
-                      value={newIngredient.name}
-                      onChange={(e) => setNewIngredient({ ...newIngredient, name: e.target.value })}
-                      autoFocus
-                      required
-                    />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label>Catégorie</label>
-                    <select
-                      value={newIngredient.category}
-                      onChange={(e) => setNewIngredient({ ...newIngredient, category: e.target.value })}
-                    >
-                      {INGREDIENT_CATEGORIES.map(cat => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.icon} {cat.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className={styles.formActions}>
+                return (
+                  <li key={ingredient.id}>
                     <button
                       type="button"
-                      onClick={handleAddNewIngredient}
+                      className={`${styles.result} ${isSelected ? styles.resultSelected : ''}`}
+                      onClick={() => handleToggle(ingredient)}
                     >
-                      Ajouter
+                      <EmojiPill emoji={category.icon} tone={category.tone} size="md" />
+                      <span className={styles.resultName}>{ingredient.name}</span>
+                      <span className={styles.resultUnit}>
+                        {getUnitLabel(ingredient.defaultUnit) || category.label}
+                      </span>
+                      {isSelected && <Check size={16} strokeWidth={2.5} className={styles.check} />}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowAddForm(false)}
-                      className={styles.cancelButton}
-                    >
-                      Annuler
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className={styles.ingredientsScrollArea}>
-                {(searchTerm || selectedCategory !== 'all') && filteredIngredients.length > 0 ? (
-                  <div className={styles.ingredientsList}>
-                    {ingredientsByCategory.map(category => (
-                      <div key={category.id} className={styles.categoryGroup}>
-                        <h4 className={styles.categoryHeader}>
-                          {category.icon} {category.label}
-                        </h4>
-                        <div className={styles.ingredientGrid}>
-                          {category.ingredients.map(ingredient => {
-                            const isSelected = selectedIds.includes(ingredient.id);
-
-                            return (
-                              <button
-                                key={ingredient.id}
-                                type="button"
-                                onClick={() => handleSelectIngredient(ingredient)}
-                                className={`${styles.ingredientCard} ${isSelected ? styles.selected : ''}`}
-                              >
-                                <div className={styles.ingredientImage}>
-                                  {ingredientImages[ingredient.id] ? (
-                                    <img src={ingredientImages[ingredient.id]} alt={ingredient.name} />
-                                  ) : (
-                                    <div className={styles.placeholderImage}>{category.icon}</div>
-                                  )}
-                                  {isSelected && <span className={styles.selectedBadge}>✓</span>}
-                                </div>
-                                <div className={styles.ingredientInfo}>
-                                  <span className={styles.ingredientName}>{ingredient.name}</span>
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className={styles.emptyState}>
-                    <p>Recherchez ou sélectionnez une catégorie pour afficher les ingrédients</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <div className={styles.noResults}>
+              Aucun ingrédient ne correspond à « {searchTerm.trim()} ».
+              {canCreate && (
+                <Button variant="secondary" size="sm" icon={Plus} onClick={() => setCreating(true)}>
+                  Créer cet ingrédient
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

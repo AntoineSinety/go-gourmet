@@ -1,487 +1,428 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRecipes } from '../contexts/RecipeContext';
 import { useIngredients, INGREDIENT_CATEGORIES } from '../contexts/IngredientContext';
+import { useToast } from '../contexts/ToastContext';
+import { X } from 'lucide-react';
 import IngredientSelector from '../components/IngredientSelector';
 import ImageUpload from '../components/ImageUpload';
-import VoiceInput from '../components/VoiceInput';
+import StepEditor from '../components/StepEditor';
 import { UNITS } from '../utils/units';
 import { RECIPE_TYPES } from '../utils/recipeTypes';
 import { RECIPE_TAGS } from '../utils/recipeTags';
+import { toneVars } from '../utils/palette';
 import { loadImageWithCache } from '../services/imageService';
+import { Button, Chip, TagBadge, Field, Input, Stepper, EmojiPill } from '../components/ui';
 import styles from './RecipeForm.module.css';
+
+const UNIT_GROUPS = [
+  { label: 'Poids', category: 'weight' },
+  { label: 'Volume', category: 'volume' },
+  { label: 'Pièces', category: 'piece' },
+  { label: 'Autres', category: 'other' }
+];
+
+/** Les étapes ont besoin d'un identifiant stable pour le glisser-déposer. */
+const withStepIds = (steps) =>
+  (steps || []).map((step, index) => ({
+    ...step,
+    id: step.id || `step-${index}-${Math.random().toString(36).slice(2, 8)}`
+  }));
+
+const emptyRecipe = () => ({
+  name: '',
+  type: 'plat',
+  servings: 4,
+  ingredients: [],
+  steps: withStepIds([{ order: 0, instruction: '', ingredientIds: [] }]),
+  tags: []
+});
+
+const getCategory = (id) =>
+  INGREDIENT_CATEGORIES.find((c) => c.id === id) ||
+  INGREDIENT_CATEGORIES[INGREDIENT_CATEGORIES.length - 1];
 
 const RecipeForm = ({ onCancel, onSuccess, recipeToEdit = null }) => {
   const { addRecipe, updateRecipe } = useRecipes();
   const { ingredients: allIngredients } = useIngredients();
+  const toast = useToast();
+
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [errors, setErrors] = useState({});
   const [imageFile, setImageFile] = useState(null);
   const [removeImage, setRemoveImage] = useState(false);
   const [ingredientImages, setIngredientImages] = useState({});
-  const [expandedStep, setExpandedStep] = useState(0); // Track which step is expanded
+  const [expandedStep, setExpandedStep] = useState(0);
 
-  const [recipe, setRecipe] = useState(
-    recipeToEdit || {
-      name: '',
-      type: 'plat',
-      servings: 4,
-      ingredients: [],
-      steps: [{ order: 0, instruction: '', ingredientIds: [] }],
-      tags: []
-    }
+  const [recipe, setRecipe] = useState(() =>
+    recipeToEdit
+      ? { ...recipeToEdit, steps: withStepIds(recipeToEdit.steps) }
+      : emptyRecipe()
   );
 
   const isEditing = !!recipeToEdit;
 
-  // Load images for selected ingredients
   useEffect(() => {
+    let cancelled = false;
+
     const loadImages = async () => {
       const images = {};
       for (const recipeIng of recipe.ingredients) {
-        const fullIngredient = allIngredients.find(ing => ing.id === recipeIng.ingredientId);
-        if (fullIngredient?.imageUrl) {
+        const full = allIngredients.find((ing) => ing.id === recipeIng.ingredientId);
+        if (full?.imageUrl) {
           try {
-            const cachedUrl = await loadImageWithCache(fullIngredient.imageUrl);
-            images[recipeIng.ingredientId] = cachedUrl;
+            images[recipeIng.ingredientId] = await loadImageWithCache(full.imageUrl);
           } catch (error) {
-            console.error(`Error loading image for ${fullIngredient.name}:`, error);
+            console.error(`Error loading image for ${full.name}:`, error);
           }
         }
       }
-      setIngredientImages(images);
+      if (!cancelled) setIngredientImages(images);
     };
 
-    if (recipe.ingredients.length > 0 && allIngredients.length > 0) {
-      loadImages();
-    }
+    if (recipe.ingredients.length > 0 && allIngredients.length > 0) loadImages();
+    return () => {
+      cancelled = true;
+    };
   }, [recipe.ingredients, allIngredients]);
 
-  const handleAddIngredientToRecipe = (ingredient) => {
-    const newIngredient = {
-      ingredientId: ingredient.id,
-      name: ingredient.name,
-      category: ingredient.category,
-      imageUrl: ingredient.imageUrl,
-      quantity: '',
-      unit: 'g' // Default to grams
-    };
+  const unitsByGroup = useMemo(
+    () =>
+      UNIT_GROUPS.map((group) => ({
+        ...group,
+        units: UNITS.filter((u) => u.category === group.category)
+      })),
+    []
+  );
 
-    setRecipe(prev => ({
+  const addIngredientToRecipe = (ingredient) =>
+    setRecipe((prev) => ({
       ...prev,
-      ingredients: [...prev.ingredients, newIngredient]
+      ingredients: [
+        ...prev.ingredients,
+        {
+          ingredientId: ingredient.id,
+          name: ingredient.name,
+          category: ingredient.category,
+          imageUrl: ingredient.imageUrl,
+          quantity: '',
+          unit: ingredient.defaultUnit || 'g'
+        }
+      ]
     }));
-  };
 
-  const handleDeselectIngredient = (selectedIngredient) => {
+  const removeIngredient = (index) =>
+    setRecipe((prev) => {
+      const target = prev.ingredients[index];
+      return {
+        ...prev,
+        ingredients: prev.ingredients.filter((_, idx) => idx !== index),
+        steps: prev.steps.map((step) => ({
+          ...step,
+          ingredientIds: (step.ingredientIds || []).filter((id) => id !== target.ingredientId)
+        }))
+      };
+    });
+
+  const deselectIngredient = (selected) => {
     const index = recipe.ingredients.findIndex(
-      ing => ing.ingredientId === selectedIngredient.ingredientId
+      (ing) => ing.ingredientId === selected?.ingredientId
     );
-    if (index !== -1) {
-      handleRemoveIngredient(index);
-    }
+    if (index !== -1) removeIngredient(index);
   };
 
-  const handleUpdateIngredient = (index, field, value) => {
-    setRecipe(prev => ({
+  const updateIngredient = (index, field, value) =>
+    setRecipe((prev) => ({
       ...prev,
       ingredients: prev.ingredients.map((ing, idx) =>
         idx === index ? { ...ing, [field]: value } : ing
       )
     }));
-  };
 
-  const handleRemoveIngredient = (index) => {
-    const ingredient = recipe.ingredients[index];
-    setRecipe(prev => ({
-      ...prev,
-      ingredients: prev.ingredients.filter((_, idx) => idx !== index),
-      steps: prev.steps.map(step => ({
-        ...step,
-        ingredientIds: step.ingredientIds.filter(id => id !== ingredient.ingredientId)
-      }))
-    }));
-  };
+  const toggleTag = (tagId) =>
+    setRecipe((prev) => {
+      const current = prev.tags || [];
+      return {
+        ...prev,
+        tags: current.includes(tagId) ? current.filter((t) => t !== tagId) : [...current, tagId]
+      };
+    });
 
-  const handleAddStep = () => {
-    setRecipe(prev => ({
-      ...prev,
-      steps: [...prev.steps, {
-        order: prev.steps.length,
-        instruction: '',
-        ingredientIds: []
-      }]
-    }));
-    // Expand the new step
-    setExpandedStep(recipe.steps.length);
-  };
+  const validate = () => {
+    const next = {};
 
-  const handleUpdateStep = (index, field, value) => {
-    setRecipe(prev => ({
-      ...prev,
-      steps: prev.steps.map((step, idx) =>
-        idx === index ? { ...step, [field]: value } : step
-      )
-    }));
-  };
+    if (!recipe.name.trim()) {
+      next.name = 'Le nom de la recette est obligatoire';
+    } else if (recipe.name.trim().length < 3) {
+      next.name = '3 caractères minimum';
+    }
 
-  const handleRemoveStep = (index) => {
-    if (recipe.steps.length === 1) return;
-    setRecipe(prev => ({
-      ...prev,
-      steps: prev.steps.filter((_, idx) => idx !== index).map((step, idx) => ({
-        ...step,
-        order: idx
-      }))
-    }));
-  };
+    recipe.ingredients.forEach((ing, index) => {
+      if (ing.quantity === '' || ing.quantity === null || Number.isNaN(parseFloat(ing.quantity))) {
+        next[`ingredient-${index}`] = 'Quantité requise';
+      }
+    });
 
-  const handleImageSelect = (file) => {
-    setImageFile(file);
-    setRemoveImage(false);
-  };
+    if (!recipe.steps.some((step) => step.instruction.trim())) {
+      next.steps = 'Décrivez au moins une étape';
+    }
 
-  const handleImageRemove = () => {
-    setImageFile(null);
-    setRemoveImage(true);
+    setErrors(next);
+    return Object.keys(next).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validate()) {
+      toast.error('Le formulaire contient des erreurs');
+      return;
+    }
+
     setLoading(true);
-    setError(null);
+
+    // L'identifiant de glisser-déposer est local : il ne part pas en base.
+    const payload = {
+      ...recipe,
+      name: recipe.name.trim(),
+      steps: recipe.steps
+        .filter((step) => step.instruction.trim())
+        .map(({ id: _id, ...step }, index) => ({ ...step, order: index })),
+      ingredients: recipe.ingredients.map((ing) => ({
+        ...ing,
+        quantity: parseFloat(ing.quantity) || 0
+      }))
+    };
 
     try {
       if (isEditing) {
-        await updateRecipe(recipeToEdit.id, recipe, imageFile, removeImage);
+        await updateRecipe(recipeToEdit.id, payload, imageFile, removeImage);
+        toast.success('Recette enregistrée');
       } else {
-        await addRecipe(recipe, imageFile);
+        await addRecipe(payload, imageFile);
+        toast.success('Recette créée');
       }
       onSuccess();
     } catch (err) {
-      setError(isEditing ? 'Erreur lors de la modification de la recette' : 'Erreur lors de la création de la recette');
       console.error(err);
+      toast.error(
+        isEditing
+          ? 'Erreur lors de la modification de la recette'
+          : 'Erreur lors de la création de la recette'
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <button onClick={onCancel} className={styles.backButton}>
-          ← Retour
+    <form className={styles.form} onSubmit={handleSubmit} noValidate>
+      <header className={styles.header}>
+        <button type="button" className={styles.close} onClick={onCancel} aria-label="Annuler">
+          <X size={19} strokeWidth={2.2} />
         </button>
-        <h1>{isEditing ? 'Modifier la recette' : 'Nouvelle recette'}</h1>
-      </div>
+        <h1 className={styles.title}>{isEditing ? 'Modifier la recette' : 'Nouvelle recette'}</h1>
+        <div className={styles.headerActions}>
+          <Button variant="secondary" onClick={onCancel} disabled={loading} className={styles.cancelDesktop}>
+            Annuler
+          </Button>
+          <Button type="submit" variant="primary" loading={loading}>
+            Enregistrer
+          </Button>
+        </div>
+      </header>
 
-      {error && <div className={styles.error}>{error}</div>}
-
-      <form onSubmit={handleSubmit} className={styles.form}>
-        <div className={styles.section}>
-          <h2>Informations générales</h2>
-
-          <div className={styles.formGroup}>
-            <label>Nom de la recette *</label>
-            <input
-              type="text"
+      <div className={styles.columns}>
+        <div className={styles.column}>
+          <Field label="Nom de la recette" required error={errors.name} htmlFor="recipe-name">
+            <Input
+              id="recipe-name"
               value={recipe.name}
+              error={errors.name}
               onChange={(e) => setRecipe({ ...recipe, name: e.target.value })}
-              required
-              placeholder="Ex: Lasagnes bolognaise"
+              placeholder="Ex. Velouté de butternut"
+              autoFocus
             />
+          </Field>
+
+          <div className={styles.typeRow}>
+            <Field label="Type" className={styles.typeField}>
+              <div className={`${styles.typeChips} scrollRow`}>
+                {RECIPE_TYPES.map((type) => (
+                  <Chip
+                    key={type.id}
+                    label={type.label}
+                    emoji={type.icon}
+                    tone={type.tone}
+                    active={recipe.type === type.id}
+                    onClick={() => setRecipe({ ...recipe, type: type.id })}
+                  />
+                ))}
+              </div>
+            </Field>
+
+            <Field label="Portions" className={styles.servingsField}>
+              <Stepper
+                value={recipe.servings}
+                onChange={(value) => setRecipe({ ...recipe, servings: value })}
+                min={1}
+                max={50}
+                label="Nombre de portions"
+              />
+            </Field>
           </div>
 
           <ImageUpload
             currentImage={recipeToEdit?.imageUrl}
-            onImageSelect={handleImageSelect}
-            onImageRemove={handleImageRemove}
-            label="Image du plat"
+            onImageSelect={(file) => {
+              setImageFile(file);
+              setRemoveImage(false);
+            }}
+            onImageRemove={() => {
+              setImageFile(null);
+              setRemoveImage(true);
+            }}
+            label="Photo"
           />
 
-          <div className={styles.formGroup}>
-            <label>Type de plat *</label>
-            <select
-              value={recipe.type}
-              onChange={(e) => setRecipe({ ...recipe, type: e.target.value })}
-              required
-            >
-              {RECIPE_TYPES.map(type => (
-                <option key={type.id} value={type.id}>
-                  {type.icon} {type.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className={styles.formGroup}>
-            <label>Nombre de personnes</label>
-            <input
-              type="number"
-              min="1"
-              max="20"
-              value={recipe.servings}
-              onChange={(e) => setRecipe({ ...recipe, servings: parseInt(e.target.value) })}
-              required
-            />
-          </div>
-
-          <div className={styles.formGroup}>
-            <label>Tags (optionnel)</label>
-            <div className={styles.tagsSelector}>
-              {RECIPE_TAGS.map(tag => {
-                const isSelected = recipe.tags?.includes(tag.id);
-                const TagIcon = tag.IconComponent;
-
-                return (
-                  <button
-                    key={tag.id}
-                    type="button"
-                    onClick={() => {
-                      const currentTags = recipe.tags || [];
-                      const newTags = isSelected
-                        ? currentTags.filter(t => t !== tag.id)
-                        : [...currentTags, tag.id];
-                      setRecipe({ ...recipe, tags: newTags });
-                    }}
-                    className={`${styles.tagButton} ${isSelected ? styles.tagSelected : ''}`}
-                    style={{
-                      borderColor: isSelected ? tag.color : 'var(--border-color)',
-                      backgroundColor: isSelected ? tag.bgColor : 'transparent',
-                      color: isSelected ? tag.color : 'var(--text-secondary)'
-                    }}
-                  >
-                    <TagIcon size={16} strokeWidth={2} />
-                    <span>{tag.label}</span>
-                  </button>
-                );
-              })}
+          <div className={styles.block}>
+            <div className={styles.blockHead}>
+              <span className={styles.blockLabel}>Ingrédients · catalogue du foyer</span>
+              <span className={styles.blockCount}>{recipe.ingredients.length}</span>
             </div>
-          </div>
-        </div>
 
-        <div className={styles.section}>
-          <h2>Ingrédients ({recipe.ingredients.length})</h2>
+            <IngredientSelector
+              onSelect={addIngredientToRecipe}
+              onDeselect={deselectIngredient}
+              selectedIngredients={recipe.ingredients}
+            />
 
-          <IngredientSelector
-            onSelect={handleAddIngredientToRecipe}
-            onDeselect={handleDeselectIngredient}
-            selectedIngredients={recipe.ingredients}
-          />
+            {recipe.ingredients.length > 0 && (
+              <div className={styles.ingredients}>
+                {recipe.ingredients.map((ingredient, index) => {
+                  const category = getCategory(ingredient.category);
+                  const error = errors[`ingredient-${index}`];
 
-          {recipe.ingredients.length > 0 && (
-            <div className={styles.ingredientsList}>
-              {recipe.ingredients.map((ingredient, index) => {
-                const category = INGREDIENT_CATEGORIES.find(c => c.id === ingredient.category);
-
-                return (
-                  <div key={index} className={styles.ingredientItem}>
-                    <div className={styles.ingredientVisual}>
+                  return (
+                    <div
+                      key={`${ingredient.ingredientId}-${index}`}
+                      className={`${styles.ingredient} ${error ? styles.ingredientError : ''}`}
+                    >
                       {ingredientImages[ingredient.ingredientId] ? (
                         <img
                           src={ingredientImages[ingredient.ingredientId]}
-                          alt={ingredient.name}
+                          alt=""
                           className={styles.ingredientThumb}
                         />
                       ) : (
-                        <div className={styles.ingredientIcon}>{category?.icon || '📦'}</div>
+                        <EmojiPill emoji={category.icon} tone={category.tone} size="md" />
                       )}
-                    </div>
-                    <div className={styles.ingredientDetails}>
+
                       <span className={styles.ingredientName}>{ingredient.name}</span>
-                      <span className={styles.ingredientCategory}>{category?.label}</span>
-                    </div>
-                    <div className={styles.ingredientInputs}>
+
                       <input
                         type="number"
                         step="0.01"
+                        min="0"
+                        inputMode="decimal"
                         placeholder="Qté"
+                        aria-label={`Quantité de ${ingredient.name}`}
                         value={ingredient.quantity}
-                        onChange={(e) => handleUpdateIngredient(index, 'quantity', e.target.value)}
-                        className={styles.quantityInput}
+                        onChange={(e) => updateIngredient(index, 'quantity', e.target.value)}
+                        className={`${styles.quantity} ${error ? styles.quantityError : ''}`}
                       />
+
                       <select
                         value={ingredient.unit}
-                        onChange={(e) => handleUpdateIngredient(index, 'unit', e.target.value)}
-                        className={styles.unitInput}
+                        aria-label={`Unité de ${ingredient.name}`}
+                        onChange={(e) => updateIngredient(index, 'unit', e.target.value)}
+                        className={styles.unit}
                       >
-                        <optgroup label="Poids">
-                          {UNITS.filter(u => u.category === 'weight').map(unit => (
-                            <option key={unit.id} value={unit.id}>{unit.label}</option>
-                          ))}
-                        </optgroup>
-                        <optgroup label="Volume">
-                          {UNITS.filter(u => u.category === 'volume').map(unit => (
-                            <option key={unit.id} value={unit.id}>{unit.label}</option>
-                          ))}
-                        </optgroup>
-                        <optgroup label="Pièces">
-                          {UNITS.filter(u => u.category === 'piece').map(unit => (
-                            <option key={unit.id} value={unit.id}>{unit.label}</option>
-                          ))}
-                        </optgroup>
-                        <optgroup label="Autres">
-                          {UNITS.filter(u => u.category === 'other').map(unit => (
-                            <option key={unit.id} value={unit.id}>{unit.label}</option>
-                          ))}
-                        </optgroup>
-                      </select>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveIngredient(index)}
-                      className={styles.removeButton}
-                    >
-                      ×
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>Étapes de préparation</h2>
-
-          {recipe.steps.map((step, index) => {
-            const isExpanded = expandedStep === index;
-            const usedIngredients = recipe.ingredients.filter(ing =>
-              step.ingredientIds.includes(ing.ingredientId)
-            );
-
-            return (
-              <div
-                key={index}
-                className={`${styles.stepAccordion} ${isExpanded ? styles.expanded : styles.collapsed}`}
-              >
-                <div
-                  className={styles.stepAccordionHeader}
-                  onClick={() => setExpandedStep(index)}
-                >
-                  <div className={styles.stepNumber}>{index + 1}</div>
-                  <div className={styles.stepHeaderContent}>
-                    <h3 className={styles.stepTitle}>Étape {index + 1}</h3>
-                    {!isExpanded && step.instruction && (
-                      <p className={styles.stepPreview}>
-                        {step.instruction.substring(0, 80)}{step.instruction.length > 80 ? '...' : ''}
-                      </p>
-                    )}
-                    {!isExpanded && usedIngredients.length > 0 && (
-                      <div className={styles.stepIngredientsBadges}>
-                        <span className={styles.ingredientsLabel}>INGRÉDIENTS :</span>
-                        {usedIngredients.map((ing, idx) => (
-                          <span key={idx} className={styles.ingredientBadge}>
-                            {ing.name}
-                          </span>
+                        {unitsByGroup.map((group) => (
+                          <optgroup key={group.category} label={group.label}>
+                            {group.units.map((unit) => (
+                              <option key={unit.id} value={unit.id}>
+                                {unit.label}
+                              </option>
+                            ))}
+                          </optgroup>
                         ))}
-                      </div>
-                    )}
-                  </div>
-                  {recipe.steps.length > 1 && !isExpanded && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveStep(index);
-                      }}
-                      className={styles.removeStepButton}
-                      title="Supprimer cette étape"
-                    >
-                      🗑️
-                    </button>
-                  )}
-                </div>
+                      </select>
 
-                {isExpanded && (
-                  <div className={styles.stepAccordionBody}>
-                    <div className={styles.formGroup}>
-                      <label>Instructions</label>
-                      <VoiceInput
-                        value={step.instruction}
-                        onChange={(value) => handleUpdateStep(index, 'instruction', value)}
-                        rows={4}
-                        placeholder="Décrivez cette étape ou utilisez la dictée vocale..."
-                        autoFocus
-                      />
-                    </div>
-
-                    <div className={styles.stepIngredients}>
-                      <label>Ingrédients utilisés dans cette étape</label>
-                      <p className={styles.hint}>
-                        Sélectionnez les ingrédients nécessaires pour cette étape
-                      </p>
-                      <div className={styles.ingredientCheckboxes}>
-                        {recipe.ingredients.map((ingredient, ingIndex) => {
-                          const isUsed = step.ingredientIds.includes(ingredient.ingredientId);
-
-                          return (
-                            <label key={ingIndex} className={`${styles.checkbox} ${isUsed ? styles.checked : ''}`}>
-                              <input
-                                type="checkbox"
-                                checked={isUsed}
-                                onChange={(e) => {
-                                  const newIds = e.target.checked
-                                    ? [...step.ingredientIds, ingredient.ingredientId]
-                                    : step.ingredientIds.filter(id => id !== ingredient.ingredientId);
-                                  handleUpdateStep(index, 'ingredientIds', newIds);
-                                }}
-                              />
-                              {ingredientImages[ingredient.ingredientId] && (
-                                <img
-                                  src={ingredientImages[ingredient.ingredientId]}
-                                  alt={ingredient.name}
-                                  className={styles.checkboxThumb}
-                                />
-                              )}
-                              <span>{ingredient.name} {ingredient.quantity} {ingredient.unit}</span>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {recipe.steps.length > 1 && (
                       <button
                         type="button"
-                        onClick={() => handleRemoveStep(index)}
-                        className={styles.deleteStepButton}
+                        onClick={() => removeIngredient(index)}
+                        className={styles.removeIngredient}
+                        aria-label={`Retirer ${ingredient.name}`}
                       >
-                        🗑️ Supprimer cette étape
+                        <X size={16} strokeWidth={2.2} />
                       </button>
-                    )}
-                  </div>
-                )}
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
+            )}
 
-          <button
-            type="button"
-            onClick={handleAddStep}
-            className={styles.addStepButtonBottom}
-          >
-            + Ajouter une étape
-          </button>
+            {Object.keys(errors).some((key) => key.startsWith('ingredient-')) && (
+              <p className={styles.errorText}>
+                Renseignez une quantité pour chaque ingrédient.
+              </p>
+            )}
+          </div>
         </div>
 
-        <div className={styles.formActions}>
-          <button
-            type="button"
-            onClick={onCancel}
-            className={styles.cancelButton}
-            disabled={loading}
-          >
-            Annuler
-          </button>
-          <button type="submit" disabled={loading}>
-            {loading
-              ? (isEditing ? 'Modification...' : 'Création...')
-              : (isEditing ? 'Enregistrer les modifications' : 'Créer la recette')
-            }
-          </button>
+        <div className={styles.column}>
+          <div className={styles.block}>
+            <div className={styles.blockHead}>
+              <span className={styles.blockLabel}>Étapes · glisser pour réordonner</span>
+              <span className={styles.blockCount}>{recipe.steps.length}</span>
+            </div>
+
+            <StepEditor
+              steps={recipe.steps}
+              ingredients={recipe.ingredients}
+              expandedStep={expandedStep}
+              onExpandStep={setExpandedStep}
+              onChange={(steps) => setRecipe((prev) => ({ ...prev, steps }))}
+            />
+
+            {errors.steps && <p className={styles.errorText}>{errors.steps}</p>}
+          </div>
+
+          <div className={styles.block}>
+            <span className={styles.blockLabel}>Tags</span>
+            <div className={styles.tags}>
+              {RECIPE_TAGS.map((tag) => (
+                <TagBadge
+                  key={tag.id}
+                  tag={tag}
+                  selected={recipe.tags?.includes(tag.id)}
+                  onClick={() => toggleTag(tag.id)}
+                  className={
+                    recipe.tags?.includes(tag.id) ? styles.tagOn : styles.tagOff
+                  }
+                  style={toneVars(tag.tone)}
+                />
+              ))}
+            </div>
+          </div>
         </div>
-      </form>
-    </div>
+      </div>
+
+      <footer className={styles.footer}>
+        <Button
+          variant="secondary"
+          size="lg"
+          onClick={onCancel}
+          disabled={loading}
+          className={styles.footerCancel}
+        >
+          Annuler
+        </Button>
+        <Button type="submit" variant="primary" size="lg" loading={loading} className={styles.footerSubmit}>
+          {isEditing ? 'Enregistrer les modifications' : 'Créer la recette'}
+        </Button>
+      </footer>
+    </form>
   );
 };
 

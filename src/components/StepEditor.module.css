@@ -1,0 +1,289 @@
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* ---------- Carte d'étape ---------- */
+.card {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+  transition:
+    background-color var(--dur) var(--ease-out),
+    border-color var(--dur) var(--ease-out),
+    box-shadow var(--dur) var(--ease-out);
+}
+
+.expanded {
+  background-color: var(--surface-raised);
+  border-color: var(--accent-primary);
+  box-shadow: var(--elev-2);
+}
+
+.dragging {
+  box-shadow: var(--elev-3);
+  opacity: 0.92;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+}
+
+.handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 28px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-chip);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: grab;
+  touch-action: none;
+}
+
+.handle:active {
+  cursor: grabbing;
+}
+
+.handle:hover {
+  color: var(--text-secondary);
+}
+
+.handle:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.expanded .handle {
+  color: var(--text-secondary);
+}
+
+.headMain {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1;
+  min-width: 0;
+  min-height: 36px;
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.headMain:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-chip);
+}
+
+.number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background-color: var(--accent-primary-soft);
+  color: var(--accent-primary-light);
+  font-family: var(--font-mono);
+  font-size: 0.78125rem;
+  font-weight: 700;
+}
+
+.expanded .number {
+  background-color: var(--accent-primary);
+  color: var(--text-on-accent);
+}
+
+.summary {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-body);
+  font-size: 0.84375rem;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.expanded .summary {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.chevron {
+  flex: none;
+  color: var(--text-muted);
+}
+
+.expanded .chevron {
+  color: var(--text-primary);
+}
+
+/* ---------- Tags d'ingrédients repliés ---------- */
+.collapsedTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  padding: 0 var(--space-3) var(--space-3) calc(var(--space-3) + 28px + var(--space-1));
+}
+
+.miniTag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: var(--radius-chip);
+  background-color: var(--tone-soft);
+  color: var(--tone-text);
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+/* ---------- Corps déplié ---------- */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-1) var(--space-3) var(--space-3);
+}
+
+.attach {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.attachLabel {
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.attachList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.attachChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 34px;
+  padding: 0 var(--space-3);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-field);
+  background-color: var(--bg-primary);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color var(--dur) var(--ease-out),
+    border-color var(--dur) var(--ease-out),
+    color var(--dur) var(--ease-out);
+}
+
+.attachChip:hover {
+  border-style: solid;
+  color: var(--text-primary);
+}
+
+.attachChip:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.attachChipOn {
+  background-color: var(--tone-soft);
+  border-style: solid;
+  border-color: var(--tone-border);
+  color: var(--tone-text);
+}
+
+.removeStep {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: var(--space-2);
+  height: 36px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--error-border);
+  border-radius: var(--radius-field);
+  background-color: var(--error-soft);
+  color: var(--accent-red-text);
+  font-family: var(--font-body);
+  font-size: 0.78125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease-out);
+}
+
+.removeStep:hover {
+  background-color: rgba(239, 68, 68, 0.18);
+}
+
+.removeStep:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ---------- Ajouter une étape ---------- */
+.addStep {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  height: var(--tap-target);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 0.84375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color var(--dur) var(--ease-out),
+    border-color var(--dur) var(--ease-out),
+    color var(--dur) var(--ease-out);
+}
+
+.addStep:hover {
+  background-color: var(--surface);
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+}
+
+.addStep:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}

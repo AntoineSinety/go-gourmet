@@ -1,610 +1,351 @@
-.container {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 0.5rem;
-}
-
-.header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.backButton {
-  background-color: transparent;
-  border: 1px solid var(--border-color);
-  padding: 0.5rem 1rem;
-  color: var(--text-secondary);
-}
-
-.backButton:hover {
-  background-color: var(--bg-tertiary);
-  transform: none;
-}
-
-.header h1 {
-  font-size: 1.75rem;
-}
-
-.error {
-  background-color: rgba(239, 68, 68, 0.1);
-  border: 1px solid var(--error);
-  color: var(--error);
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
-}
+/* ==========================================================================
+   Formulaire de recette — une colonne sur mobile, deux sur desktop
+   ========================================================================== */
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  min-height: 100%;
 }
 
-.section {
-  background-color: var(--bg-secondary);
+/* ---------- En-tête collant ---------- */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background-color: rgba(26, 35, 50, 0.96);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 1.5rem;
+  border-radius: var(--radius-control);
+  background-color: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease-out), color var(--dur) var(--ease-out);
 }
 
-.section h2 {
-  font-size: 1.25rem;
-  margin-bottom: 1.5rem;
+.close:hover {
+  background-color: var(--surface-raised);
   color: var(--text-primary);
 }
 
-.sectionHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  gap: 1rem;
+.close:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
-.sectionHeader h2 {
-  margin: 0;
-}
-
-.addStepButton {
-  background-color: var(--bg-tertiary);
-  border: 1px solid var(--border-color);
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
+.title {
+  flex: 1;
+  min-width: 0;
+  font: var(--text-display-sm);
+  font-size: 1.125rem;
+  letter-spacing: var(--tracking-display-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.formGroup {
-  margin-bottom: 1.25rem;
-}
-
-.formGroup:last-child {
-  margin-bottom: 0;
-}
-
-.formGroup label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.formGroup input,
-.formGroup textarea,
-.formGroup select {
-  width: 100%;
-}
-
-/* Tags Selector */
-.tagsSelector {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.tagButton {
-  display: flex;
+.headerActions {
+  display: none;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  border: 2px solid var(--border-color);
-  background-color: transparent;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
+  gap: var(--space-2);
+  flex: none;
 }
 
-.tagButton:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+/* ---------- Colonnes ---------- */
+.columns {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4);
+  /* Réserve la place de la barre d'actions collante du mobile. */
+  padding-bottom: calc(var(--space-8) + 64px);
 }
 
-.tagButton.tagSelected {
-  font-weight: 600;
-}
-
-.ingredientsList {
-  margin-top: 1.5rem;
+.column {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-5);
+  min-width: 0;
 }
 
-.ingredientItem {
+/* ---------- Type et portions ---------- */
+.typeRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.typeField {
+  min-width: 0;
+}
+
+.typeChips {
+  margin: 0 calc(-1 * var(--space-4));
+  padding: 0 var(--space-4);
+}
+
+.servingsField {
+  flex: none;
+}
+
+/* ---------- Blocs ---------- */
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.blockHead {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.625rem;
-  background-color: var(--bg-tertiary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  transition: all 0.2s;
+  justify-content: space-between;
+  gap: var(--space-3);
 }
 
-.ingredientItem:hover {
-  border-color: var(--accent-blue);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.blockLabel {
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-secondary);
 }
 
-.ingredientVisual {
-  flex-shrink: 0;
+.blockCount {
+  font-family: var(--font-mono);
+  font-size: 0.71875rem;
+  color: var(--text-muted);
+}
+
+.errorText {
+  font: var(--text-body-sm);
+  color: var(--accent-red-text);
+}
+
+/* ---------- Ingrédients sélectionnés ---------- */
+.ingredients {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ingredient {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-control);
+}
+
+.ingredientError {
+  background-color: var(--error-soft);
+  border-color: var(--error);
 }
 
 .ingredientThumb {
-  width: 44px;
-  height: 44px;
+  width: 32px;
+  height: 32px;
+  flex: none;
   object-fit: cover;
-  border-radius: 6px;
-  border: 2px solid var(--border-color);
-}
-
-.ingredientIcon {
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-hover) 100%);
-  border-radius: 6px;
-  border: 2px solid var(--border-color);
-}
-
-.ingredientDetails {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
+  border-radius: 9px;
 }
 
 .ingredientName {
-  color: var(--text-primary);
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.ingredientCategory {
-  color: var(--text-muted);
-  font-size: 0.75rem;
-}
-
-.ingredientInputs {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.quantityInput,
-.unitInput {
-  width: 80px !important;
-  padding: 0.5rem !important;
-  font-size: 0.9rem;
-}
-
-.removeButton {
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  background-color: transparent;
-  border: 1px solid var(--border-color);
-  color: var(--error);
-  font-size: 1.5rem;
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-.removeButton:hover {
-  background-color: rgba(239, 68, 68, 0.1);
-  border-color: var(--error);
-  transform: none;
-}
-
-/* Accordion Step Styles */
-.stepAccordion {
-  background-color: var(--bg-tertiary);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  margin-bottom: 1rem;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.stepAccordion:last-child {
-  margin-bottom: 0;
-}
-
-.stepAccordion.expanded {
-  border-color: rgba(147, 51, 234, 0.5);
-  box-shadow: 0 4px 16px rgba(147, 51, 234, 0.2);
-}
-
-.stepAccordionHeader {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  padding: 1rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.stepAccordionHeader:hover {
-  background-color: var(--bg-hover);
-}
-
-.stepAccordion.expanded .stepAccordionHeader {
-  background-color: rgba(147, 51, 234, 0.1);
-  border-bottom: 1px solid rgba(147, 51, 234, 0.3);
-}
-
-.stepNumber {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  min-height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #9333ea 0%, #7e22ce 100%);
-  color: white;
-  font-weight: 700;
-  font-size: 1.125rem;
-  border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.4);
-}
-
-.stepHeaderContent {
   flex: 1;
   min-width: 0;
-}
-
-.stepTitle {
-  font-size: 1rem;
-  font-weight: 600;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
   color: var(--text-primary);
-  margin: 0 0 0.5rem 0;
-}
-
-.stepPreview {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  line-height: 1.5;
-  margin: 0.5rem 0;
-  opacity: 0.85;
-}
-
-.stepIngredientsBadges {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
-}
-
-.ingredientsLabel {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  letter-spacing: 0.05em;
-}
-
-.ingredientBadge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.75rem;
-  background: linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(126, 34, 206, 0.2) 100%);
-  border: 1px solid rgba(147, 51, 234, 0.4);
-  border-radius: 12px;
-  color: #c084fc;
-  font-size: 0.8rem;
-  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.stepAccordionBody {
-  padding: 1.5rem;
-  animation: slideDown 0.3s ease;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.removeStepButton {
-  background-color: transparent;
+.quantity,
+.unit {
+  flex: none;
+  height: 34px;
+  background-color: var(--bg-primary);
   border: 1px solid var(--border-color);
-  padding: 0.5rem;
-  font-size: 1.25rem;
-  color: var(--error);
-  min-width: 36px;
-  min-height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  flex-shrink: 0;
-}
-
-.removeStepButton:hover {
-  background-color: rgba(239, 68, 68, 0.1);
-  border-color: var(--error);
-  transform: none;
-}
-
-.addStepButtonBottom {
-  width: 100%;
-  background: linear-gradient(135deg, rgba(147, 51, 234, 0.15) 0%, rgba(126, 34, 206, 0.15) 100%);
-  border: 2px dashed rgba(147, 51, 234, 0.4);
-  padding: 1rem;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #c084fc;
-  border-radius: 12px;
-  margin-top: 1rem;
-  transition: all 0.2s;
-}
-
-.addStepButtonBottom:hover {
-  background: linear-gradient(135deg, rgba(147, 51, 234, 0.25) 0%, rgba(126, 34, 206, 0.25) 100%);
-  border-color: rgba(147, 51, 234, 0.6);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
-}
-
-.stepIngredients {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
-}
-
-.stepIngredients label {
-  display: block;
+  border-radius: 9px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
   font-weight: 500;
-  margin-bottom: 0.5rem;
+  transition: border-color var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
+}
+
+.quantity {
+  width: 58px;
+  padding: 0 var(--space-1);
+  text-align: center;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.quantity::-webkit-outer-spin-button,
+.quantity::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.quantityError {
+  border-color: var(--error);
+  color: var(--accent-red-text);
+}
+
+.unit {
+  max-width: 104px;
+  padding: 0 var(--space-2);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.unit option {
+  background-color: var(--surface);
   color: var(--text-primary);
 }
 
-.hint {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin-bottom: 1rem;
+.quantity:focus,
+.unit:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: var(--focus-ring);
 }
 
-.ingredientCheckboxes {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.checkbox {
-  display: flex;
+.removeIngredient {
+  display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.625rem 0.75rem;
-  margin-bottom: 0;
+  justify-content: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-chip);
+  background: transparent;
+  color: var(--text-muted);
   cursor: pointer;
-  border-radius: 8px;
-  border: 2px solid var(--border-color);
-  background-color: var(--bg-secondary);
-  transition: all 0.2s;
-  font-weight: normal !important;
-  font-size: 0.9rem;
+  transition: background-color var(--dur) var(--ease-out), color var(--dur) var(--ease-out);
 }
 
-.checkbox:hover {
-  border-color: var(--accent-blue);
-  background-color: var(--bg-hover);
+.removeIngredient:hover {
+  background-color: var(--error-soft);
+  color: var(--accent-red-text);
 }
 
-.checkbox.checked {
-  border-color: var(--accent-green);
-  border-width: 3px;
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.15) 100%);
-  box-shadow: 0 2px 12px rgba(34, 197, 94, 0.3);
-  font-weight: 600 !important;
+.removeIngredient:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
-.checkbox input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
-  margin: 0;
-  cursor: pointer;
-  flex-shrink: 0;
-  accent-color: var(--accent-green);
-}
-
-.checkboxThumb {
-  width: 32px;
-  height: 32px;
-  object-fit: cover;
-  border-radius: 6px;
-  border: 2px solid var(--border-color);
-  flex-shrink: 0;
-  transition: all 0.2s;
-}
-
-.checked .checkboxThumb {
-  border-color: var(--accent-green);
-  border-width: 3px;
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
-}
-
-.formActions {
+/* ---------- Tags ---------- */
+.tags {
   display: flex;
-  gap: 1rem;
-  padding-top: 1rem;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
-.formActions button {
-  flex: 1;
-  padding: 0.875rem 1.5rem;
+.tagOn,
+.tagOff {
+  height: 34px;
+  padding: 0 var(--space-3);
+  border-radius: 9px;
+  font-size: 0.78125rem;
 }
 
-.cancelButton {
-  background-color: transparent;
-  border: 1px solid var(--border-color);
+.tagOff {
+  background-color: var(--surface);
+  border-color: var(--border-color);
   color: var(--text-secondary);
 }
 
-.cancelButton:hover {
-  background-color: var(--bg-hover);
-  transform: none;
+/* ---------- Barre d'actions mobile ---------- */
+.footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--bottom-nav-height) + var(--safe-bottom));
+  z-index: var(--z-sticky);
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background-color: rgba(26, 35, 50, 0.96);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid var(--border-subtle);
 }
 
-@media (max-width: 768px) {
-  .container {
-    padding: 0.5rem;
+.footerCancel {
+  flex: none;
+}
+
+.footerSubmit {
+  flex: 1;
+}
+
+/* ==========================================================================
+   Desktop
+   ========================================================================== */
+@media (min-width: 769px) {
+  .header {
+    padding: var(--space-3) var(--space-8);
   }
 
-  .header h1 {
-    font-size: 1.5rem;
+  .title {
+    font-size: 1.3125rem;
+    font-weight: 700;
   }
 
-  .section {
-    padding: 1rem;
+  .headerActions {
+    display: flex;
   }
 
-  .ingredientItem {
-    flex-wrap: nowrap;
-    gap: 0.5rem;
-    padding: 0.5rem;
+  .columns {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-8);
+    padding: var(--space-8) var(--space-12);
   }
 
-  .ingredientVisual {
-    flex-shrink: 0;
+  .column {
+    gap: var(--space-6);
   }
 
-  .ingredientThumb,
-  .ingredientIcon {
-    width: 40px;
-    height: 40px;
+  .typeRow {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: var(--space-4);
   }
 
-  .ingredientDetails {
+  .typeField {
     flex: 1;
-    text-align: left;
   }
 
-  .ingredientName {
-    font-size: 0.85rem;
+  .typeChips {
+    margin: 0;
+    padding: 0;
+    flex-wrap: wrap;
+    overflow: visible;
   }
 
-  .ingredientCategory {
-    font-size: 0.7rem;
-  }
-
-  .ingredientInputs {
-    flex-shrink: 0;
-  }
-
-  .quantityInput,
-  .unitInput {
-    width: 60px !important;
-    padding: 0.4rem !important;
-    font-size: 0.85rem;
-  }
-
-  .removeButton {
-    width: 28px;
-    height: 28px;
-    font-size: 1.25rem;
-  }
-
-  .formActions {
-    flex-direction: column;
-  }
-
-  .sectionHeader {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .addStepButton {
-    width: 100%;
-  }
-
-  .checkbox {
-    gap: 0.5rem;
-    padding: 0.5rem 0.625rem;
-    font-size: 0.85rem;
-  }
-
-  .checkbox input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-  }
-
-  .checkboxThumb {
-    width: 28px;
-    height: 28px;
-  }
-
-  .checked .checkboxThumb {
-    border-width: 2px;
-  }
-
-  .stepAccordionHeader {
-    padding: 0.75rem;
-    gap: 0.75rem;
-  }
-
-  .stepNumber {
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-    min-height: 32px;
-    font-size: 1rem;
-  }
-
-  .stepTitle {
-    font-size: 0.9rem;
-  }
-
-  .stepPreview {
-    font-size: 0.85rem;
-  }
-
-  .ingredientBadge {
-    font-size: 0.75rem;
-    padding: 0.2rem 0.6rem;
-  }
-
-  .stepAccordionBody {
-    padding: 1rem;
-  }
-
-  .addStepButtonBottom {
-    font-size: 0.9rem;
-    padding: 0.875rem;
+  /* La barre mobile disparaît : les actions vivent dans l'en-tête. */
+  .footer {
+    display: none;
   }
 }
