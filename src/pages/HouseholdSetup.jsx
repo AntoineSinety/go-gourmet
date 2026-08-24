@@ -1,18 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useHousehold } from '../contexts/HouseholdContext';
-import { Plus, ArrowRight, ArrowLeft, Home, Users, PartyPopper } from 'lucide-react';
+import { Home, Users, AlertCircle, PartyPopper } from 'lucide-react';
+import AuthShell from '../components/AuthShell';
+import { Button, Segmented, Field, Input } from '../components/ui';
 import styles from './HouseholdSetup.module.css';
+
+const MODES = [
+  { value: 'create', label: 'Créer' },
+  { value: 'join', label: 'Rejoindre' }
+];
 
 const HouseholdSetup = () => {
   const { createHousehold, joinHousehold } = useHousehold();
-  const [mode, setMode] = useState(null);
+
+  const [mode, setMode] = useState('create');
   const [householdName, setHouseholdName] = useState('');
   const [householdId, setHouseholdId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isInviteLink, setIsInviteLink] = useState(false);
 
-  // Check for invite link parameter on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const joinId = params.get('join');
@@ -21,15 +28,14 @@ const HouseholdSetup = () => {
       setHouseholdId(joinId);
       setMode('join');
       setIsInviteLink(true);
-      // Clean up URL without reloading the page
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);
 
-  const handleCreateHousehold = async (e) => {
+  const handleCreate = async (e) => {
     e.preventDefault();
     if (!householdName.trim()) {
-      setError('Veuillez entrer un nom de foyer');
+      setError('Donnez un nom à votre foyer');
       return;
     }
 
@@ -37,21 +43,20 @@ const HouseholdSetup = () => {
     setError(null);
 
     try {
-      await createHousehold(householdName);
+      await createHousehold(householdName.trim());
     } catch (err) {
-      setError('Erreur lors de la création du foyer');
       console.error(err);
-    } finally {
+      setError('Le foyer n’a pas pu être créé. Réessayez.');
       setLoading(false);
     }
   };
 
-  const handleJoinHousehold = async (e) => {
+  const handleJoin = async (e) => {
     e.preventDefault();
     const cleanedId = householdId.trim();
 
     if (!cleanedId) {
-      setError('Veuillez entrer un ID de foyer');
+      setError('Entrez le code d’invitation du foyer');
       return;
     }
 
@@ -61,131 +66,106 @@ const HouseholdSetup = () => {
     try {
       await joinHousehold(cleanedId);
     } catch (err) {
-      setError('Erreur lors de la connexion au foyer. Vérifiez l\'ID.');
       console.error(err);
-    } finally {
+      setError('Foyer introuvable. Vérifiez le code reçu.');
       setLoading(false);
     }
   };
 
-  if (!mode) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.card}>
-          <div className={styles.header}>
-            <h1>Configuration du foyer</h1>
-            <p>Choisissez comment vous souhaitez utiliser l'application</p>
-          </div>
+  return (
+    <AuthShell>
+      <h1 className={styles.title}>Votre foyer</h1>
+      <p className={styles.intro}>
+        Créez un foyer ou rejoignez celui de votre famille avec un code d’invitation.
+      </p>
 
-          <div className={styles.options}>
-            <button
-              onClick={() => setMode('create')}
-              className={styles.optionButton}
+      {!isInviteLink && (
+        <Segmented
+          options={MODES}
+          value={mode}
+          onChange={(value) => {
+            setMode(value);
+            setError(null);
+          }}
+          size="md"
+          label="Créer ou rejoindre un foyer"
+          className={styles.modes}
+        />
+      )}
+
+      <div className={styles.card}>
+        <span className={styles.icon}>
+          {mode === 'create' ? (
+            <Home size={24} strokeWidth={2} />
+          ) : (
+            <Users size={24} strokeWidth={2} />
+          )}
+        </span>
+
+        <h2 className={styles.cardTitle}>
+          {mode === 'create' ? 'Créer un foyer' : 'Rejoindre un foyer'}
+        </h2>
+
+        {isInviteLink && (
+          <p className={styles.invite}>
+            <PartyPopper size={16} strokeWidth={2.2} />
+            Vous avez été invité à rejoindre un foyer.
+          </p>
+        )}
+
+        {error && (
+          <div className={styles.error} role="alert">
+            <AlertCircle size={17} strokeWidth={2.2} />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {mode === 'create' ? (
+          <form onSubmit={handleCreate} className={styles.form}>
+            <Field
+              label="Nom du foyer"
+              hint="Vous pourrez le renommer et inviter des membres ensuite."
+              htmlFor="household-name"
             >
-              <div className={styles.optionIcon}><Plus size={24} /></div>
-              <h3>Créer un nouveau foyer</h3>
-              <p>Commencez avec votre propre collection de recettes</p>
-            </button>
-
-            <button
-              onClick={() => setMode('join')}
-              className={styles.optionButton}
-            >
-              <div className={styles.optionIcon}><Users size={24} /></div>
-              <h3>Rejoindre un foyer</h3>
-              <p>Partagez les recettes avec d'autres personnes</p>
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (mode === 'create') {
-    return (
-      <div className={styles.container}>
-        <div className={styles.card}>
-          <button
-            onClick={() => setMode(null)}
-            className={styles.backButton}
-          >
-            <ArrowLeft size={16} style={{ marginRight: '6px' }} />Retour
-          </button>
-
-          <div className={styles.header}>
-            <div className={styles.headerIcon}><Home size={32} /></div>
-            <h1>Créer un foyer</h1>
-            <p>Donnez un nom à votre foyer</p>
-          </div>
-
-          {error && <div className={styles.error}>{error}</div>}
-
-          <form onSubmit={handleCreateHousehold} className={styles.form}>
-            <div className={styles.formGroup}>
-              <label htmlFor="householdName">Nom du foyer</label>
-              <input
-                type="text"
-                id="householdName"
+              <Input
+                id="household-name"
                 value={householdName}
                 onChange={(e) => setHouseholdName(e.target.value)}
-                placeholder="Ex: Famille Dupont, Colocation..."
+                placeholder="Ex. Chez Antoine & Marie"
                 autoFocus
                 disabled={loading}
               />
-            </div>
+            </Field>
 
-            <button type="submit" disabled={loading} className={styles.submitButton}>
-              {loading ? 'Création...' : 'Créer le foyer'}
-            </button>
+            <Button type="submit" variant="primary" size="lg" fullWidth loading={loading}>
+              Créer le foyer
+            </Button>
           </form>
-        </div>
-      </div>
-    );
-  }
+        ) : (
+          <form onSubmit={handleJoin} className={styles.form}>
+            <Field
+              label="Code d’invitation"
+              hint="Le code vous a été communiqué par un membre du foyer."
+              htmlFor="household-code"
+            >
+              <Input
+                id="household-code"
+                value={householdId}
+                onChange={(e) => setHouseholdId(e.target.value)}
+                placeholder="Collez le code ici"
+                autoFocus={!isInviteLink}
+                disabled={loading}
+                className={styles.codeInput}
+              />
+            </Field>
 
-  return (
-    <div className={styles.container}>
-      <div className={styles.card}>
-        {!isInviteLink && (
-          <button
-            onClick={() => setMode(null)}
-            className={styles.backButton}
-          >
-            <ArrowLeft size={16} style={{ marginRight: '6px' }} />Retour
-          </button>
+            <Button type="submit" variant="primary" size="lg" fullWidth loading={loading}>
+              Rejoindre le foyer
+            </Button>
+          </form>
         )}
-
-        <div className={styles.header}>
-          <div className={styles.headerIcon}><Users size={32} /></div>
-          <h1>Rejoindre un foyer</h1>
-          <p>{isInviteLink ? <><PartyPopper size={16} style={{ verticalAlign: 'middle', marginRight: '6px' }} />Vous avez été invité à rejoindre un foyer !</> : 'Entrez l\'ID du foyer partagé par un membre'}</p>
-        </div>
-
-        {error && <div className={styles.error}>{error}</div>}
-
-        <form onSubmit={handleJoinHousehold} className={styles.form}>
-          <div className={styles.formGroup}>
-            <label htmlFor="householdId">ID du foyer</label>
-            <input
-              type="text"
-              id="householdId"
-              value={householdId}
-              onChange={(e) => setHouseholdId(e.target.value)}
-              placeholder="Collez l'ID du foyer ici"
-              autoFocus={!isInviteLink}
-              disabled={loading}
-            />
-            <small className={styles.hint}>
-              {isInviteLink ? 'Cliquez sur "Rejoindre" pour accéder au foyer partagé' : 'L\'ID vous a été communiqué par un membre du foyer'}
-            </small>
-          </div>
-
-          <button type="submit" disabled={loading} className={styles.submitButton}>
-            {loading ? 'Connexion...' : 'Rejoindre le foyer'}
-          </button>
-        </form>
       </div>
-    </div>
+    </AuthShell>
   );
 };
 

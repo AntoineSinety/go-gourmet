@@ -1,0 +1,30 @@
+.shell {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: var(--space-6) var(--space-4);
+  padding-top: calc(var(--safe-top) + var(--space-6));
+  padding-bottom: calc(var(--safe-bottom) + var(--space-6));
+  background-color: var(--bg-canvas);
+  overflow: hidden;
+}
+
+.halo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 340px;
+  background: radial-gradient(120% 90% at 50% 0%, rgba(255, 115, 0, 0.16), rgba(255, 115, 0, 0));
+  pointer-events: none;
+}
+
+.content {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+}

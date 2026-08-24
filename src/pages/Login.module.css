@@ -1,112 +1,139 @@
-.loginContainer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  padding: 1rem;
-  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
-}
-
-.loginCard {
-  width: 100%;
-  max-width: 420px;
-  background-color: var(--bg-secondary);
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+.card {
+  padding: var(--space-8) var(--space-6);
+  background-color: var(--bg-primary);
   border: 1px solid var(--border-color);
-}
-
-.logo {
+  border-radius: 24px;
+  box-shadow: var(--elev-3);
   text-align: center;
-  margin-bottom: 2rem;
 }
 
-.logoIcon {
+.mark {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 72px;
   height: 72px;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--accent-primary);
-  border-radius: 16px;
-  color: var(--accent-primary);
-  margin-bottom: 1rem;
+  border-radius: 24px;
+  background-color: var(--accent-primary);
+  color: var(--text-on-accent);
+  box-shadow: 0 8px 24px rgba(255, 115, 0, 0.3);
 }
 
-.logo h1 {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
-  background: linear-gradient(135deg, var(--accent-primary-light) 0%, var(--accent-primary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.brand {
+  margin-top: var(--space-5);
+  font: var(--text-display-lg);
+  font-size: 1.875rem;
+  letter-spacing: var(--tracking-display);
 }
 
-.logo p {
+.tagline {
+  margin-top: var(--space-2);
+  font-size: 0.875rem;
   color: var(--text-secondary);
-  font-size: 0.95rem;
 }
 
-.loginContent {
-  margin-top: 2rem;
+.divider {
+  height: 1px;
+  margin: var(--space-6) 0;
+  background-color: var(--border-subtle);
 }
 
-.loginContent h2 {
-  font-size: 1.5rem;
-  margin-bottom: 0.5rem;
+.title {
+  font: var(--text-display-sm);
+  font-size: 1.375rem;
+  letter-spacing: var(--tracking-display-sm);
 }
 
-.subtitle {
+.text {
+  margin-top: var(--space-2);
+  font-size: 0.84375rem;
+  line-height: 1.6;
   color: var(--text-secondary);
-  margin-bottom: 2rem;
-  font-size: 0.95rem;
 }
 
-.googleButton {
+/* ---------- Erreur ---------- */
+.error {
   display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--error-soft);
+  border: 1px solid var(--error-border);
+  border-radius: var(--radius-control);
+  color: #fca5a5;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.error svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--error);
+}
+
+/* ---------- Bouton Google ---------- */
+.googleButton {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
   width: 100%;
-  background-color: var(--bg-tertiary);
+  height: 52px;
+  margin-top: var(--space-5);
   border: 1px solid var(--border-color);
-  padding: 0.875rem 1.5rem;
-  font-size: 1rem;
-  transition: all 0.2s;
+  border-radius: var(--radius-card);
+  background-color: var(--text-primary);
+  color: var(--text-on-accent);
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color var(--dur) var(--ease-out),
+    color var(--dur) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
-.googleButton:hover {
-  background-color: rgba(249, 115, 22, 0.1);
-  border-color: var(--accent-primary);
-  color: var(--accent-primary);
+.googleButton:hover:not(:disabled) {
+  background-color: #ffffff;
 }
 
-.googleButton svg {
-  flex-shrink: 0;
+.googleButton:active:not(:disabled) {
+  transform: scale(0.985);
 }
 
-.error {
-  background-color: rgba(239, 68, 68, 0.1);
-  border: 1px solid var(--error);
-  color: var(--error);
-  padding: 0.75rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
+.googleButton:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
-@media (max-width: 480px) {
-  .loginCard {
-    padding: 1.5rem;
+.googleButton:disabled {
+  background-color: var(--surface-raised);
+  color: var(--text-secondary);
+  cursor: progress;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border: 2.5px solid var(--text-muted);
+  border-top-color: var(--accent-primary-light);
+  border-radius: var(--radius-pill);
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
+}
 
-  .logo h1 {
-    font-size: 1.75rem;
-  }
-
-  .loginContent h2 {
-    font-size: 1.25rem;
-  }
+.note {
+  margin-top: var(--space-4);
+  font-size: 0.71875rem;
+  line-height: 1.5;
+  color: var(--text-muted);
 }

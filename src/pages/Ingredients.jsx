@@ -1,12 +1,39 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useIngredients, INGREDIENT_CATEGORIES } from '../contexts/IngredientContext';
+import { useToast } from '../contexts/ToastContext';
 import { useScrollRestoration, usePersistedState } from '../hooks/useScrollRestoration';
+import { UNITS, getUnitLabel } from '../utils/units';
+import { toneVars } from '../utils/palette';
 import ImageUpload from '../components/ImageUpload';
-import { loadImageWithCache } from '../services/imageService';
-import { Plus, Pencil, Trash2, BookOpen, LayoutGrid, List, Package, Users } from 'lucide-react';
+import OptimizedImage from '../components/OptimizedImage';
+import { Plus, Pencil, Trash2, BookOpen, ArrowLeft, Carrot, SearchX } from 'lucide-react';
+import {
+  Page,
+  Button,
+  SearchField,
+  Chip,
+  EmojiPill,
+  Modal,
+  Field,
+  Input,
+  Select,
+  EmptyState,
+  RowSkeleton
+} from '../components/ui';
 import styles from './Ingredients.module.css';
 
-const Ingredients = () => {
+const emptyForm = () => ({
+  name: '',
+  category: 'fruits-legumes',
+  defaultUnit: 'g',
+  imageUrl: null
+});
+
+const getCategory = (id) =>
+  INGREDIENT_CATEGORIES.find((c) => c.id === id) ||
+  INGREDIENT_CATEGORIES[INGREDIENT_CATEGORIES.length - 1];
+
+const Ingredients = ({ onBack }) => {
   const {
     ingredients,
     loading,
@@ -15,475 +42,390 @@ const Ingredients = () => {
     deleteIngredient,
     getIngredientRecipes
   } = useIngredients();
+  const toast = useToast();
 
-  // Persister les filtres
   const [persistedFilters, setPersistedFilters] = usePersistedState('ingredientsFilters', {
     searchTerm: '',
-    selectedCategory: 'all',
-    viewMode: 'category'
+    selectedCategory: 'all'
   });
 
   const [searchTerm, setSearchTerm] = useState(persistedFilters.searchTerm);
   const [selectedCategory, setSelectedCategory] = useState(persistedFilters.selectedCategory);
-  const [viewMode, setViewMode] = useState(persistedFilters.viewMode);
 
-  // Restaurer le scroll
-  useScrollRestoration('ingredients', [loading, ingredients.length]);
-
-  // Sauvegarder les filtres
-  useEffect(() => {
-    setPersistedFilters({
-      searchTerm,
-      selectedCategory,
-      viewMode
-    });
-  }, [searchTerm, selectedCategory, viewMode, setPersistedFilters]);
-  const [editingIngredient, setEditingIngredient] = useState(null);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
-  const [ingredientRecipes, setIngredientRecipes] = useState([]);
-  const [loadingRecipes, setLoadingRecipes] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [formData, setFormData] = useState(emptyForm);
   const [imageFile, setImageFile] = useState(null);
   const [removeImage, setRemoveImage] = useState(false);
-  const [recipeCountsCache, setRecipeCountsCache] = useState({});
-  const [showRecipesModal, setShowRecipesModal] = useState(null);
+  const [saving, setSaving] = useState(false);
 
-  const [formData, setFormData] = useState({
-    name: '',
-    category: 'fruits-legumes',
-    imageUrl: null
-  });
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [usedInRecipes, setUsedInRecipes] = useState([]);
 
-  // Charger les compteurs de recettes pour tous les ingrédients
+  useScrollRestoration('ingredients', [loading, ingredients.length]);
+
   useEffect(() => {
-    const loadRecipeCounts = async () => {
-      const counts = {};
-      for (const ingredient of ingredients) {
-        const recipes = await getIngredientRecipes(ingredient.id);
-        counts[ingredient.id] = recipes.length;
-      }
-      setRecipeCountsCache(counts);
-    };
+    setPersistedFilters({ searchTerm, selectedCategory });
+  }, [searchTerm, selectedCategory, setPersistedFilters]);
 
-    if (ingredients.length > 0) {
-      loadRecipeCounts();
-    }
-  }, [ingredients, getIngredientRecipes]);
+  const countByCategory = useMemo(() => {
+    const counts = {};
+    ingredients.forEach((ing) => {
+      counts[ing.category] = (counts[ing.category] || 0) + 1;
+    });
+    return counts;
+  }, [ingredients]);
 
-  const filteredIngredients = ingredients.filter(ing => {
-    const matchesSearch = ing.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || ing.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const filtered = useMemo(() => {
+    const search = searchTerm.trim().toLowerCase();
+    return ingredients.filter((ing) => {
+      const matchesSearch = !search || ing.name.toLowerCase().includes(search);
+      const matchesCategory = selectedCategory === 'all' || ing.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [ingredients, searchTerm, selectedCategory]);
 
-  // Grouper par catégories
-  const ingredientsByCategory = INGREDIENT_CATEGORIES.map(category => ({
-    ...category,
-    ingredients: filteredIngredients.filter(ing => ing.category === category.id)
-  })).filter(cat => cat.ingredients.length > 0);
+  const sections = useMemo(
+    () =>
+      INGREDIENT_CATEGORIES.map((category) => ({
+        ...category,
+        items: filtered
+          .filter((ing) => ing.category === category.id)
+          .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+      })).filter((category) => category.items.length > 0),
+    [filtered]
+  );
 
-  const handleAddIngredient = async () => {
-    if (!formData.name.trim()) return;
-
-    try {
-      await addIngredient(formData, imageFile);
-      setFormData({ name: '', category: 'fruits-legumes', imageUrl: null });
-      setImageFile(null);
-      setShowAddForm(false);
-    } catch (error) {
-      console.error('Error adding ingredient:', error);
-    }
+  const openCreate = () => {
+    setEditing(null);
+    setFormData(emptyForm());
+    setImageFile(null);
+    setRemoveImage(false);
+    setFormOpen(true);
   };
 
-  const handleEditIngredient = async () => {
-    if (!formData.name.trim() || !editingIngredient) return;
-
-    try {
-      await updateIngredient(editingIngredient.id, formData, imageFile, removeImage);
-      setEditingIngredient(null);
-      setFormData({ name: '', category: 'fruits-legumes', imageUrl: null });
-      setImageFile(null);
-      setRemoveImage(false);
-    } catch (error) {
-      console.error('Error updating ingredient:', error);
-    }
-  };
-
-  const handleDeleteClick = async (ingredient) => {
-    setLoadingRecipes(true);
-    const recipes = await getIngredientRecipes(ingredient.id);
-    setIngredientRecipes(recipes);
-    setShowDeleteConfirm(ingredient);
-    setLoadingRecipes(false);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!showDeleteConfirm) return;
-
-    try {
-      await deleteIngredient(showDeleteConfirm.id);
-      setShowDeleteConfirm(null);
-      setIngredientRecipes([]);
-    } catch (error) {
-      console.error('Error deleting ingredient:', error);
-    }
-  };
-
-  const handleShowRecipes = async (ingredient) => {
-    setLoadingRecipes(true);
-    const recipes = await getIngredientRecipes(ingredient.id);
-    setShowRecipesModal({ ingredient, recipes });
-    setLoadingRecipes(false);
-  };
-
-  const openEditForm = (ingredient) => {
-    setEditingIngredient(ingredient);
+  const openEdit = (ingredient) => {
+    setEditing(ingredient);
     setFormData({
       name: ingredient.name,
       category: ingredient.category,
-      imageUrl: ingredient.imageUrl
+      defaultUnit: ingredient.defaultUnit || 'g',
+      imageUrl: ingredient.imageUrl || null
     });
     setImageFile(null);
     setRemoveImage(false);
-    setShowAddForm(false);
+    setFormOpen(true);
   };
 
-  const cancelEdit = () => {
-    setEditingIngredient(null);
-    setFormData({ name: '', category: 'fruits-legumes', imageUrl: null });
-    setImageFile(null);
-    setRemoveImage(false);
-  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.name.trim()) return;
 
-  const handleImageSelect = (file) => {
-    setImageFile(file);
-    setRemoveImage(false);
-  };
+    setSaving(true);
+    const payload = { ...formData, name: formData.name.trim() };
 
-  const handleImageRemove = () => {
-    setImageFile(null);
-    setRemoveImage(true);
-    setFormData(prev => ({ ...prev, imageUrl: null }));
-  };
-
-  if (loading) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.loading}>Chargement des ingrédients...</div>
-      </div>
-    );
-  }
-
-  const IngredientCard = ({ ingredient }) => {
-    const category = INGREDIENT_CATEGORIES.find(c => c.id === ingredient.category);
-    const [cachedImageUrl, setCachedImageUrl] = useState(null);
-    const recipeCount = recipeCountsCache[ingredient.id] || 0;
-
-    useEffect(() => {
-      if (ingredient.imageUrl) {
-        loadImageWithCache(ingredient.imageUrl).then(setCachedImageUrl);
+    try {
+      if (editing) {
+        await updateIngredient(editing.id, payload, imageFile, removeImage);
+        toast.success('Ingrédient modifié');
+      } else {
+        await addIngredient(payload, imageFile);
+        toast.success(`« ${payload.name} » ajouté au catalogue`);
       }
-    }, [ingredient.imageUrl]);
-
-    return (
-      <div className={styles.ingredientCard}>
-        <div className={styles.ingredientImage}>
-          {cachedImageUrl || ingredient.imageUrl ? (
-            <img src={cachedImageUrl || ingredient.imageUrl} alt={ingredient.name} />
-          ) : (
-            <div className={styles.placeholderImage}>
-              <span className={styles.placeholderIcon}><Package size={32} /></span>
-            </div>
-          )}
-        </div>
-        <div className={styles.ingredientInfo}>
-          <h3>{ingredient.name}</h3>
-        </div>
-        <div className={styles.ingredientFooter}>
-          <button
-            onClick={() => handleShowRecipes(ingredient)}
-            className={styles.recipeCount}
-            title="Voir les recettes"
-          >
-            <BookOpen size={14} style={{ marginRight: '4px' }} />{recipeCount}
-          </button>
-          <div className={styles.ingredientActions}>
-            <button
-              onClick={() => openEditForm(ingredient)}
-              className={styles.editBtn}
-              title="Modifier"
-            >
-              <Pencil size={14} />
-            </button>
-            <button
-              onClick={() => handleDeleteClick(ingredient)}
-              className={styles.deleteBtn}
-              title="Supprimer"
-            >
-              <Trash2 size={14} />
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+      setFormOpen(false);
+    } catch (error) {
+      console.error('Error saving ingredient:', error);
+      toast.error("L'ingrédient n'a pas pu être enregistré");
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const askDelete = useCallback(
+    async (ingredient) => {
+      setPendingDelete(ingredient);
+      setUsedInRecipes([]);
+      try {
+        setUsedInRecipes(await getIngredientRecipes(ingredient.id));
+      } catch (error) {
+        console.error('Error loading ingredient recipes:', error);
+      }
+    },
+    [getIngredientRecipes]
+  );
+
+  const handleDelete = async () => {
+    const ingredient = pendingDelete;
+    setPendingDelete(null);
+
+    try {
+      await deleteIngredient(ingredient.id);
+      toast.success(`« ${ingredient.name} » supprimé`);
+    } catch (error) {
+      console.error('Error deleting ingredient:', error);
+      toast.error("L'ingrédient n'a pas pu être supprimé");
+    }
+  };
+
+  const hasFilters = searchTerm !== '' || selectedCategory !== 'all';
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h1>Gestion des ingrédients</h1>
-        <button
-          onClick={() => {
-            setShowAddForm(true);
-            setEditingIngredient(null);
-            setFormData({ name: '', category: 'fruits-legumes', imageUrl: null });
-            setImageFile(null);
-            setRemoveImage(false);
-          }}
+    <Page>
+      <header className={styles.header}>
+        {onBack && (
+          <button type="button" className={styles.back} onClick={onBack} aria-label="Retour aux réglages">
+            <ArrowLeft size={19} strokeWidth={2.2} />
+          </button>
+        )}
+        <div className={styles.headings}>
+          <h1 className={styles.title}>Ingrédients</h1>
+          <p className={styles.subtitle}>
+            Catalogue du foyer · {ingredients.length} item{ingredients.length > 1 ? 's' : ''}
+          </p>
+        </div>
+        <Button
+          variant="primary"
+          icon={Plus}
+          onClick={openCreate}
+          aria-label="Ajouter un ingrédient"
           className={styles.addButton}
         >
-          <Plus size={18} style={{ verticalAlign: 'middle', marginRight: '6px' }} />Ajouter
-        </button>
-      </div>
+          <span className={styles.addLabel}>Ajouter</span>
+        </Button>
+      </header>
 
-      <div className={styles.filters}>
-        <input
-          type="text"
-          placeholder="Rechercher un ingrédient..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className={styles.searchInput}
+      <SearchField
+        value={searchTerm}
+        onChange={setSearchTerm}
+        placeholder="Rechercher un ingrédient…"
+      />
+
+      <div className={`${styles.chipRow} scrollRow`}>
+        <Chip
+          label="Toutes"
+          count={ingredients.length}
+          active={selectedCategory === 'all'}
+          onClick={() => setSelectedCategory('all')}
         />
-        <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className={styles.categoryFilter}
-        >
-          <option value="all">Toutes les catégories</option>
-          {INGREDIENT_CATEGORIES.map(cat => (
-            <option key={cat.id} value={cat.id}>
-              {cat.icon} {cat.label}
-            </option>
-          ))}
-        </select>
-        <div className={styles.viewToggle}>
-          <button
-            onClick={() => setViewMode('grid')}
-            className={viewMode === 'grid' ? styles.active : ''}
-            title="Vue grille"
-          >
-            <LayoutGrid size={18} />
-          </button>
-          <button
-            onClick={() => setViewMode('category')}
-            className={viewMode === 'category' ? styles.active : ''}
-            title="Vue par catégorie"
-          >
-            <List size={18} />
-          </button>
-        </div>
+        {INGREDIENT_CATEGORIES.map((category) => {
+          const count = countByCategory[category.id] || 0;
+          return (
+            <Chip
+              key={category.id}
+              label={category.label}
+              emoji={category.icon}
+              tone={category.tone}
+              count={count}
+              active={selectedCategory === category.id}
+              disabled={count === 0}
+              onClick={() => setSelectedCategory(category.id)}
+            />
+          );
+        })}
       </div>
 
-      {(showAddForm || editingIngredient) && (
-        <div className={styles.formCard}>
-          <h3>{editingIngredient ? 'Modifier l\'ingrédient' : 'Nouvel ingrédient'}</h3>
+      {loading ? (
+        <div className={styles.list}>
+          <RowSkeleton />
+          <RowSkeleton />
+          <RowSkeleton />
+        </div>
+      ) : ingredients.length === 0 ? (
+        <EmptyState
+          icon={Carrot}
+          title="Catalogue vide"
+          description="Les ingrédients créés depuis une recette apparaîtront ici automatiquement."
+          action={
+            <Button variant="primary" size="lg" icon={Plus} fullWidth onClick={openCreate}>
+              Ajouter un ingrédient
+            </Button>
+          }
+        />
+      ) : sections.length === 0 ? (
+        <EmptyState
+          size="sm"
+          dashed={false}
+          icon={SearchX}
+          title="Aucun résultat"
+          description={`Aucun ingrédient ne correspond${searchTerm ? ` à « ${searchTerm} »` : ' à ce filtre'}.`}
+          action={
+            hasFilters && (
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedCategory('all');
+                }}
+              >
+                Réinitialiser
+              </Button>
+            )
+          }
+        />
+      ) : (
+        <div className={styles.sections}>
+          {sections.map((category) => (
+            <section key={category.id} className={styles.section}>
+              <h2 className={styles.sectionHead} style={toneVars(category.tone)}>
+                <EmojiPill emoji={category.icon} tone={category.tone} size="sm" />
+                {category.label}
+                <span className={styles.sectionCount}>{category.items.length}</span>
+              </h2>
+
+              <div className={styles.list}>
+                {category.items.map((ingredient) => (
+                  <div key={ingredient.id} className={styles.row}>
+                    <OptimizedImage
+                      src={ingredient.imageUrl}
+                      alt=""
+                      asBackground
+                      caption=""
+                      placeholder={
+                        <span className={styles.rowEmoji}>{getCategory(ingredient.category).icon}</span>
+                      }
+                      className={styles.rowThumb}
+                    />
+                    <div className={styles.rowText}>
+                      <span className={styles.rowName}>{ingredient.name}</span>
+                      <span className={styles.rowCategory}>{category.label}</span>
+                    </div>
+                    {ingredient.defaultUnit && (
+                      <span className={styles.rowUnit}>{getUnitLabel(ingredient.defaultUnit)}</span>
+                    )}
+                    <div className={styles.rowActions}>
+                      <button
+                        type="button"
+                        className={styles.rowAction}
+                        onClick={() => openEdit(ingredient)}
+                        aria-label={`Modifier ${ingredient.name}`}
+                      >
+                        <Pencil size={15} strokeWidth={2} />
+                      </button>
+                      <button
+                        type="button"
+                        className={`${styles.rowAction} ${styles.rowDelete}`}
+                        onClick={() => askDelete(ingredient)}
+                        aria-label={`Supprimer ${ingredient.name}`}
+                      >
+                        <Trash2 size={15} strokeWidth={2} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
+
+      <Modal
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        title={editing ? 'Modifier l’ingrédient' : 'Ajouter un ingrédient'}
+        size="sm"
+      >
+        <form className={styles.form} onSubmit={handleSubmit}>
+          <Field label="Nom" required htmlFor="ingredient-name">
+            <Input
+              id="ingredient-name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Ex. Lait de coco"
+              autoFocus
+            />
+          </Field>
+
+          <Field label="Catégorie">
+            <div className={styles.categoryChips}>
+              {INGREDIENT_CATEGORIES.map((category) => (
+                <Chip
+                  key={category.id}
+                  label={category.label}
+                  emoji={category.icon}
+                  tone={category.tone}
+                  active={formData.category === category.id}
+                  onClick={() => setFormData({ ...formData, category: category.id })}
+                />
+              ))}
+            </div>
+          </Field>
+
+          <Field label="Unité par défaut" hint="Pré-remplie quand on ajoute l’ingrédient à une recette.">
+            <Select
+              value={formData.defaultUnit}
+              onChange={(e) => setFormData({ ...formData, defaultUnit: e.target.value })}
+            >
+              {UNITS.map((unit) => (
+                <option key={unit.id} value={unit.id}>
+                  {unit.label}
+                </option>
+              ))}
+            </Select>
+          </Field>
 
           <ImageUpload
             currentImage={formData.imageUrl}
-            onImageSelect={handleImageSelect}
-            onImageRemove={handleImageRemove}
-            label="Photo de l'ingrédient"
+            onImageSelect={(file) => {
+              setImageFile(file);
+              setRemoveImage(false);
+            }}
+            onImageRemove={() => {
+              setImageFile(null);
+              setRemoveImage(true);
+              setFormData((prev) => ({ ...prev, imageUrl: null }));
+            }}
+            label="Photo"
           />
 
-          <div className={styles.formGroup}>
-            <label>Nom</label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Ex: Tomates"
-              autoFocus
-            />
-          </div>
-          <div className={styles.formGroup}>
-            <label>Catégorie</label>
-            <select
-              value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-            >
-              {INGREDIENT_CATEGORIES.map(cat => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.icon} {cat.label}
-                </option>
-              ))}
-            </select>
-          </div>
           <div className={styles.formActions}>
-            <button
-              onClick={editingIngredient ? handleEditIngredient : handleAddIngredient}
-              className={styles.saveButton}
-            >
-              {editingIngredient ? 'Enregistrer' : 'Ajouter'}
-            </button>
-            <button
-              onClick={() => {
-                setShowAddForm(false);
-                cancelEdit();
-              }}
-              className={styles.cancelButton}
-            >
+            <Button variant="secondary" onClick={() => setFormOpen(false)} disabled={saving}>
               Annuler
-            </button>
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              loading={saving}
+              disabled={!formData.name.trim()}
+              className={styles.formSubmit}
+            >
+              {editing ? 'Enregistrer' : 'Ajouter au catalogue'}
+            </Button>
           </div>
-        </div>
-      )}
+        </form>
+      </Modal>
 
-      <div className={styles.stats}>
-        <p>
-          {filteredIngredients.length} ingrédient{filteredIngredients.length > 1 ? 's' : ''}
-          {selectedCategory !== 'all' && ' dans cette catégorie'}
+      <Modal
+        open={!!pendingDelete}
+        onClose={() => setPendingDelete(null)}
+        title="Supprimer cet ingrédient ?"
+        size="sm"
+        footer={
+          <>
+            <Button variant="secondary" fullWidth onClick={() => setPendingDelete(null)}>
+              Annuler
+            </Button>
+            <Button variant="danger" fullWidth icon={Trash2} onClick={handleDelete}>
+              Supprimer
+            </Button>
+          </>
+        }
+      >
+        <p className={styles.confirmText}>
+          « {pendingDelete?.name} » sera retiré du catalogue du foyer.
         </p>
-      </div>
-
-      {viewMode === 'grid' ? (
-        <div className={styles.categoriesView}>
-          {ingredientsByCategory.map(category => (
-            <div key={category.id} className={styles.categorySection}>
-              <h2 className={styles.categoryTitle}>
-                <span className={styles.categoryIcon}>{category.icon}</span>
-                {category.label}
-                <span className={styles.categoryCount}>({category.ingredients.length})</span>
-              </h2>
-              <div className={styles.ingredientsList}>
-                {category.ingredients.map(ingredient => (
-                  <IngredientCard key={ingredient.id} ingredient={ingredient} />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className={styles.categoriesView}>
-          {ingredientsByCategory.map(category => (
-            <div key={category.id} className={styles.categorySection}>
-              <h2 className={styles.categoryTitle}>
-                <span className={styles.categoryIcon}>{category.icon}</span>
-                {category.label}
-                <span className={styles.categoryCount}>({category.ingredients.length})</span>
-              </h2>
-              <div className={styles.ingredientsList}>
-                {category.ingredients.map(ingredient => (
-                  <IngredientCard key={ingredient.id} ingredient={ingredient} />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {filteredIngredients.length === 0 && (
-        <div className={styles.emptyState}>
-          <p>Aucun ingrédient trouvé</p>
-        </div>
-      )}
-
-      {/* Modal pour voir les recettes */}
-      {showRecipesModal && (
-        <div className={styles.modal} onClick={() => setShowRecipesModal(null)}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <h3>Recettes avec {showRecipesModal.ingredient.name}</h3>
-
-            {loadingRecipes ? (
-              <p className={styles.loadingRecipes}>Chargement des recettes...</p>
-            ) : showRecipesModal.recipes.length > 0 ? (
-              <>
-                <p className={styles.recipeInfo}>
-                  Cet ingrédient est utilisé dans {showRecipesModal.recipes.length} recette{showRecipesModal.recipes.length > 1 ? 's' : ''} :
-                </p>
-                <ul className={styles.recipesList}>
-                  {showRecipesModal.recipes.map(recipe => (
-                    <li key={recipe.id} className={styles.recipeItem}>
-                      <span className={styles.recipeName}>{recipe.name}</span>
-                      {recipe.servings && (
-                        <span className={styles.recipeServings}>
-                          <Users size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} />{recipe.servings} pers.
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </>
-            ) : (
-              <p className={styles.noRecipes}>
-                Cet ingrédient n'est utilisé dans aucune recette pour le moment.
-              </p>
-            )}
-
-            <div className={styles.modalActions}>
-              <button
-                onClick={() => setShowRecipesModal(null)}
-                className={styles.closeButton}
-              >
-                Fermer
-              </button>
-            </div>
+        {usedInRecipes.length > 0 && (
+          <div className={styles.usage}>
+            <span className={styles.usageTitle}>
+              <BookOpen size={15} strokeWidth={2.2} />
+              Utilisé dans {usedInRecipes.length} recette{usedInRecipes.length > 1 ? 's' : ''}
+            </span>
+            <span className={styles.usageList}>
+              {usedInRecipes.map((recipe) => recipe.name).join(', ')}
+            </span>
           </div>
-        </div>
-      )}
-
-      {/* Modal de suppression */}
-      {showDeleteConfirm && (
-        <div className={styles.modal} onClick={() => setShowDeleteConfirm(null)}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <h3>Supprimer l'ingrédient ?</h3>
-            <p className={styles.deleteWarning}>
-              Voulez-vous vraiment supprimer <strong>{showDeleteConfirm.name}</strong> ?
-            </p>
-
-            {loadingRecipes ? (
-              <p className={styles.loadingRecipes}>Vérification des recettes associées...</p>
-            ) : (
-              <>
-                {ingredientRecipes.length > 0 && (
-                  <div className={styles.associatedRecipes}>
-                    <p className={styles.warningText}>
-                      ⚠️ Cet ingrédient est utilisé dans {ingredientRecipes.length} recette{ingredientRecipes.length > 1 ? 's' : ''} :
-                    </p>
-                    <ul className={styles.recipesList}>
-                      {ingredientRecipes.map(recipe => (
-                        <li key={recipe.id}>{recipe.name}</li>
-                      ))}
-                    </ul>
-                    <p className={styles.warningText}>
-                      La suppression de cet ingrédient peut affecter ces recettes.
-                    </p>
-                  </div>
-                )}
-              </>
-            )}
-
-            <div className={styles.modalActions}>
-              <button
-                onClick={handleDeleteConfirm}
-                className={styles.confirmDeleteButton}
-                disabled={loadingRecipes}
-              >
-                Supprimer
-              </button>
-              <button
-                onClick={() => {
-                  setShowDeleteConfirm(null);
-                  setIngredientRecipes([]);
-                }}
-                className={styles.cancelButton}
-              >
-                Annuler
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+        )}
+      </Modal>
+    </Page>
   );
 };
 

@@ -1,20 +1,53 @@
 import { useState, useEffect } from 'react';
 import { useHousehold } from '../contexts/HouseholdContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Settings as SettingsIcon, Smartphone, Carrot, RefreshCw, Home, Link, Users, User, Utensils, LogOut, Save, Pencil, Check, X, Plus, Trash2, ChevronRight, Minus } from 'lucide-react';
+import { useIngredients } from '../contexts/IngredientContext';
+import { usePermanentItems } from '../contexts/PermanentItemsContext';
+import { useToast } from '../contexts/ToastContext';
+import {
+  Carrot,
+  RefreshCw,
+  ShoppingCart,
+  LogOut,
+  Pencil,
+  Check,
+  X,
+  Plus,
+  Trash2,
+  ChevronRight,
+  Copy,
+  Smartphone
+} from 'lucide-react';
+import {
+  Page,
+  PageHeader,
+  Button,
+  Avatar,
+  Stepper,
+  Input,
+  Modal,
+  EmojiPill
+} from '../components/ui';
 import styles from './Settings.module.css';
+
+const APP_VERSION = '1.0.0';
 
 const Settings = ({ onNavigate }) => {
   const { household, updateHousehold } = useHousehold();
   const { user, logout } = useAuth();
+  const { ingredients } = useIngredients();
+  const { permanentItems } = usePermanentItems();
+  const toast = useToast();
+
   const [isEditingName, setIsEditingName] = useState(false);
   const [householdName, setHouseholdName] = useState(household?.name || '');
   const [defaultServings, setDefaultServings] = useState(household?.defaultServings || 4);
   const [members, setMembers] = useState(household?.members || []);
   const [newMemberName, setNewMemberName] = useState('');
   const [showAddMember, setShowAddMember] = useState(false);
+  const [confirmLogout, setConfirmLogout] = useState(false);
+  const [confirmCache, setConfirmCache] = useState(false);
 
-  // Sync local state with household context
   useEffect(() => {
     if (household) {
       setHouseholdName(household.name || '');
@@ -23,383 +56,366 @@ const Settings = ({ onNavigate }) => {
     }
   }, [household]);
 
+  const inviteLink = household
+    ? `${window.location.origin}${window.location.pathname}?join=${household.id}`
+    : '';
+
   const handleSaveName = async () => {
     if (!householdName.trim()) return;
-
     try {
       await updateHousehold({ name: householdName.trim() });
       setIsEditingName(false);
+      toast.success('Nom du foyer mis à jour');
     } catch (error) {
       console.error('Error updating household name:', error);
-      alert('Erreur lors de la mise à jour du nom');
+      toast.error('Le nom n’a pas pu être mis à jour');
     }
   };
 
-  const handleSaveDefaultServings = async () => {
+  const handleServingsChange = async (value) => {
+    setDefaultServings(value);
     try {
-      await updateHousehold({ defaultServings: parseInt(defaultServings) });
-      alert('Paramètres sauvegardés !');
+      await updateHousehold({ defaultServings: value });
     } catch (error) {
       console.error('Error updating default servings:', error);
-      alert('Erreur lors de la mise à jour');
+      toast.error('Le réglage n’a pas pu être enregistré');
     }
   };
 
   const handleAddMember = async () => {
     if (!newMemberName.trim()) return;
 
-    const newMember = {
-      id: `member_${Date.now()}`,
-      name: newMemberName.trim(),
-      addedAt: new Date().toISOString()
-    };
-
-    const updatedMembers = [...members, newMember];
+    const updated = [
+      ...members,
+      { id: `member_${Date.now()}`, name: newMemberName.trim(), addedAt: new Date().toISOString() }
+    ];
 
     try {
-      await updateHousehold({ members: updatedMembers });
-      setMembers(updatedMembers);
+      await updateHousehold({ members: updated });
+      setMembers(updated);
       setNewMemberName('');
       setShowAddMember(false);
+      toast.success('Membre ajouté');
     } catch (error) {
       console.error('Error adding member:', error);
-      alert('Erreur lors de l\'ajout du membre');
+      toast.error('Le membre n’a pas pu être ajouté');
     }
   };
 
   const handleRemoveMember = async (memberId) => {
-    const updatedMembers = members.filter(m => m.id !== memberId);
-
+    const updated = members.filter((m) => m.id !== memberId);
     try {
-      await updateHousehold({ members: updatedMembers });
-      setMembers(updatedMembers);
+      await updateHousehold({ members: updated });
+      setMembers(updated);
+      toast.success('Membre retiré');
     } catch (error) {
       console.error('Error removing member:', error);
-      alert('Erreur lors de la suppression du membre');
+      toast.error('Le membre n’a pas pu être retiré');
     }
   };
 
-  const handleLogout = async () => {
-    if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
-      await logout();
+  const copy = async (value, label) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success(`${label} copié`);
+    } catch (error) {
+      console.error('Clipboard error:', error);
+      toast.error('La copie a échoué');
     }
   };
 
   const handleClearCache = async () => {
-    if (!confirm('Vider le cache et recharger l\'application ? Cela permettra de récupérer la dernière version.')) {
-      return;
-    }
+    setConfirmCache(false);
 
     try {
-      // Unregister all service workers
       if ('serviceWorker' in navigator) {
         const registrations = await navigator.serviceWorker.getRegistrations();
-        for (const registration of registrations) {
-          await registration.unregister();
-        }
+        await Promise.all(registrations.map((registration) => registration.unregister()));
       }
 
-      // Clear all caches
       if ('caches' in window) {
         const cacheNames = await caches.keys();
-        await Promise.all(cacheNames.map(name => caches.delete(name)));
+        await Promise.all(cacheNames.map((name) => caches.delete(name)));
       }
 
-      // Clear localStorage and sessionStorage
       localStorage.clear();
       sessionStorage.clear();
-
-      // Reload the page
-      window.location.reload(true);
+      window.location.reload();
     } catch (error) {
       console.error('Error clearing cache:', error);
-      alert('Erreur lors du vidage du cache');
+      toast.error('Le cache n’a pas pu être vidé');
     }
   };
 
   if (!household) {
     return (
-      <div className={styles.container}>
-        <div className={styles.loading}>Chargement...</div>
-      </div>
+      <Page>
+        <PageHeader title="Plus" subtitle="Chargement…" />
+      </Page>
     );
   }
 
   return (
-    <div className={styles.container}>
-      {/* Header */}
-      <div className={styles.header}>
-        <h1>Plus</h1>
-        <p className={styles.subtitle}>Paramètres et options supplémentaires</p>
-      </div>
+    <Page>
+      <PageHeader title="Plus" subtitle="Réglages du foyer et de l’application" />
 
-      {/* Pages Section */}
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}><Smartphone size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} />Pages</h2>
-        <div className={styles.card}>
-          <button
-            className={styles.pageButton}
-            onClick={() => onNavigate && onNavigate('ingredients')}
-          >
-            <div className={styles.pageInfo}>
-              <span className={styles.pageIcon}><Carrot size={24} /></span>
-              <div className={styles.pageText}>
-                <span className={styles.pageName}>Ingrédients</span>
-                <span className={styles.pageDescription}>Gérer vos ingrédients</span>
+      <div className={styles.columns}>
+        <div className={styles.column}>
+          <section className={styles.card}>
+            <h2 className={styles.cardLabel}>Pages</h2>
+            <button
+              type="button"
+              className={styles.pageLink}
+              onClick={() => onNavigate?.('ingredients')}
+            >
+              <EmojiPill emoji="🥬" tone="green" size="lg" />
+              <span className={styles.pageName}>Ingrédients du foyer</span>
+              <span className={styles.pageCount}>
+                {ingredients.length} item{ingredients.length > 1 ? 's' : ''}
+              </span>
+              <ChevronRight size={18} strokeWidth={2} className={styles.pageArrow} />
+            </button>
+            <button
+              type="button"
+              className={styles.pageLink}
+              onClick={() => onNavigate?.('shopping')}
+            >
+              <span className={styles.pageIcon}>
+                <ShoppingCart size={19} strokeWidth={2} />
+              </span>
+              <span className={styles.pageName}>Items permanents</span>
+              <span className={styles.pageCount}>
+                {permanentItems?.length || 0} item{(permanentItems?.length || 0) > 1 ? 's' : ''}
+              </span>
+              <ChevronRight size={18} strokeWidth={2} className={styles.pageArrow} />
+            </button>
+            <button
+              type="button"
+              className={styles.pageLink}
+              onClick={() => onNavigate?.('migrate')}
+            >
+              <span className={styles.pageIcon}>
+                <RefreshCw size={19} strokeWidth={2} />
+              </span>
+              <span className={styles.pageName}>Migration des articles</span>
+              <ChevronRight size={18} strokeWidth={2} className={styles.pageArrow} />
+            </button>
+          </section>
+
+          <section className={styles.card}>
+            <h2 className={styles.cardLabel}>Informations du foyer</h2>
+            <div className={styles.fieldLabel}>Nom du foyer</div>
+            {isEditingName ? (
+              <div className={styles.editRow}>
+                <Input
+                  value={householdName}
+                  onChange={(e) => setHouseholdName(e.target.value)}
+                  autoFocus
+                  aria-label="Nom du foyer"
+                />
+                <Button variant="primary" icon={Check} onClick={handleSaveName} aria-label="Enregistrer" />
+                <Button
+                  variant="secondary"
+                  icon={X}
+                  onClick={() => {
+                    setHouseholdName(household.name || '');
+                    setIsEditingName(false);
+                  }}
+                  aria-label="Annuler"
+                />
               </div>
-            </div>
-            <span className={styles.pageArrow}><ChevronRight size={20} /></span>
-          </button>
-          <button
-            className={styles.pageButton}
-            onClick={() => onNavigate && onNavigate('migrate')}
-          >
-            <div className={styles.pageInfo}>
-              <span className={styles.pageIcon}><RefreshCw size={24} /></span>
-              <div className={styles.pageText}>
-                <span className={styles.pageName}>Migration articles</span>
-                <span className={styles.pageDescription}>Récupérer les articles permanents</span>
-              </div>
-            </div>
-            <span className={styles.pageArrow}><ChevronRight size={20} /></span>
-          </button>
-        </div>
-      </div>
-
-      {/* Household Info */}
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}><Home size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} />Informations du foyer</h2>
-
-        <div className={styles.card}>
-          <div className={styles.cardRow}>
-            <div className={styles.label}>Nom du foyer</div>
-            {!isEditingName ? (
+            ) : (
               <div className={styles.valueRow}>
                 <span className={styles.value}>{household.name}</span>
                 <button
-                  onClick={() => {
-                    setHouseholdName(household.name);
-                    setIsEditingName(true);
-                  }}
-                  className={styles.editButton}
+                  type="button"
+                  className={styles.inlineAction}
+                  onClick={() => setIsEditingName(true)}
+                  aria-label="Renommer le foyer"
                 >
-                  <Pencil size={14} style={{ marginRight: '6px' }} />Modifier
-                </button>
-              </div>
-            ) : (
-              <div className={styles.editRow}>
-                <input
-                  type="text"
-                  value={householdName}
-                  onChange={(e) => setHouseholdName(e.target.value)}
-                  className={styles.input}
-                  autoFocus
-                />
-                <button onClick={handleSaveName} className={styles.saveButton}>
-                  <Check size={14} style={{ marginRight: '4px' }} />Sauvegarder
-                </button>
-                <button
-                  onClick={() => {
-                    setIsEditingName(false);
-                    setHouseholdName(household.name);
-                  }}
-                  className={styles.cancelButton}
-                >
-                  <X size={16} />
+                  <Pencil size={16} strokeWidth={2} />
                 </button>
               </div>
             )}
-          </div>
+          </section>
 
-          <div className={styles.cardRow}>
-            <div className={styles.label}>Créé le</div>
-            <div className={styles.value}>
-              {new Date(household.createdAt).toLocaleDateString('fr-FR', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric'
-              })}
+          <section className={styles.card}>
+            <h2 className={styles.cardLabel}>Inviter des membres</h2>
+            <div className={styles.fieldLabel}>Code d’invitation</div>
+            <div className={styles.inviteRow}>
+              <div className={styles.code}>{household.id}</div>
+              <Button variant="primary" icon={Copy} onClick={() => copy(household.id, 'Code')}>
+                Copier
+              </Button>
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Invite Link */}
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}><Link size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} />Inviter des membres</h2>
-        <div className={styles.card}>
-          <p className={styles.inviteDescription}>
-            Partagez ce lien pour inviter quelqu'un à rejoindre votre foyer
-          </p>
-          <div className={styles.inviteLinkContainer}>
-            <input
-              type="text"
-              value={`${window.location.origin}${window.location.pathname}?join=${household.id}`}
-              readOnly
-              className={styles.inviteLinkInput}
-              onClick={(e) => e.target.select()}
-            />
-            <button
-              onClick={async () => {
-                const link = `${window.location.origin}${window.location.pathname}?join=${household.id}`;
-
-                // Try to use native share API first
-                if (navigator.share) {
-                  try {
-                    await navigator.share({
-                      title: 'Invitation Go Gourmet',
-                      text: `Rejoignez mon foyer "${household.name}" sur Go Gourmet !`,
-                      url: link
-                    });
-                  } catch (err) {
-                    // User cancelled or error - fallback to clipboard
-                    if (err.name !== 'AbortError') {
-                      navigator.clipboard.writeText(link);
-                      alert('Lien copié dans le presse-papiers !');
-                    }
-                  }
-                } else {
-                  // Fallback for browsers without share API
-                  navigator.clipboard.writeText(link);
-                  alert('Lien copié dans le presse-papiers !');
-                }
-              }}
-              className={styles.shareButton}
-            >
-              <Link size={16} style={{ marginRight: '6px' }} />Partager
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Members */}
-      <div className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}><Users size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} />Membres du foyer</h2>
-          <button
-            onClick={() => setShowAddMember(!showAddMember)}
-            className={styles.addButton}
-          >
-            {showAddMember ? <><X size={14} style={{ marginRight: '4px' }} />Annuler</> : <><Plus size={14} style={{ marginRight: '4px' }} />Ajouter</>}
-          </button>
-        </div>
-
-        {showAddMember && (
-          <div className={styles.addMemberForm}>
-            <input
-              type="text"
-              value={newMemberName}
-              onChange={(e) => setNewMemberName(e.target.value)}
-              placeholder="Nom du membre"
-              className={styles.input}
-              autoFocus
-            />
-            <button onClick={handleAddMember} className={styles.submitButton}>
-              Ajouter
-            </button>
-          </div>
-        )}
-
-        <div className={styles.membersList}>
-          {members.length === 0 ? (
-            <div className={styles.emptyState}>
-              Aucun membre ajouté
+            <div className={styles.fieldLabel}>Lien d’invitation</div>
+            <div className={styles.inviteRow}>
+              <div className={styles.link}>{inviteLink}</div>
+              <Button variant="secondary" icon={Copy} onClick={() => copy(inviteLink, 'Lien')}>
+                Copier
+              </Button>
             </div>
-          ) : (
-            members.map(member => (
-              <div key={member.id} className={styles.memberCard}>
-                <div className={styles.memberInfo}>
-                  <span className={styles.memberIcon}><User size={20} /></span>
-                  <span className={styles.memberName}>{member.name}</span>
-                </div>
-                <button
-                  onClick={() => handleRemoveMember(member.id)}
-                  className={styles.removeButton}
-                  title="Retirer ce membre"
-                >
-                  <Trash2 size={16} />
-                </button>
+          </section>
+
+          <section className={styles.card}>
+            <div className={styles.cardHead}>
+              <h2 className={styles.cardLabel}>Membres du foyer · {members.length}</h2>
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={showAddMember ? X : Plus}
+                onClick={() => setShowAddMember(!showAddMember)}
+              >
+                {showAddMember ? 'Annuler' : 'Ajouter'}
+              </Button>
+            </div>
+
+            {showAddMember && (
+              <div className={styles.editRow}>
+                <Input
+                  value={newMemberName}
+                  onChange={(e) => setNewMemberName(e.target.value)}
+                  placeholder="Prénom du membre"
+                  aria-label="Prénom du membre"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleAddMember();
+                  }}
+                />
+                <Button variant="primary" onClick={handleAddMember} disabled={!newMemberName.trim()}>
+                  Ajouter
+                </Button>
               </div>
-            ))
-          )}
-        </div>
-      </div>
+            )}
 
-      {/* Default Settings */}
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}><Utensils size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} />Paramètres par défaut</h2>
-
-        <div className={styles.card}>
-          <div className={styles.cardRow}>
-            <div>
-              <div className={styles.label}>Nombre de portions par défaut</div>
+            {members.length === 0 ? (
               <p className={styles.hint}>
-                Utilisé lors de l'ajout de nouveaux repas au planning
+                Aucun membre listé. Partagez le code d’invitation pour partager le foyer.
               </p>
+            ) : (
+              <ul className={styles.members}>
+                {members.map((member, index) => {
+                  const name = typeof member === 'string' ? 'Membre' : member.name || 'Membre';
+                  const id = typeof member === 'string' ? member : member.id;
+
+                  return (
+                    <li key={id || index} className={styles.member}>
+                      <Avatar name={name} index={index} size={38} />
+                      <span className={styles.memberName}>{name}</span>
+                      {index === 0 && <span className={styles.ownerBadge}>Créateur</span>}
+                      {typeof member !== 'string' && (
+                        <button
+                          type="button"
+                          className={styles.memberRemove}
+                          onClick={() => handleRemoveMember(member.id)}
+                          aria-label={`Retirer ${name}`}
+                        >
+                          <Trash2 size={15} strokeWidth={2} />
+                        </button>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+        </div>
+
+        <div className={styles.column}>
+          <section className={styles.card}>
+            <h2 className={styles.cardLabel}>Paramètres par défaut</h2>
+            <div className={styles.settingRow}>
+              <div>
+                <div className={styles.settingName}>Portions par défaut</div>
+                <p className={styles.hint}>Appliquées aux nouvelles recettes et aux repas ajoutés.</p>
+              </div>
+              <Stepper
+                value={defaultServings}
+                onChange={handleServingsChange}
+                min={1}
+                max={50}
+                label="Portions par défaut"
+              />
             </div>
-            <div className={styles.servingsControl}>
-              <button
-                onClick={() => setDefaultServings(Math.max(1, defaultServings - 1))}
-                className={styles.servingsButton}
-              >
-                −
-              </button>
-              <span className={styles.servingsValue}>{defaultServings}</span>
-              <button
-                onClick={() => setDefaultServings(defaultServings + 1)}
-                className={styles.servingsButton}
-              >
-                +
-              </button>
+          </section>
+
+          <section className={styles.card}>
+            <h2 className={styles.cardLabel}>Compte</h2>
+            <div className={styles.account}>
+              <Avatar src={user?.photoURL} name={user?.displayName || user?.email} size={52} />
+              <div className={styles.accountText}>
+                <span className={styles.accountName}>{user?.displayName || 'Compte Google'}</span>
+                <span className={styles.accountEmail}>{user?.email}</span>
+              </div>
             </div>
-          </div>
-          <button onClick={handleSaveDefaultServings} className={styles.saveSettingsButton}>
-            <Save size={16} style={{ marginRight: '6px' }} />Sauvegarder les paramètres
-          </button>
+            <Button variant="danger" icon={LogOut} fullWidth onClick={() => setConfirmLogout(true)}>
+              Se déconnecter
+            </Button>
+          </section>
+
+          <section className={styles.card}>
+            <h2 className={styles.cardLabel}>Application</h2>
+            <div className={styles.settingRow}>
+              <span className={styles.settingName}>Version</span>
+              <span className={styles.version}>{APP_VERSION}</span>
+            </div>
+            <div className={styles.pwaBanner}>
+              <Smartphone size={19} strokeWidth={2} />
+              <span className={styles.pwaText}>
+                Installez Go Gourmet sur l’écran d’accueil depuis le menu de votre navigateur.
+              </span>
+            </div>
+            <Button variant="secondary" icon={RefreshCw} fullWidth onClick={() => setConfirmCache(true)}>
+              Vider le cache et recharger
+            </Button>
+          </section>
         </div>
       </div>
 
-      {/* Account */}
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}><User size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} />Compte</h2>
+      <Modal
+        open={confirmLogout}
+        onClose={() => setConfirmLogout(false)}
+        title="Se déconnecter ?"
+        size="sm"
+        footer={
+          <>
+            <Button variant="secondary" fullWidth onClick={() => setConfirmLogout(false)}>
+              Annuler
+            </Button>
+            <Button variant="danger" fullWidth icon={LogOut} onClick={logout}>
+              Se déconnecter
+            </Button>
+          </>
+        }
+      >
+        <p className={styles.confirmText}>
+          Vous devrez vous reconnecter avec Google pour retrouver le foyer.
+        </p>
+      </Modal>
 
-        <div className={styles.card}>
-          <div className={styles.cardRow}>
-            <div className={styles.label}>Email</div>
-            <div className={styles.value}>{user?.email}</div>
-          </div>
-
-          <button onClick={handleLogout} className={styles.logoutButton}>
-            <LogOut size={16} style={{ marginRight: '6px' }} />Se déconnecter
-          </button>
-        </div>
-      </div>
-
-      {/* Application */}
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}><Smartphone size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} />Application</h2>
-
-        <div className={styles.card}>
-          <div className={styles.cardRow}>
-            <div>
-              <div className={styles.label}>Vider le cache</div>
-              <p className={styles.hint}>
-                Supprime tous les fichiers en cache et recharge l'application pour récupérer la dernière version
-              </p>
-            </div>
-          </div>
-          <button onClick={handleClearCache} className={styles.logoutButton}>
-            <RefreshCw size={16} style={{ marginRight: '6px' }} />Vider le cache et recharger
-          </button>
-        </div>
-      </div>
-
-      {/* App Info */}
-      <div className={styles.footer}>
-        <p className={styles.appName}><Utensils size={16} style={{ verticalAlign: 'middle', marginRight: '6px' }} />Go Gourmet</p>
-        <p className={styles.version}>Version 1.0.0</p>
-      </div>
-    </div>
+      <Modal
+        open={confirmCache}
+        onClose={() => setConfirmCache(false)}
+        title="Vider le cache ?"
+        size="sm"
+        footer={
+          <>
+            <Button variant="secondary" fullWidth onClick={() => setConfirmCache(false)}>
+              Annuler
+            </Button>
+            <Button variant="primary" fullWidth icon={RefreshCw} onClick={handleClearCache}>
+              Vider et recharger
+            </Button>
+          </>
+        }
+      >
+        <p className={styles.confirmText}>
+          Les fichiers en cache seront supprimés et l’application rechargée dans sa dernière
+          version. Vos données du foyer ne sont pas touchées.
+        </p>
+      </Modal>
+    </Page>
   );
 };
 

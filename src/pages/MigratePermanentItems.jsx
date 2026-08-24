@@ -11,10 +11,12 @@ import {
   updateDoc
 } from 'firebase/firestore';
 import { useHousehold } from '../contexts/HouseholdContext';
+import { useToast } from '../contexts/ToastContext';
 import styles from './MigratePermanentItems.module.css';
 
 const MigratePermanentItems = () => {
   const { household } = useHousehold();
+  const toast = useToast();
   const [scanning, setScanning] = useState(false);
   const [migrating, setMigrating] = useState(false);
   const [mealPlansFound, setMealPlansFound] = useState([]);
@@ -25,7 +27,7 @@ const MigratePermanentItems = () => {
   // Scanner tous les mealPlans pour trouver les permanentItems
   const scanMealPlans = async () => {
     if (!household) {
-      alert('Pas de household connecté');
+      toast.error('Aucun foyer connecté');
       return;
     }
 
@@ -93,7 +95,7 @@ const MigratePermanentItems = () => {
 
     } catch (error) {
       console.error('Erreur lors du scan:', error);
-      alert('Erreur: ' + error.message);
+      toast.error('Erreur : ' + error.message);
     } finally {
       setScanning(false);
     }
@@ -126,11 +128,11 @@ const MigratePermanentItems = () => {
       });
 
       setMigrationDone(true);
-      alert(`Migration réussie ! ${cleanItems.length} articles permanents migrés.`);
+      toast.success(`Migration réussie : ${cleanItems.length} articles permanents.`);
 
     } catch (error) {
       console.error('Erreur lors de la migration:', error);
-      alert('Erreur: ' + error.message);
+      toast.error('Erreur : ' + error.message);
     } finally {
       setMigrating(false);
     }
