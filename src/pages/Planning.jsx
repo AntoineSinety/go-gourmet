@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useMealPlan } from '../contexts/MealPlanContext';
 import { useRecipes } from '../contexts/RecipeContext';
 import { useUrlPersistedState } from '../hooks/useScrollRestoration';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 import {
   getCurrentWeek,
   getWeekLabel,
@@ -13,14 +14,37 @@ import MealSlot from '../components/MealSlot';
 import RecipePicker from '../components/RecipePicker';
 import RecipeDetail from './RecipeDetail';
 import TemplatesModal from '../components/TemplatesModal';
-import { ChevronLeft, ChevronRight, LayoutGrid, List, Calendar, Lightbulb, Plus, X, Users, BookOpen } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  LayoutGrid,
+  List,
+  BookMarked,
+  Plus,
+  X,
+  CalendarX
+} from 'lucide-react';
+import { Page, PageHeader, Button, Skeleton, EmptyState, SidePanel } from '../components/ui';
 import styles from './Planning.module.css';
 
-const Planning = () => {
-  const { mealPlan, loading, loadMealPlan, updateMealSlot, updateMultipleMealSlots, addExtra, deleteExtra } = useMealPlan();
-  const { deleteRecipe } = useRecipes();
+const SLOTS = [
+  { type: 'lunch', label: 'Midi' },
+  { type: 'dinner', label: 'Soir' }
+];
 
-  // État de la semaine courante avec synchronisation URL
+const Planning = () => {
+  const {
+    mealPlan,
+    loading,
+    loadMealPlan,
+    updateMealSlot,
+    updateMultipleMealSlots,
+    addExtra,
+    deleteExtra
+  } = useMealPlan();
+  const { deleteRecipe } = useRecipes();
+  const isDesktop = useMediaQuery('(min-width: 769px)');
+
   const serializeToUrl = (state) => {
     const params = new URLSearchParams(window.location.search);
     params.set('week', state.weekNumber);
@@ -28,8 +52,7 @@ const Planning = () => {
     if (state.viewMode !== 'grid') params.set('planView', state.viewMode);
     else params.delete('planView');
 
-    const newUrl = `${window.location.pathname}?${params}`;
-    window.history.replaceState({}, '', newUrl);
+    window.history.replaceState({}, '', `${window.location.pathname}?${params}`);
   };
 
   const deserializeFromUrl = () => {
@@ -38,140 +61,71 @@ const Planning = () => {
     return {
       weekNumber: parseInt(params.get('week')) || current.weekNumber,
       year: parseInt(params.get('year')) || current.year,
-      viewMode: params.get('planView') || 'grid',
+      viewMode: params.get('planView') || 'grid'
     };
   };
 
   const [weekState, setWeekState] = useUrlPersistedState('planningWeek', {
     weekNumber: getCurrentWeek().weekNumber,
     year: getCurrentWeek().year,
-    viewMode: 'grid',
+    viewMode: 'grid'
   }, {
     serializeToUrl,
     deserializeFromUrl
   });
 
   const [viewMode, setViewMode] = useState(weekState.viewMode);
-
-  // État du RecipePicker
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerSlotId, setPickerSlotId] = useState(null);
-  const [pickerSlotType, setPickerSlotType] = useState(null);
-
-  // État du RecipePicker pour extras
   const [extraPickerOpen, setExtraPickerOpen] = useState(false);
-
-  // État du RecipeDetail sidepanel
   const [selectedRecipeId, setSelectedRecipeId] = useState(null);
-
-  // État du modal Templates
   const [templatesModalOpen, setTemplatesModalOpen] = useState(false);
 
-  // État pour le drag and drop
-  const [draggingSlotId, setDraggingSlotId] = useState(null);
+  // La grille 7 × 2 n'a pas de sens sous 769px : la liste s'impose.
+  const effectiveView = isDesktop ? viewMode : 'list';
 
-  // Charger le meal plan quand la semaine change
   useEffect(() => {
     if (weekState.weekNumber && weekState.year) {
       loadMealPlan(weekState.weekNumber, weekState.year);
     }
   }, [weekState.weekNumber, weekState.year, loadMealPlan]);
 
-  // Navigation entre semaines
   const handleNavigateWeek = (direction) => {
     const newWeek = navigateWeek(weekState.weekNumber, weekState.year, direction);
-    setWeekState({
-      weekNumber: newWeek.weekNumber,
-      year: newWeek.year,
-      viewMode: viewMode,
-    });
-    // Charger explicitement le nouveau meal plan
+    setWeekState({ weekNumber: newWeek.weekNumber, year: newWeek.year, viewMode });
     loadMealPlan(newWeek.weekNumber, newWeek.year);
   };
 
-  // Changer le mode d'affichage
   const handleViewModeChange = (mode) => {
     setViewMode(mode);
-    setWeekState(prev => ({ ...prev, viewMode: mode }));
-  };
-
-  // Gestion des meal slots
-  const handleAddMeal = (slotId, slotType) => {
-    setPickerSlotId(slotId);
-    setPickerSlotType(slotType);
-    setPickerOpen(true);
+    setWeekState((prev) => ({ ...prev, viewMode: mode }));
   };
 
   const handleRecipeSelect = async (mealData, selectedSlots) => {
-    // Si multi-day, ajouter à tous les slots sélectionnés en une seule opération
     if (selectedSlots.length > 1) {
-      const updates = selectedSlots.map((slotId, i) => ({
-        slotId,
-        mealData: {
-          ...mealData,
-          multiDayIndex: i + 1,
-          multiDayMealIds: selectedSlots
-        }
-      }));
-      await updateMultipleMealSlots(updates);
+      await updateMultipleMealSlots(
+        selectedSlots.map((slotId, i) => ({
+          slotId,
+          mealData: { ...mealData, multiDayIndex: i + 1, multiDayMealIds: selectedSlots }
+        }))
+      );
     } else {
-      // Single slot
       await updateMealSlot(selectedSlots[0], mealData);
     }
 
     setPickerOpen(false);
     setPickerSlotId(null);
-    setPickerSlotType(null);
-  };
-
-  const handlePickerCancel = () => {
-    setPickerOpen(false);
-    setPickerSlotId(null);
-    setPickerSlotType(null);
-  };
-
-  const handleEditMeal = (slotId, mealData) => {
-    updateMealSlot(slotId, mealData);
-  };
-
-  const handleRemoveMeal = (slotId) => {
-    updateMealSlot(slotId, null);
-  };
-
-  // Gestion des extras
-  const handleAddExtra = () => {
-    setExtraPickerOpen(true);
   };
 
   const handleExtraSelect = async (mealData) => {
-    // Pour les extras, on ne se soucie pas des slots multi-day
-    const extraData = {
+    await addExtra({
       recipeId: mealData.recipeId,
       recipeName: mealData.recipeName,
       recipeType: mealData.recipeType,
       recipeImageUrl: mealData.recipeImageUrl,
-      servings: mealData.servings,
-    };
-
-    await addExtra(extraData);
+      servings: mealData.servings
+    });
     setExtraPickerOpen(false);
-  };
-
-  const handleExtraCancel = () => {
-    setExtraPickerOpen(false);
-  };
-
-  const handleRemoveExtra = async (extraId) => {
-    await deleteExtra(extraId);
-  };
-
-  // Gestion du drag and drop
-  const handleDragStart = (slotId, meal) => {
-    setDraggingSlotId(slotId);
-  };
-
-  const handleDragEnd = () => {
-    setDraggingSlotId(null);
   };
 
   const handleDrop = async (sourceSlotId, targetSlotId) => {
@@ -180,375 +134,307 @@ const Planning = () => {
     const sourceMeal = mealPlan.meals[sourceSlotId];
     const targetMeal = mealPlan.meals[targetSlotId];
 
-    // Échanger les repas
-    const updates = [];
+    await updateMultipleMealSlots([
+      { slotId: targetSlotId, mealData: sourceMeal || null },
+      { slotId: sourceSlotId, mealData: targetMeal || null }
+    ]);
+  };
 
-    if (sourceMeal) {
-      updates.push({ slotId: targetSlotId, mealData: sourceMeal });
-    } else {
-      updates.push({ slotId: targetSlotId, mealData: null });
-    }
+  const weekDays = useMemo(
+    () => (mealPlan ? getWeekDays(mealPlan.startDate) : []),
+    [mealPlan]
+  );
 
-    if (targetMeal) {
-      updates.push({ slotId: sourceSlotId, mealData: targetMeal });
-    } else {
-      updates.push({ slotId: sourceSlotId, mealData: null });
-    }
+  const isToday = (dateString) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    );
+  };
 
-    await updateMultipleMealSlots(updates);
+  // En vue liste, le jour courant est épinglé en tête, les jours passés en fin.
+  const listDays = useMemo(() => {
+    const upcoming = weekDays.filter((day) => !day.isPast);
+    const past = weekDays.filter((day) => day.isPast);
+    return [...upcoming, ...past];
+  }, [weekDays]);
+
+  const filledCount = useMemo(
+    () => (mealPlan ? Object.values(mealPlan.meals || {}).filter(Boolean).length : 0),
+    [mealPlan]
+  );
+
+  const availableDaysForPicker = useMemo(() => {
+    if (!pickerOpen || !mealPlan) return [];
+    return weekDays
+      .filter((day) => !day.isPast)
+      .flatMap((day) =>
+        SLOTS.map((slot) => ({
+          slotId: getMealSlotId(day.dayKey, slot.type),
+          dayKey: day.dayKey,
+          dayName: day.dayName,
+          slotType: slot.type
+        }))
+      )
+      .filter((slot) => !mealPlan.meals[slot.slotId]);
+  }, [pickerOpen, mealPlan, weekDays]);
+
+  const slotProps = (day, slotType) => {
+    const slotId = getMealSlotId(day.dayKey, slotType);
+    return {
+      key: slotId,
+      slotId,
+      slotType,
+      meal: mealPlan.meals[slotId],
+      isPast: day.isPast,
+      onAdd: () => {
+        setPickerSlotId(slotId);
+        setPickerOpen(true);
+      },
+      onEdit: (updatedMeal) => updateMealSlot(slotId, updatedMeal),
+      onRemove: () => updateMealSlot(slotId, null),
+      onViewRecipe: setSelectedRecipeId,
+      onDrop: handleDrop
+    };
   };
 
   if (loading) {
     return (
-      <div className={styles.container}>
-        <div className={styles.loading}>Chargement du planning...</div>
-      </div>
+      <Page>
+        <PageHeader title="Planning des repas" subtitle="Chargement…" />
+        <div className={styles.skeletonGrid}>
+          {Array.from({ length: 8 }, (_, i) => (
+            <Skeleton key={i} variant="block" height={118} />
+          ))}
+        </div>
+      </Page>
     );
   }
 
   if (!mealPlan) {
     return (
-      <div className={styles.container}>
-        <div className={styles.error}>Erreur lors du chargement du planning</div>
-      </div>
+      <Page>
+        <PageHeader title="Planning des repas" />
+        <EmptyState
+          size="sm"
+          icon={CalendarX}
+          title="Planning indisponible"
+          description="Le planning de cette semaine n'a pas pu être chargé. Réessayez dans un instant."
+        />
+      </Page>
     );
   }
 
-  const weekDays = getWeekDays(mealPlan.startDate);
   const weekLabel = getWeekLabel(mealPlan.startDate, mealPlan.endDate);
-
-  // Déterminer si un jour est aujourd'hui
-  const isToday = (dateString) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    return date.getDate() === today.getDate() &&
-           date.getMonth() === today.getMonth() &&
-           date.getFullYear() === today.getFullYear();
-  };
-
-  // Préparer les jours disponibles pour le multi-day si le picker est ouvert
-  const availableDaysForPicker = pickerOpen ? weekDays
-    .filter(day => !day.isPast) // Only future days
-    .flatMap(day => [
-      {
-        slotId: getMealSlotId(day.dayKey, 'lunch'),
-        dayKey: day.dayKey,
-        dayName: day.dayName,
-        slotType: 'lunch'
-      },
-      {
-        slotId: getMealSlotId(day.dayKey, 'dinner'),
-        dayKey: day.dayKey,
-        dayName: day.dayName,
-        slotType: 'dinner'
-      }
-    ])
-    .filter(slot => !mealPlan.meals[slot.slotId]) // Only empty slots
-    : [];
+  const extras = mealPlan.extras || [];
 
   return (
-    <div className={styles.container}>
-      {/* Header avec navigation */}
-      <div className={styles.header}>
-        <div className={styles.headerLeft}>
-          <h1>Planning des repas</h1>
-          <div className={styles.weekNavigation}>
-            <button
-              onClick={() => handleNavigateWeek(-1)}
-              className={styles.navButton}
-              title="Semaine précédente"
-            >
-              <ChevronLeft size={20} />
-            </button>
-            <div className={styles.weekInfo}>
-              <div className={styles.weekNumber}>Semaine {mealPlan.weekNumber}</div>
-              <div className={styles.weekDates}><Calendar size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} />{weekLabel}</div>
-            </div>
-            <button
-              onClick={() => handleNavigateWeek(1)}
-              className={styles.navButton}
-              title="Semaine suivante"
-            >
-              <ChevronRight size={20} />
-            </button>
+    <Page>
+      <PageHeader
+        title="Planning des repas"
+        subtitle={`${filledCount} créneau${filledCount > 1 ? 'x' : ''} rempli${filledCount > 1 ? 's' : ''} sur 14${extras.length ? ` · ${extras.length} extra${extras.length > 1 ? 's' : ''}` : ''}`}
+      />
+
+      <div className={styles.toolbar}>
+        <div className={styles.weekNav}>
+          <button
+            type="button"
+            className={styles.weekButton}
+            onClick={() => handleNavigateWeek(-1)}
+            aria-label="Semaine précédente"
+          >
+            <ChevronLeft size={18} strokeWidth={2.2} />
+          </button>
+          <div className={styles.weekInfo}>
+            <div className={styles.weekNumber}>Semaine {mealPlan.weekNumber}</div>
+            <div className={styles.weekDates}>{weekLabel}</div>
           </div>
+          <button
+            type="button"
+            className={styles.weekButton}
+            onClick={() => handleNavigateWeek(1)}
+            aria-label="Semaine suivante"
+          >
+            <ChevronRight size={18} strokeWidth={2.2} />
+          </button>
         </div>
 
-        <div className={styles.headerRight}>
-          {/* Toggle vue grille/liste */}
+        <div className={styles.toolbarRight}>
           <div className={styles.viewToggle}>
             <button
+              type="button"
               onClick={() => handleViewModeChange('grid')}
-              className={`${styles.viewButton} ${viewMode === 'grid' ? styles.activeView : ''}`}
-              title="Vue grille"
+              className={`${styles.viewButton} ${viewMode === 'grid' ? styles.viewActive : ''}`}
+              aria-pressed={viewMode === 'grid'}
             >
-              <LayoutGrid size={18} />
+              <LayoutGrid size={16} strokeWidth={2.2} />
+              Grille
             </button>
             <button
+              type="button"
               onClick={() => handleViewModeChange('list')}
-              className={`${styles.viewButton} ${viewMode === 'list' ? styles.activeView : ''}`}
-              title="Vue liste"
+              className={`${styles.viewButton} ${viewMode === 'list' ? styles.viewActive : ''}`}
+              aria-pressed={viewMode === 'list'}
             >
-              <List size={18} />
+              <List size={16} strokeWidth={2.2} />
+              Liste
             </button>
           </div>
+
+          <Button
+            variant="secondary"
+            icon={BookMarked}
+            onClick={() => setTemplatesModalOpen(true)}
+            className={styles.templatesButton}
+            aria-label="Modèles de semaine"
+          >
+            <span className={styles.templatesLabel}>Modèles</span>
+          </Button>
         </div>
       </div>
 
-      {/* Vue Grille */}
-      {viewMode === 'grid' && (
-        <div className={styles.weekGrid}>
-          {/* Header des jours */}
-          <div className={styles.gridHeader}>
-            {/* Cellule vide pour l'alignement avec les labels Midi/Soir */}
-            <div></div>
-            {weekDays.map(day => (
+      {effectiveView === 'grid' ? (
+        <div className={styles.grid}>
+          <div className={styles.gridRow}>
+            <div className={styles.rowLabel} />
+            {weekDays.map((day) => (
               <div
                 key={day.dayKey}
-                className={`${styles.dayHeader} ${isToday(day.date) ? styles.today : ''}`}
+                className={`${styles.dayHeader} ${isToday(day.date) ? styles.dayToday : ''} ${day.isPast ? styles.dayPast : ''}`}
               >
-                <div className={styles.dayName}>{day.dayName.substring(0, 3)}</div>
+                <div className={styles.dayName}>
+                  {day.dayName.substring(0, 3)}
+                  {isToday(day.date) && ' · auj.'}
+                </div>
                 <div className={styles.dayNumber}>{day.dayNumber}</div>
               </div>
             ))}
           </div>
 
-          {/* Ligne des midis */}
-          <div className={styles.gridRow}>
-            <div className={styles.rowLabel}>Midi</div>
-            {weekDays.map(day => {
-              const slotId = getMealSlotId(day.dayKey, 'lunch');
-              const meal = mealPlan.meals[slotId];
-              return (
-                <MealSlot
-                  key={slotId}
-                  meal={meal}
-                  dayName={day.dayName}
-                  slotType="lunch"
-                  slotId={slotId}
-                  isPast={day.isPast}
-                  onAdd={() => handleAddMeal(slotId, 'lunch')}
-                  onEdit={(updatedMeal) => handleEditMeal(slotId, updatedMeal)}
-                  onRemove={() => handleRemoveMeal(slotId)}
-                  onViewRecipe={(recipeId) => setSelectedRecipeId(recipeId)}
-                  onDragStart={handleDragStart}
-                  onDragEnd={handleDragEnd}
-                  onDrop={handleDrop}
-                />
-              );
-            })}
-          </div>
-
-          {/* Ligne des soirs */}
-          <div className={styles.gridRow}>
-            <div className={styles.rowLabel}>Soir</div>
-            {weekDays.map(day => {
-              const slotId = getMealSlotId(day.dayKey, 'dinner');
-              const meal = mealPlan.meals[slotId];
-              return (
-                <MealSlot
-                  key={slotId}
-                  meal={meal}
-                  dayName={day.dayName}
-                  slotType="dinner"
-                  slotId={slotId}
-                  isPast={day.isPast}
-                  onAdd={() => handleAddMeal(slotId, 'dinner')}
-                  onEdit={(updatedMeal) => handleEditMeal(slotId, updatedMeal)}
-                  onRemove={() => handleRemoveMeal(slotId)}
-                  onViewRecipe={(recipeId) => setSelectedRecipeId(recipeId)}
-                  onDragStart={handleDragStart}
-                  onDragEnd={handleDragEnd}
-                  onDrop={handleDrop}
-                />
-              );
-            })}
-          </div>
+          {SLOTS.map((slot) => (
+            <div key={slot.type} className={styles.gridRow}>
+              <div className={styles.rowLabel}>{slot.label}</div>
+              {weekDays.map((day) => (
+                <MealSlot {...slotProps(day, slot.type)} variant="grid" />
+              ))}
+            </div>
+          ))}
         </div>
-      )}
-
-      {/* Vue Liste */}
-      {viewMode === 'list' && (
-        <div className={styles.weekList}>
-          {weekDays.map(day => {
-            const lunchSlotId = getMealSlotId(day.dayKey, 'lunch');
-            const dinnerSlotId = getMealSlotId(day.dayKey, 'dinner');
-            const lunchMeal = mealPlan.meals[lunchSlotId];
-            const dinnerMeal = mealPlan.meals[dinnerSlotId];
+      ) : (
+        <div className={styles.list}>
+          {listDays.map((day) => {
+            const today = isToday(day.date);
+            const filled = SLOTS.filter(
+              (slot) => mealPlan.meals[getMealSlotId(day.dayKey, slot.type)]
+            ).length;
 
             return (
-              <div
+              <section
                 key={day.dayKey}
-                className={`${styles.dayCard} ${isToday(day.date) ? styles.todayCard : ''}`}
+                className={`${styles.dayCard} ${today ? styles.dayCardToday : ''} ${day.isPast ? styles.dayCardPast : ''}`}
               >
-                {/* En-tête du jour */}
-                <div className={styles.dayCardHeader}>
-                  <div className={styles.dayCardDate}>
-                    <div className={styles.dayCardName}>{day.dayName}</div>
-                    <div className={styles.dayCardNumber}>{day.dayNumber}</div>
-                  </div>
-                  {isToday(day.date) && (
-                    <span className={styles.todayBadge}>Aujourd'hui</span>
-                  )}
-                </div>
+                <header className={styles.dayCardHead}>
+                  <span className={styles.dayCardTitle}>
+                    {day.dayName} {day.dayNumber}
+                    {today && ' · aujourd’hui'}
+                    {day.isPast && ' · passé'}
+                  </span>
+                  <span className={styles.dayCardCount}>{filled}/2</span>
+                </header>
 
-                {/* Repas du jour */}
-                <div className={styles.dayCardMeals}>
-                  {/* Midi */}
-                  <div className={styles.mealRow}>
-                    <div className={styles.mealRowLabel}>
-                      <span>Midi</span>
+                <div className={styles.dayCardBody}>
+                  {SLOTS.map((slot) => (
+                    <div key={slot.type} className={styles.mealRow}>
+                      <span className={styles.mealRowLabel}>{slot.label}</span>
+                      <MealSlot {...slotProps(day, slot.type)} variant="row" />
                     </div>
-                    <div className={styles.mealRowContent}>
-                      <MealSlot
-                        meal={lunchMeal}
-                        dayName={day.dayName}
-                        slotType="lunch"
-                        slotId={lunchSlotId}
-                        isPast={day.isPast}
-                        onAdd={() => handleAddMeal(lunchSlotId, 'lunch')}
-                        onEdit={(updatedMeal) => handleEditMeal(lunchSlotId, updatedMeal)}
-                        onRemove={() => handleRemoveMeal(lunchSlotId)}
-                        onViewRecipe={(recipeId) => setSelectedRecipeId(recipeId)}
-                        onDragStart={handleDragStart}
-                        onDragEnd={handleDragEnd}
-                        onDrop={handleDrop}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Soir */}
-                  <div className={styles.mealRow}>
-                    <div className={styles.mealRowLabel}>
-                      <span>Soir</span>
-                    </div>
-                    <div className={styles.mealRowContent}>
-                      <MealSlot
-                        meal={dinnerMeal}
-                        dayName={day.dayName}
-                        slotType="dinner"
-                        slotId={dinnerSlotId}
-                        isPast={day.isPast}
-                        onAdd={() => handleAddMeal(dinnerSlotId, 'dinner')}
-                        onEdit={(updatedMeal) => handleEditMeal(dinnerSlotId, updatedMeal)}
-                        onRemove={() => handleRemoveMeal(dinnerSlotId)}
-                        onViewRecipe={(recipeId) => setSelectedRecipeId(recipeId)}
-                        onDragStart={handleDragStart}
-                        onDragEnd={handleDragEnd}
-                        onDrop={handleDrop}
-                      />
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              </div>
+              </section>
             );
           })}
         </div>
       )}
 
-      {/* Extras de la semaine */}
-      <div className={styles.extrasSection}>
-        <div className={styles.extrasHeader}>
-          <h3><Lightbulb size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} />Extras de la semaine</h3>
-          <button className={styles.addExtraButton} onClick={handleAddExtra}>
-            <Plus size={16} style={{ verticalAlign: 'middle', marginRight: '4px' }} />Ajouter
-          </button>
-        </div>
-        {mealPlan.extras.length === 0 ? (
-          <p className={styles.noExtras}>Aucun extra pour cette semaine</p>
+      <section className={styles.extras}>
+        <header className={styles.extrasHead}>
+          <h2 className={styles.extrasTitle}>Extras de la semaine</h2>
+          <Button variant="secondary" size="sm" icon={Plus} onClick={() => setExtraPickerOpen(true)}>
+            Ajouter un extra
+          </Button>
+        </header>
+
+        {extras.length === 0 ? (
+          <p className={styles.extrasEmpty}>
+            Aucun extra. Les extras partent directement dans la liste de courses.
+          </p>
         ) : (
           <div className={styles.extrasList}>
-            {mealPlan.extras.map(extra => (
-              <div
-                key={extra.id}
-                className={styles.extraItem}
-                onClick={() => setSelectedRecipeId(extra.recipeId)}
-              >
-                <span className={styles.extraName}>{extra.recipeName}</span>
-                <span className={styles.extraServings}><Users size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} />{extra.servings}</span>
+            {extras.map((extra) => (
+              <span key={extra.id} className={styles.extra}>
                 <button
-                  className={styles.removeExtraButton}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRemoveExtra(extra.id);
-                  }}
-                  title="Retirer"
+                  type="button"
+                  className={styles.extraName}
+                  onClick={() => setSelectedRecipeId(extra.recipeId)}
                 >
-                  <X size={14} />
+                  {extra.recipeName}
                 </button>
-              </div>
+                <span className={styles.extraServings}>{extra.servings} pers.</span>
+                <button
+                  type="button"
+                  className={styles.extraRemove}
+                  onClick={() => deleteExtra(extra.id)}
+                  aria-label={`Retirer ${extra.recipeName}`}
+                >
+                  <X size={14} strokeWidth={2.4} />
+                </button>
+              </span>
             ))}
           </div>
         )}
-      </div>
+      </section>
 
-      {/* Boutons d'action en bas */}
-      <div className={styles.footer}>
-        <button
-          className={styles.actionButton}
-          onClick={() => setTemplatesModalOpen(true)}
-        >
-          <BookOpen size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} />Modèles de planning
-        </button>
-      </div>
-
-      {/* RecipePicker Modal pour meal slots */}
       {pickerOpen && (
         <RecipePicker
           onSelect={handleRecipeSelect}
-          onCancel={handlePickerCancel}
+          onCancel={() => {
+            setPickerOpen(false);
+            setPickerSlotId(null);
+          }}
           currentSlotId={pickerSlotId}
           availableDays={availableDaysForPicker}
         />
       )}
 
-      {/* RecipePicker Modal pour extras */}
       {extraPickerOpen && (
         <RecipePicker
-          onSelect={(mealData) => handleExtraSelect(mealData)}
-          onCancel={handleExtraCancel}
+          onSelect={handleExtraSelect}
+          onCancel={() => setExtraPickerOpen(false)}
           currentSlotId={null}
-          availableDays={[]} // Pas de multi-day pour les extras
+          availableDays={[]}
         />
       )}
 
-      {/* RecipeDetail Sidepanel */}
-      {selectedRecipeId && (
-        <>
-          <div
-            className={styles.modalOverlay}
-            onClick={() => setSelectedRecipeId(null)}
+      <SidePanel
+        open={!!selectedRecipeId}
+        onClose={() => setSelectedRecipeId(null)}
+        label="Détail de la recette"
+      >
+        {selectedRecipeId && (
+          <RecipeDetail
+            recipeId={selectedRecipeId}
+            onClose={() => setSelectedRecipeId(null)}
+            onDelete={deleteRecipe}
           />
-          <div className={styles.sideModal}>
-            <RecipeDetail
-              recipeId={selectedRecipeId}
-              onClose={() => setSelectedRecipeId(null)}
-              onDelete={deleteRecipe}
-            />
-          </div>
-        </>
-      )}
+        )}
+      </SidePanel>
 
-      {/* Templates Modal */}
-      <TemplatesModal
-        isOpen={templatesModalOpen}
-        onClose={() => setTemplatesModalOpen(false)}
-      />
-    </div>
+      <TemplatesModal isOpen={templatesModalOpen} onClose={() => setTemplatesModalOpen(false)} />
+    </Page>
   );
-};
-
-// Helper pour obtenir le type de recette (copié depuis recipeTypes)
-const getRecipeTypeById = (typeId) => {
-  const types = {
-    entree: { id: 'entree', label: 'Entrée', icon: '🥗' },
-    plat: { id: 'plat', label: 'Plat', icon: '🍝' },
-    dessert: { id: 'dessert', label: 'Dessert', icon: '🍰' },
-    appetizer: { id: 'appetizer', label: 'Apéritif', icon: '🥂' },
-    breakfast: { id: 'breakfast', label: 'Petit-déjeuner', icon: '🥐' },
-    snack: { id: 'snack', label: 'Goûter', icon: '🍪' },
-  };
-  return types[typeId] || types.plat;
 };
 
 export default Planning;

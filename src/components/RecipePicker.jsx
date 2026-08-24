@@ -1,457 +1,312 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useRecipes } from '../contexts/RecipeContext';
-import { getRecipeTypeById, RECIPE_TYPES } from '../utils/recipeTypes';
-import { X, BookOpen, Pencil, FileText, Carrot, Search, RotateCcw, Users, Check, Pin, Info, ChefHat, Sunrise, Moon } from 'lucide-react';
+import { RECIPE_TYPES, getRecipeTypeById } from '../utils/recipeTypes';
+import { getTagsByIds } from '../utils/recipeTags';
+import { Check, Pin, SearchX } from 'lucide-react';
+import OptimizedImage from './OptimizedImage';
+import {
+  Modal,
+  Button,
+  Segmented,
+  SearchField,
+  Chip,
+  Stepper,
+  TagBadge,
+  EmptyState,
+  Field,
+  Input
+} from './ui';
 import styles from './RecipePicker.module.css';
 
-const RecipePicker = ({
-  onSelect,
-  onCancel,
-  currentSlotId,
-  availableDays = [] // Array of { dayKey, dayName, slotType } for multi-day selection
-}) => {
+const MODES = [
+  { value: 'recipe', label: 'Recette du foyer' },
+  { value: 'custom', label: '✏️ Repas libre' }
+];
+
+const SEARCH_MODES = [
+  { value: 'name', label: 'Nom' },
+  { value: 'ingredient', label: 'Ingrédient' }
+];
+
+/**
+ * Choix d'un repas pour un créneau : modale sur desktop, bottom sheet sur mobile.
+ * Deux onglets — une recette du foyer, ou un repas libre saisi à la main —
+ * plus l'option d'étaler le plat sur plusieurs créneaux consécutifs.
+ */
+const RecipePicker = ({ onSelect, onCancel, currentSlotId, availableDays = [] }) => {
   const { recipes, loading } = useRecipes();
 
-  // Mode: 'recipe' ou 'custom'
   const [mode, setMode] = useState('recipe');
-
-  // Filter and search state
   const [searchTerm, setSearchTerm] = useState('');
   const [searchMode, setSearchMode] = useState('name');
   const [selectedType, setSelectedType] = useState('all');
-
-  // Selection state
   const [selectedRecipe, setSelectedRecipe] = useState(null);
-  const [servings, setServings] = useState(2); // Default to 2 people
-  const [selectedDays, setSelectedDays] = useState(currentSlotId ? [currentSlotId] : []); // Multi-day selection
-
-  // Custom meal state
+  const [servings, setServings] = useState(2);
+  const [spread, setSpread] = useState(1);
   const [customMealName, setCustomMealName] = useState('');
   const [customMealType, setCustomMealType] = useState('plat');
 
-  // Filter recipes
-  const filteredRecipes = recipes.filter(recipe => {
-    // Filter by type
-    const matchesType = selectedType === 'all' || recipe.type === selectedType;
+  // Créneaux consécutifs disponibles à partir de celui qu'on remplit.
+  const spreadSlots = useMemo(() => {
+    if (!currentSlotId) return [];
+    const startIndex = availableDays.findIndex((slot) => slot.slotId === currentSlotId);
+    if (startIndex === -1) return [currentSlotId];
+    return availableDays.slice(startIndex).map((slot) => slot.slotId);
+  }, [availableDays, currentSlotId]);
 
-    // Filter by search term
-    let matchesSearch = true;
-    if (searchTerm.trim()) {
-      const searchLower = searchTerm.toLowerCase();
-      if (searchMode === 'name') {
-        matchesSearch = recipe.name.toLowerCase().includes(searchLower);
-      } else if (searchMode === 'ingredient') {
-        matchesSearch = recipe.ingredients?.some(ing =>
-          ing.name?.toLowerCase().includes(searchLower)
-        ) || false;
-      }
-    }
+  const maxSpread = Math.max(1, spreadSlots.length);
+  const targetSlots = currentSlotId ? spreadSlots.slice(0, spread) : [];
 
-    return matchesSearch && matchesType;
-  });
+  const currentSlot = availableDays.find((slot) => slot.slotId === currentSlotId);
+  const subtitle = currentSlot
+    ? `${currentSlot.dayName} · ${currentSlot.slotType === 'lunch' ? 'Midi' : 'Soir'}`
+    : 'Extra de la semaine';
+
+  const filteredRecipes = useMemo(() => {
+    const search = searchTerm.trim().toLowerCase();
+
+    return recipes.filter((recipe) => {
+      const matchesType = selectedType === 'all' || (recipe.type || 'plat') === selectedType;
+      if (!search) return matchesType;
+
+      const matchesSearch =
+        searchMode === 'name'
+          ? recipe.name.toLowerCase().includes(search)
+          : recipe.ingredients?.some((ing) => ing.name?.toLowerCase().includes(search)) || false;
+
+      return matchesSearch && matchesType;
+    });
+  }, [recipes, searchTerm, searchMode, selectedType]);
+
+  const countByType = useMemo(() => {
+    const counts = {};
+    recipes.forEach((recipe) => {
+      const type = recipe.type || 'plat';
+      counts[type] = (counts[type] || 0) + 1;
+    });
+    return counts;
+  }, [recipes]);
+
+  const canConfirm =
+    mode === 'recipe' ? !!selectedRecipe : customMealName.trim().length > 0;
 
   const handleConfirm = () => {
-    if (mode === 'recipe' && !selectedRecipe) return;
-    if (mode === 'custom' && !customMealName.trim()) return;
+    if (!canConfirm) return;
 
-    const mealData = mode === 'recipe' ? {
-      recipeId: selectedRecipe.id,
-      recipeName: selectedRecipe.name,
-      recipeType: selectedRecipe.type || 'plat',
-      recipeImageUrl: selectedRecipe.imageUrl || null,
-      servings: servings,
-      isMultiDay: selectedDays.length > 1,
-      multiDayMealIds: selectedDays.length > 1 ? selectedDays : null,
-      multiDayCount: selectedDays.length > 1 ? selectedDays.length : null,
-    } : {
-      // Custom meal (no recipeId)
-      recipeName: customMealName.trim(),
-      recipeType: customMealType,
-      recipeImageUrl: null,
-      servings: servings,
-      isCustom: true,
-      isMultiDay: selectedDays.length > 1,
-      multiDayMealIds: selectedDays.length > 1 ? selectedDays : null,
-      multiDayCount: selectedDays.length > 1 ? selectedDays.length : null,
-    };
+    const isMultiDay = targetSlots.length > 1;
 
-    onSelect(mealData, selectedDays);
+    const mealData =
+      mode === 'recipe'
+        ? {
+            recipeId: selectedRecipe.id,
+            recipeName: selectedRecipe.name,
+            recipeType: selectedRecipe.type || 'plat',
+            recipeImageUrl: selectedRecipe.imageUrl || null,
+            servings,
+            isMultiDay,
+            multiDayMealIds: isMultiDay ? targetSlots : null,
+            multiDayCount: isMultiDay ? targetSlots.length : null
+          }
+        : {
+            recipeName: customMealName.trim(),
+            recipeType: customMealType,
+            recipeImageUrl: null,
+            servings,
+            isCustom: true,
+            isMultiDay,
+            multiDayMealIds: isMultiDay ? targetSlots : null,
+            multiDayCount: isMultiDay ? targetSlots.length : null
+          };
+
+    onSelect(mealData, targetSlots);
   };
-
-  const toggleDay = (dayId) => {
-    setSelectedDays(prev => {
-      if (prev.includes(dayId)) {
-        // Don't allow deselecting the original slot
-        if (dayId === currentSlotId && prev.length === 1) return prev;
-        return prev.filter(id => id !== dayId);
-      } else {
-        return [...prev, dayId];
-      }
-    });
-  };
-
-  const clearAllFilters = () => {
-    setSearchTerm('');
-    setSelectedType('all');
-  };
-
-  const hasActiveFilters = searchTerm !== '' || selectedType !== 'all';
 
   return (
-    <div className={styles.overlay} onClick={onCancel}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
-        <div className={styles.header}>
-          <h2>{mode === 'recipe' ? 'Sélectionner une recette' : 'Repas personnalisé'}</h2>
-          <button onClick={onCancel} className={styles.closeButton} title="Fermer">
-            <X size={18} />
-          </button>
-        </div>
-
-        {/* Mode Toggle */}
-        <div className={styles.modeToggle}>
-          <button
-            onClick={() => setMode('recipe')}
-            className={`${styles.modeButton} ${mode === 'recipe' ? styles.activeModeButton : ''}`}
+    <Modal
+      open
+      onClose={onCancel}
+      title="Choisir un repas"
+      subtitle={subtitle}
+      size="md"
+      footer={
+        <>
+          <Button variant="secondary" onClick={onCancel} className={styles.footerCancel}>
+            Annuler
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleConfirm}
+            disabled={!canConfirm}
+            className={styles.footerConfirm}
           >
-            <BookOpen size={16} style={{ marginRight: '6px' }} />Recettes
-          </button>
-          <button
-            onClick={() => setMode('custom')}
-            className={`${styles.modeButton} ${mode === 'custom' ? styles.activeModeButton : ''}`}
-          >
-            <Pencil size={16} style={{ marginRight: '6px' }} />Repas custom
-          </button>
-        </div>
+            Ajouter au planning
+          </Button>
+        </>
+      }
+    >
+      <div className={styles.body}>
+        <Segmented
+          options={MODES}
+          value={mode}
+          onChange={setMode}
+          size="md"
+          label="Type de repas"
+          className={styles.modes}
+        />
 
-        {/* Search and Filters (only in recipe mode) */}
-        {mode === 'recipe' && (
-        <div className={styles.filterSection}>
-          {/* Search Bar with Mode Toggle */}
-          <div className={styles.searchContainer}>
-            <div className={styles.searchModeToggle}>
-              <button
-                onClick={() => setSearchMode('name')}
-                className={`${styles.searchModeButton} ${searchMode === 'name' ? styles.activeModeButton : ''}`}
-                title="Rechercher par nom"
-              >
-                <FileText size={14} style={{ marginRight: '4px' }} />Nom
-              </button>
-              <button
-                onClick={() => setSearchMode('ingredient')}
-                className={`${styles.searchModeButton} ${searchMode === 'ingredient' ? styles.activeModeButton : ''}`}
-                title="Rechercher par ingrédient"
-              >
-                <Carrot size={14} style={{ marginRight: '4px' }} />Ingrédient
-              </button>
-            </div>
+        {mode === 'recipe' ? (
+          <>
+            <SearchField
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder={
+                searchMode === 'name' ? 'Rechercher une recette…' : 'Rechercher par ingrédient…'
+              }
+              modes={SEARCH_MODES}
+              mode={searchMode}
+              onModeChange={setSearchMode}
+              modeLabel="Mode de recherche"
+            />
 
-            <div className={styles.searchInputWrapper}>
-              <span className={styles.searchIcon}><Search size={18} /></span>
-              <input
-                type="text"
-                placeholder={
-                  searchMode === 'name'
-                    ? 'Rechercher une recette...'
-                    : 'Rechercher par ingrédient...'
-                }
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className={styles.searchInput}
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className={styles.clearSearchButton}
-                  title="Effacer"
-                >
-                  <X size={14} />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Type Filters */}
-          <div className={styles.filterControls}>
-            <div className={styles.typeFilters}>
-              <button
+            <div className={`${styles.chipRow} scrollRow`}>
+              <Chip
+                label="Tous"
+                count={recipes.length}
+                active={selectedType === 'all'}
                 onClick={() => setSelectedType('all')}
-                className={`${styles.typeFilterButton} ${selectedType === 'all' ? styles.active : ''}`}
-              >
-                Tous
-              </button>
-              {RECIPE_TYPES.map(type => {
-                const count = recipes.filter(r => r.type === type.id).length;
-                if (count === 0) return null;
-                return (
-                  <button
-                    key={type.id}
-                    onClick={() => setSelectedType(type.id)}
-                    className={`${styles.typeFilterButton} ${selectedType === type.id ? styles.active : ''}`}
-                  >
-                    {type.icon} {type.label}
-                  </button>
-                );
-              })}
+              />
+              {RECIPE_TYPES.filter((type) => countByType[type.id]).map((type) => (
+                <Chip
+                  key={type.id}
+                  label={type.label}
+                  emoji={type.icon}
+                  tone={type.tone}
+                  count={countByType[type.id]}
+                  active={selectedType === type.id}
+                  onClick={() => setSelectedType(type.id)}
+                />
+              ))}
             </div>
 
-            {hasActiveFilters && (
-              <button
-                onClick={clearAllFilters}
-                className={styles.clearFiltersButton}
-                title="Réinitialiser les filtres"
-              >
-                <RotateCcw size={16} />
-              </button>
+            {loading ? (
+              <p className={styles.status}>Chargement des recettes…</p>
+            ) : filteredRecipes.length === 0 ? (
+              <EmptyState
+                size="sm"
+                dashed={false}
+                icon={SearchX}
+                title="Aucune recette"
+                description="Aucune recette ne correspond à cette recherche."
+              />
+            ) : (
+              <ul className={styles.results}>
+                {filteredRecipes.map((recipe) => {
+                  const type = getRecipeTypeById(recipe.type || 'plat');
+                  const tags = getTagsByIds(recipe.tags || []);
+                  const isSelected = selectedRecipe?.id === recipe.id;
+
+                  return (
+                    <li key={recipe.id}>
+                      <button
+                        type="button"
+                        className={`${styles.result} ${isSelected ? styles.resultSelected : ''}`}
+                        onClick={() => {
+                          setSelectedRecipe(recipe);
+                          setServings(recipe.servings || 2);
+                        }}
+                        aria-pressed={isSelected}
+                      >
+                        <OptimizedImage
+                          src={recipe.imageUrl}
+                          alt=""
+                          asBackground
+                          caption=""
+                          placeholder={<span className={styles.resultEmoji}>{type.icon}</span>}
+                          className={styles.resultThumb}
+                        />
+                        <span className={styles.resultText}>
+                          <span className={styles.resultName}>{recipe.name}</span>
+                          <span className={styles.resultMeta}>
+                            {type.icon} {type.label} · {recipe.servings} pers. ·{' '}
+                            {recipe.steps?.length || 0} étapes
+                          </span>
+                        </span>
+                        {tags[0] && <TagBadge tag={tags[0]} size="sm" className={styles.resultTag} />}
+                        {isSelected && (
+                          <span className={styles.resultCheck}>
+                            <Check size={16} strokeWidth={2.6} />
+                          </span>
+                        )}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
             )}
-          </div>
-
-          {/* Results count */}
-          <div className={styles.resultsInfo}>
-            {filteredRecipes.length} recette{filteredRecipes.length > 1 ? 's' : ''}
-          </div>
-        </div>
-        )}
-
-        {/* Scrollable Content */}
-        <div className={styles.scrollableContent}>
-          {/* Recipe Grid (mode recipe) */}
-          {mode === 'recipe' && (
-          <div className={styles.recipeGrid}>
-          {loading ? (
-            <div className={styles.loading}>Chargement...</div>
-          ) : filteredRecipes.length === 0 ? (
-            <div className={styles.empty}>
-              Aucune recette trouvée
-            </div>
-          ) : (
-            filteredRecipes.map(recipe => {
-              const recipeType = getRecipeTypeById(recipe.type || 'plat');
-              const isSelected = selectedRecipe?.id === recipe.id;
-
-              return (
-                <div
-                  key={recipe.id}
-                  className={`${styles.recipeCard} ${isSelected ? styles.selected : ''}`}
-                  onClick={() => setSelectedRecipe(recipe)}
-                >
-                  <div
-                    className={styles.recipeCardInner}
-                    style={{
-                      backgroundImage: recipe.imageUrl
-                        ? `url(${recipe.imageUrl})`
-                        : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                    }}
-                  >
-                    {recipeType && (
-                      <div className={styles.recipeTypeBadge}>
-                        <span className={styles.recipeTypeIcon}>{recipeType.icon}</span>
-                      </div>
-                    )}
-
-                    <div className={styles.recipeOverlay}>
-                      <h3 className={styles.recipeName}>{recipe.name}</h3>
-                      <div className={styles.recipeInfo}>
-                        <span><Users size={12} style={{ marginRight: '4px', verticalAlign: 'middle' }} />{recipe.servings} pers.</span>
-                      </div>
-                    </div>
-
-                    {!recipe.imageUrl && (
-                      <div className={styles.placeholderIcon}><ChefHat size={48} /></div>
-                    )}
-
-                    {isSelected && (
-                      <div className={styles.selectedBadge}><Check size={18} /></div>
-                    )}
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-          )}
-
-        {/* Custom Meal Form (mode custom) */}
-        {mode === 'custom' && (
+          </>
+        ) : (
           <div className={styles.customForm}>
-            <div className={styles.customFormField}>
-              <label className={styles.customFormLabel}>
-                Nom du repas *
-              </label>
-              <input
-                type="text"
-                placeholder="Ex: Pizza, Restaurant, Poke Bowl..."
+            <Field label="Nom du repas" required htmlFor="custom-meal-name">
+              <Input
+                id="custom-meal-name"
                 value={customMealName}
                 onChange={(e) => setCustomMealName(e.target.value)}
-                className={styles.customFormInput}
+                placeholder="Ex. Pizza à emporter"
                 autoFocus
               />
-            </div>
+            </Field>
 
-            <div className={styles.customFormField}>
-              <label className={styles.customFormLabel}>
-                Type de repas
-              </label>
-              <div className={styles.customTypeButtons}>
-                {RECIPE_TYPES.map(type => (
-                  <button
+            <Field label="Type">
+              <div className={`${styles.chipRow} scrollRow`}>
+                {RECIPE_TYPES.map((type) => (
+                  <Chip
                     key={type.id}
+                    label={type.label}
+                    emoji={type.icon}
+                    tone={type.tone}
+                    active={customMealType === type.id}
                     onClick={() => setCustomMealType(type.id)}
-                    className={`${styles.customTypeButton} ${customMealType === type.id ? styles.active : ''}`}
-                  >
-                    {type.icon} {type.label}
-                  </button>
+                  />
                 ))}
               </div>
-            </div>
+            </Field>
           </div>
         )}
 
-        {/* Configuration Section */}
-        {(selectedRecipe || (mode === 'custom' && customMealName.trim())) && (
-          <div className={styles.configSection}>
-            <div className={styles.configHeader}>
-              <h3>Configuration</h3>
+        <div className={styles.config}>
+          <div className={styles.configRow}>
+            <div>
+              <div className={styles.configLabel}>Portions</div>
+              <p className={styles.configHint}>Sert à calculer les quantités des courses.</p>
             </div>
+            <Stepper value={servings} onChange={setServings} min={1} max={50} label="Portions" />
+          </div>
 
-            <div className={styles.configContent}>
-              {/* Servings */}
-              <div className={styles.configRow}>
-                <label className={styles.configLabel}>
-                  <Users size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />Nombre de personnes :
-                </label>
-                <div className={styles.servingsControl}>
-                  <button
-                    onClick={() => setServings(Math.max(1, servings - 1))}
-                    className={styles.servingsButton}
-                  >
-                    −
-                  </button>
-                  <input
-                    type="number"
-                    min="1"
-                    max="20"
-                    value={servings}
-                    onChange={(e) => setServings(Math.max(1, Number(e.target.value)))}
-                    className={styles.servingsInput}
-                  />
-                  <button
-                    onClick={() => setServings(Math.min(20, servings + 1))}
-                    className={styles.servingsButton}
-                  >
-                    +
-                  </button>
+          {maxSpread > 1 && (
+            <div className={styles.configRow}>
+              <div>
+                <div className={styles.configLabel}>
+                  <Pin size={14} strokeWidth={2.2} />
+                  Étaler sur plusieurs jours
                 </div>
+                <p className={styles.configHint}>
+                  {spread > 1
+                    ? `Le plat occupera ${spread} créneaux consécutifs.`
+                    : 'Un seul créneau pour l’instant.'}
+                </p>
               </div>
-
-              {/* Multi-day selection (if available) */}
-              {availableDays.length > 1 && (() => {
-                // Regrouper les slots par jour
-                const dayGroups = availableDays.reduce((acc, slot) => {
-                  if (!acc[slot.dayKey]) {
-                    acc[slot.dayKey] = { dayName: slot.dayName, lunch: null, dinner: null };
-                  }
-                  if (slot.slotType === 'lunch') {
-                    acc[slot.dayKey].lunch = slot.slotId;
-                  } else {
-                    acc[slot.dayKey].dinner = slot.slotId;
-                  }
-                  return acc;
-                }, {});
-
-                const days = Object.entries(dayGroups);
-
-                return (
-                  <div className={styles.configRow}>
-                    <label className={styles.configLabel}>
-                      <Pin size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />Étaler sur plusieurs jours :
-                    </label>
-                    <div className={styles.multiDayGrid}>
-                      {/* Header avec les noms des jours */}
-                      <div className={styles.multiDayHeader}>
-                        <div className={styles.multiDayHeaderEmpty}></div>
-                        {days.map(([dayKey, dayData]) => (
-                          <div key={dayKey} className={styles.multiDayDay}>
-                            {dayData.dayName.substring(0, 3)}
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Ligne Midi */}
-                      <div className={styles.multiDayRow}>
-                        <div className={styles.multiDayLabel}><Sunrise size={12} style={{ marginRight: '4px' }} />Midi</div>
-                        {days.map(([dayKey, dayData]) => (
-                          <div key={`${dayKey}-lunch`} className={styles.multiDaySlot}>
-                            {dayData.lunch && (
-                              <label
-                                className={`${styles.multiDayCheckbox} ${selectedDays.includes(dayData.lunch) ? styles.checked : ''}`}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={selectedDays.includes(dayData.lunch)}
-                                  onChange={() => toggleDay(dayData.lunch)}
-                                />
-                                <span className={styles.checkmark}></span>
-                              </label>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Ligne Soir */}
-                      <div className={styles.multiDayRow}>
-                        <div className={styles.multiDayLabel}><Moon size={12} style={{ marginRight: '4px' }} />Soir</div>
-                        {days.map(([dayKey, dayData]) => (
-                          <div key={`${dayKey}-dinner`} className={styles.multiDaySlot}>
-                            {dayData.dinner && (
-                              <label
-                                className={`${styles.multiDayCheckbox} ${selectedDays.includes(dayData.dinner) ? styles.checked : ''}`}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={selectedDays.includes(dayData.dinner)}
-                                  onChange={() => toggleDay(dayData.dinner)}
-                                />
-                                <span className={styles.checkmark}></span>
-                              </label>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    {selectedDays.length > 1 && (
-                      <p className={styles.multiDayHint}>
-                        <Info size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} />Les quantités ne seront comptées qu'une seule fois dans la liste de courses
-                      </p>
-                    )}
-                  </div>
-                );
-              })()}
+              <Stepper
+                value={spread}
+                onChange={setSpread}
+                min={1}
+                max={maxSpread}
+                label="Nombre de créneaux"
+              />
             </div>
-          </div>
-        )}
-        </div> {/* End scrollableContent */}
-
-        {/* Footer with action buttons */}
-        <div className={styles.footer}>
-          <button onClick={onCancel} className={styles.cancelButton}>
-            Annuler
-          </button>
-          <button
-            onClick={handleConfirm}
-            className={styles.confirmButton}
-            disabled={mode === 'recipe' ? !selectedRecipe : !customMealName.trim()}
-          >
-            {selectedDays.length > 1
-              ? `Ajouter à ${selectedDays.length} repas`
-              : selectedDays.length === 0
-              ? 'Ajouter comme extra'
-              : 'Ajouter au planning'
-            }
-          </button>
+          )}
         </div>
       </div>
-    </div>
+    </Modal>
   );
 };
 

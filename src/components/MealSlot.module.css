@@ -1,477 +1,429 @@
+/* ==========================================================================
+   Créneau de planning — 5 états typés par le fond et la bordure,
+   jamais par la couleur seule.
+   ========================================================================== */
+
 .slot {
   position: relative;
-  min-height: 140px;
-  border-radius: 12px;
-  background-color: var(--bg-secondary);
-  border: 2px solid var(--border-color);
-  transition: all 0.3s ease;
-  overflow: hidden;
-  cursor: pointer;
+  min-width: 0;
+  background-color: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  transition:
+    background-color var(--dur) var(--ease-out),
+    border-color var(--dur) var(--ease-out),
+    box-shadow var(--dur) var(--ease-out),
+    opacity var(--dur) var(--ease-out);
 }
 
-/* État vide */
-.slot.empty {
-  border-style: dashed;
+.filled {
+  box-shadow: var(--elev-1);
+}
+
+/* ---------- État vide ---------- */
+.empty {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  background-color: var(--surface-inset);
+  border-style: dashed;
+  border-color: var(--border-color);
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 0.78125rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-.slot.empty:hover {
-  border-color: var(--accent-blue);
-  background-color: var(--bg-tertiary);
-  transform: scale(1.02);
-}
-
-.emptyContent {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
+.empty:hover {
+  background-color: var(--surface);
+  border-color: var(--accent-primary);
   color: var(--text-secondary);
-  opacity: 0.6;
 }
 
-.addIcon {
-  font-size: 2rem;
-  line-height: 1;
+.empty:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 .emptyLabel {
-  font-size: 0.875rem;
-  font-weight: 500;
+  white-space: nowrap;
 }
 
-/* État passé (verrouillé) */
-.slot.past {
-  cursor: default;
-  opacity: 0.4;
+/* ---------- État passé ---------- */
+.past {
+  opacity: 0.45;
   pointer-events: none;
 }
 
-.slot.past:hover {
-  transform: none;
-  box-shadow: none;
-}
-
-.slot.filled.past {
-  border-color: var(--border-color);
-}
-
-.slot.filled.past:hover {
-  transform: none;
-  box-shadow: none;
-}
-
 .pastLabel {
-  font-size: 1.5rem;
-  color: var(--text-secondary);
-  opacity: 0.5;
-}
-
-/* État rempli */
-.slot.filled {
-  border-color: var(--accent-blue);
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  position: relative;
-  overflow: hidden;
-}
-
-.slot.filled:hover {
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-  transform: translateY(-2px);
-}
-
-/* Image en haut avec overlay */
-.mealImageContainer {
-  width: 100%;
-  height: 80px;
-  position: relative;
-  overflow: hidden;
-  background-color: var(--bg-tertiary);
-}
-
-.mealImage {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.mealImagePlaceholder {
-  width: 100%;
-  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.5rem;
-  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+  width: 100%;
+  height: 100%;
+  font-family: var(--font-mono);
+  font-size: 0.71875rem;
+  color: var(--text-muted);
 }
 
-/* Contenu en bas */
-.mealContent {
-  flex: 1;
-  padding: 0.75rem;
+/* ---------- Glisser-déposer ---------- */
+.dragSource {
+  opacity: 0.4;
+  border-style: dashed;
+}
+
+.dropTarget {
+  background-color: rgba(255, 115, 0, 0.1);
+  border: 2px dashed var(--accent-primary);
+  color: var(--accent-primary-light);
+}
+
+.dropHint {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  border-radius: var(--radius-card);
+  background-color: rgba(255, 115, 0, 0.12);
+  color: var(--accent-primary-light);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 700;
+  pointer-events: none;
 }
 
-/* En-tête avec titre et badge */
-.mealHeader {
+/* ---------- Vignette ---------- */
+.thumbWrap {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+
+.thumb,
+.customThumb {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.5rem;
-  margin-bottom: auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background-color: var(--surface-raised);
+  color: var(--text-secondary);
 }
 
-/* Nom de la recette */
-.recipeName {
-  font-size: 1rem;
+.thumbEmoji {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.multiDay {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 5px;
+  border-radius: 5px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ---------- Textes ---------- */
+.name {
+  display: block;
+  font-family: var(--font-body);
   font-weight: 600;
   color: var(--text-primary);
-  margin: 0;
-  line-height: 1.3;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  flex: 1;
 }
 
-/* Badge multi-day */
-.multiDayBadge {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.3) 100%);
-  border: 1px solid rgba(34, 197, 94, 0.5);
-  border-radius: 12px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: #22c55e;
-  flex-shrink: 0;
-}
-
-.multiDayIcon {
-  font-size: 0.8rem;
-}
-
-.multiDayText {
-  line-height: 1;
-  font-size: 0.7rem;
-}
-
-/* Boutons d'action uniformes */
-.actionButtons {
-  display: flex;
-  gap: 0.4rem;
-  margin-top: auto;
-}
-
-.actionBtn {
-  flex: 1;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  padding: 0.6rem 0.4rem;
-  border-radius: 6px;
-  border: 1px solid var(--border-color);
-  background-color: var(--bg-secondary);
-  cursor: pointer;
-  transition: all 0.2s;
-  min-width: 0;
-}
-
-.actionBtn:hover {
-  transform: scale(1.03);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.actionIcon {
-  font-size: 1rem;
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-.actionText {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  line-height: 1;
+.meta {
+  display: block;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* Variantes de boutons */
-.actionBtnActive {
-  background-color: rgba(34, 197, 94, 0.15);
-  border-color: rgba(34, 197, 94, 0.4);
-}
-
-.actionBtnActive .actionIcon {
-  color: #22c55e;
-}
-
-.actionBtnActive:hover {
-  background-color: rgba(34, 197, 94, 0.25);
-  border-color: rgba(34, 197, 94, 0.6);
-}
-
-.actionBtnInactive {
-  background-color: rgba(239, 68, 68, 0.1);
-  border-color: rgba(239, 68, 68, 0.3);
-  opacity: 0.8;
-}
-
-.actionBtnInactive .actionIcon {
-  color: #ef4444;
-}
-
-.actionBtnInactive:hover {
-  background-color: rgba(239, 68, 68, 0.2);
-  border-color: rgba(239, 68, 68, 0.5);
-  opacity: 1;
-}
-
-.actionBtnDanger {
-  background-color: rgba(239, 68, 68, 0.1);
-  border-color: rgba(239, 68, 68, 0.3);
-}
-
-.actionBtnDanger .actionIcon {
-  color: #ef4444;
-}
-
-.actionBtnDanger:hover {
-  background-color: rgba(239, 68, 68, 0.2);
-  border-color: rgba(239, 68, 68, 0.5);
-}
-
-/* Modal d'édition des portions */
-.servingsModal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
+.customBadge {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
-  z-index: 1000;
+  align-self: flex-start;
+  gap: 5px;
+  padding: 3px 8px 3px 6px;
+  border-radius: var(--radius-chip);
+  background-color: var(--surface-raised);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.65625rem;
+  font-weight: 600;
 }
 
-.servingsModalContent {
-  background-color: var(--bg-primary);
-  padding: 1rem;
-  border-radius: 10px;
-  border: 2px solid var(--accent-blue);
+/* ==========================================================================
+   Variante grille (desktop)
+   ========================================================================== */
+.grid {
+  height: 118px;
+}
+
+.grid.empty {
+  height: 118px;
+}
+
+.gridMain {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  min-width: 140px;
-  max-width: 90%;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-}
-
-.servingsModalContent label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  text-align: center;
-}
-
-.servingsModalContent input {
-  padding: 0.5rem;
-  font-size: 1.1rem;
-  text-align: center;
-  background-color: var(--bg-secondary);
-  border: 2px solid var(--border-color);
-  border-radius: 8px;
-  color: var(--text-primary);
-  outline: none;
-  transition: border-color 0.2s;
-  font-weight: 600;
-}
-
-.servingsModalContent input:focus {
-  border-color: var(--accent-blue);
-}
-
-.servingsModalButtons {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-}
-
-.servingsModalButtons button {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
+  gap: var(--space-1);
+  width: 100%;
+  height: 100%;
+  padding: var(--space-2) var(--space-3) var(--space-3);
   border: none;
-  font-size: 1.1rem;
+  background: none;
+  text-align: left;
   cursor: pointer;
-  transition: all 0.2s;
+}
+
+.gridMain:focus-visible {
+  outline: none;
+  box-shadow: inset var(--focus-ring);
+  border-radius: var(--radius-card);
+}
+
+.grid .thumb,
+.grid .customThumb {
+  width: 100%;
+  height: 52px;
+}
+
+.grid .thumbWrap {
+  display: block;
+  width: 100%;
+}
+
+.grid .name {
+  margin-top: var(--space-1);
+  font-size: 0.78125rem;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.grid .meta {
+  font-size: 0.65625rem;
+}
+
+.custom .gridMain {
+  justify-content: space-between;
+}
+
+.custom .name {
+  font-size: 0.8125rem;
+  margin-top: auto;
+}
+
+/* Actions au survol */
+.hoverActions {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-card);
+  background-color: rgba(19, 27, 39, 0.6);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur) var(--ease-out);
 }
 
-.servingsSaveButton {
-  background-color: var(--success, #10b981);
-  color: white;
+.hoverButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border-color);
+  border-radius: 11px;
+  background-color: var(--surface);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease-out), color var(--dur) var(--ease-out);
 }
 
-.servingsSaveButton:hover {
-  background-color: #059669;
-  transform: scale(1.05);
+.hoverButton:hover {
+  background-color: var(--surface-raised);
 }
 
-.servingsCancelButton {
-  background-color: var(--bg-tertiary);
-  color: var(--text-secondary);
+.hoverButton:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
-.servingsCancelButton:hover {
-  background-color: var(--error, #ef4444);
-  color: white;
-  transform: scale(1.05);
-}
-
-/* Responsive mobile */
-@media (max-width: 768px) {
-  .slot {
-    min-height: 140px;
-  }
-
-  .mealImageContainer {
-    height: 70px;
-  }
-
-  .mealImagePlaceholder {
-    font-size: 2rem;
-  }
-
-  .mealContent {
-    padding: 0.65rem;
-  }
-
-  .recipeName {
-    font-size: 0.9rem;
-  }
-
-  .actionButtons {
-    gap: 0.3rem;
-  }
-
-  .actionBtn {
-    padding: 0.5rem 0.3rem;
-    gap: 0.3rem;
-  }
-
-  .actionIcon {
-    font-size: 0.95rem;
-  }
-
-  .actionText {
-    font-size: 0.7rem;
-  }
-
-  .multiDayBadge {
-    font-size: 0.65rem;
-    padding: 0.2rem 0.4rem;
-  }
-
-  .multiDayIcon {
-    font-size: 0.7rem;
-  }
-
-  .multiDayText {
-    font-size: 0.65rem;
-  }
-
-  .emptyLabel {
-    font-size: 1rem;
-  }
-
-  .addIcon {
-    font-size: 2.5rem;
-  }
-}
-
-/* Custom meal badge */
-.customBadge {
-  font-size: 0.8rem;
-  opacity: 0.7;
-}
-
-/* Custom meal slot styling */
-.slot.customMeal {
+.hoverOff {
+  color: var(--text-muted);
   border-style: dashed;
 }
 
-.slot.customMeal:hover {
-  cursor: default;
-  transform: none;
+.hoverDanger {
+  background-color: rgba(239, 68, 68, 0.16);
+  border-color: var(--error-border);
+  color: var(--accent-red-text);
 }
 
-/* Remove button in top-right corner of image */
-.removeButton {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  width: 24px;
-  height: 24px;
-  min-width: 24px;
-  min-height: 24px;
-  border-radius: 50%;
-  background-color: rgba(239, 68, 68, 0.9);
-  color: white;
-  border: none;
+@media (hover: hover) and (min-width: 769px) {
+  .grid.filled:hover {
+    background-color: var(--surface-raised);
+    box-shadow: var(--elev-2);
+  }
+
+  .grid.filled:hover .hoverActions,
+  .grid.filled:focus-within .hoverActions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+/* Sans survol (tactile), les actions restent accessibles via la vue liste. */
+@media (hover: none) {
+  .hoverActions {
+    position: static;
+    opacity: 1;
+    pointer-events: auto;
+    justify-content: flex-end;
+    padding: 0 var(--space-2) var(--space-2);
+    background: none;
+    backdrop-filter: none;
+  }
+}
+
+/* ==========================================================================
+   Variante ligne (vue liste)
+   ========================================================================== */
+.row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: bold;
-  cursor: pointer;
-  opacity: 0;
-  transition: all 0.2s ease;
-  z-index: 10;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2);
+}
+
+.row.empty {
+  min-height: 52px;
+  padding: var(--space-3);
+}
+
+.row.past {
+  padding: var(--space-2);
+}
+
+.rowMain {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1;
+  min-width: 0;
   padding: 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
 }
 
-.slot.filled:hover .removeButton {
-  opacity: 1;
+.rowMain:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-field);
 }
 
-.removeButton:hover {
-  background-color: #dc2626;
-  transform: scale(1.15);
+.row .thumb,
+.row .customThumb {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-control);
 }
 
-/* Drag and drop styling */
-.slot.filled:not(.past) {
-  cursor: grab;
+.rowText {
+  min-width: 0;
 }
 
-.slot.filled:not(.past):active {
-  cursor: grabbing;
+.row .name {
+  font-size: 0.90625rem;
+  white-space: nowrap;
 }
 
-.slot.dragOver {
-  border-color: var(--primary-color);
-  background-color: rgba(99, 102, 241, 0.1);
-  transform: scale(1.02);
+.row .meta {
+  margin-top: 2px;
+  font-size: 0.71875rem;
+}
+
+.rowOptions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+  background-color: var(--surface-raised);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease-out), color var(--dur) var(--ease-out);
+}
+
+.rowOptions:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.rowOptions:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ---------- Options (modale) ---------- */
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.optionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.optionLabel {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.optionHint {
+  margin-top: 3px;
+  font: var(--text-body-sm);
+  color: var(--text-muted);
 }

@@ -1,14 +1,22 @@
 import { useState } from 'react';
-import { createPortal } from 'react-dom';
+import { Plus, Users, ShoppingCart, Trash2, MoreVertical, Pin, Pencil } from 'lucide-react';
 import { getRecipeTypeById } from '../utils/recipeTypes';
+import OptimizedImage from './OptimizedImage';
+import { Button, Modal, Stepper } from './ui';
 import styles from './MealSlot.module.css';
 
+/**
+ * Créneau du planning, dans ses cinq états : vide, rempli, passé,
+ * repas libre et plat étalé sur plusieurs jours.
+ *
+ * variant : grid (cellule de la grille desktop) | row (ligne de la vue liste)
+ */
 const MealSlot = ({
   meal,
-  dayName,
-  slotType, // 'lunch' or 'dinner'
+  slotType,
   slotId,
   isPast,
+  variant = 'grid',
   onAdd,
   onEdit,
   onRemove,
@@ -17,213 +25,254 @@ const MealSlot = ({
   onDragEnd,
   onDrop
 }) => {
-  const [showServingsEdit, setShowServingsEdit] = useState(false);
-  const [editedServings, setEditedServings] = useState(meal?.servings || 2);
+  const [optionsOpen, setOptionsOpen] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const isEmpty = !meal || !meal.recipeName;
   const isCustomMeal = meal?.isCustom || !meal?.recipeId;
   const slotLabel = slotType === 'lunch' ? 'Midi' : 'Soir';
-  const slotIcon = slotType === 'lunch' ? '🌅' : '🌙';
 
-  const handleServingsChange = () => {
-    if (onEdit && meal) {
-      onEdit({
-        ...meal,
-        servings: editedServings
-      });
-      setShowServingsEdit(false);
+  const dragHandlers = {
+    onDragOver: (e) => {
+      if (isPast) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      setIsDragOver(true);
+    },
+    onDragLeave: () => setIsDragOver(false),
+    onDrop: (e) => {
+      if (isPast) return;
+      e.preventDefault();
+      setIsDragOver(false);
+      const sourceSlotId = e.dataTransfer.getData('text/plain');
+      if (sourceSlotId && sourceSlotId !== slotId) onDrop?.(sourceSlotId, slotId);
     }
   };
 
-  const handleServingsCancel = () => {
-    setEditedServings(meal?.servings || 2);
-    setShowServingsEdit(false);
-  };
-
-  const handleDragStart = (e) => {
-    if (isPast || !meal) return;
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', slotId);
-    onDragStart && onDragStart(slotId, meal);
-  };
-
-  const handleDragEnd = (e) => {
-    setIsDragOver(false);
-    onDragEnd && onDragEnd();
-  };
-
-  const handleDragOver = (e) => {
-    if (isPast) return;
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    setIsDragOver(true);
-  };
-
-  const handleDragLeave = (e) => {
-    setIsDragOver(false);
-  };
-
-  const handleDrop = (e) => {
-    if (isPast) return;
-    e.preventDefault();
-    setIsDragOver(false);
-    const sourceSlotId = e.dataTransfer.getData('text/plain');
-    if (sourceSlotId && sourceSlotId !== slotId) {
-      onDrop && onDrop(sourceSlotId, slotId);
-    }
-  };
-
+  // ---------- Créneau vide ----------
   if (isEmpty) {
     if (isPast) {
       return (
-        <div className={`${styles.slot} ${styles.empty} ${styles.past}`}>
-          <div className={styles.emptyContent}>
-            <span className={styles.pastLabel}>—</span>
-          </div>
+        <div className={`${styles.slot} ${styles[variant]} ${styles.empty} ${styles.past}`}>
+          <span className={styles.pastLabel}>passé · vide</span>
         </div>
       );
     }
+
     return (
-      <div
-        className={`${styles.slot} ${styles.empty} ${isDragOver ? styles.dragOver : ''}`}
-        onClick={() => onAdd && onAdd()}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
+      <button
+        type="button"
+        className={`${styles.slot} ${styles[variant]} ${styles.empty} ${isDragOver ? styles.dropTarget : ''}`}
+        onClick={onAdd}
+        {...dragHandlers}
       >
-        <div className={styles.emptyContent}>
-          <span className={styles.addIcon}>+</span>
-          <span className={styles.emptyLabel}>Ajouter</span>
-        </div>
-      </div>
+        <Plus size={variant === 'grid' ? 16 : 15} strokeWidth={2.4} />
+        <span className={styles.emptyLabel}>{isDragOver ? 'Déposer ici' : 'Ajouter'}</span>
+      </button>
     );
   }
 
-  // Récupérer le type de recette pour afficher l'icône
-  const recipeType = getRecipeTypeById(meal.recipeType || 'plat');
+  const type = getRecipeTypeById(meal.recipeType || 'plat');
 
-  return (
-    <div
-      className={`${styles.slot} ${styles.filled} ${isPast ? styles.past : ''} ${isCustomMeal ? styles.customMeal : ''} ${isDragOver ? styles.dragOver : ''}`}
-      onClick={() => !isPast && !isCustomMeal && onViewRecipe && onViewRecipe(meal.recipeId)}
-      draggable={!isPast}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
+  const openRecipe = () => {
+    if (isPast || isCustomMeal) return;
+    onViewRecipe?.(meal.recipeId);
+  };
+
+  const options = (
+    <Modal
+      open={optionsOpen}
+      onClose={() => setOptionsOpen(false)}
+      title={meal.recipeName}
+      subtitle={`${slotLabel} · ${meal.servings || 2} personne${(meal.servings || 2) > 1 ? 's' : ''}`}
+      size="sm"
     >
-      {/* Image en haut */}
-      <div className={styles.mealImageContainer}>
-        {meal.recipeImageUrl ? (
-          <img
-            src={meal.recipeImageUrl}
-            alt={meal.recipeName}
-            className={styles.mealImage}
-          />
-        ) : (
-          <div className={styles.mealImagePlaceholder}>
-            {recipeType.icon}
+      <div className={styles.options}>
+        <div className={styles.optionRow}>
+          <div>
+            <div className={styles.optionLabel}>Portions</div>
+            <p className={styles.optionHint}>Ajuste les quantités dans la liste de courses.</p>
           </div>
-        )}
-
-        {/* Bouton supprimer en haut à droite */}
-        {!isPast && (
-          <button
-            className={styles.removeButton}
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove && onRemove();
-            }}
-            title="Retirer ce repas"
-          >
-            ✕
-          </button>
-        )}
-      </div>
-
-      {/* Contenu à droite */}
-      <div className={styles.mealContent}>
-        {/* En-tête avec titre et badge multi-day */}
-        <div className={styles.mealHeader}>
-          <h4 className={styles.recipeName}>
-            {isCustomMeal && <span className={styles.customBadge}>✏️ </span>}
-            {meal.recipeName}
-          </h4>
-          {meal.isMultiDay && (
-            <div className={styles.multiDayBadge} title="Plat étalé sur plusieurs jours">
-              <span className={styles.multiDayIcon}>📌</span>
-              <span className={styles.multiDayText}>
-                {meal.multiDayIndex}/{meal.multiDayCount}
-              </span>
-            </div>
-          )}
+          <Stepper
+            value={meal.servings || 2}
+            onChange={(value) => onEdit?.({ ...meal, servings: value })}
+            min={1}
+            max={50}
+            label="Portions"
+          />
         </div>
 
-        {/* Boutons d'action uniformes en bas */}
-        {!isPast && (
-          <div className={styles.actionButtons}>
-            <button
-              className={styles.actionBtn}
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowServingsEdit(true);
-              }}
-              title="Modifier le nombre de personnes"
-            >
-              <span className={styles.actionIcon}>👥</span>
-              <span className={styles.actionText}>{meal.servings || 2}p</span>
-            </button>
+        <div className={styles.optionRow}>
+          <div>
+            <div className={styles.optionLabel}>Compter dans les courses</div>
+            <p className={styles.optionHint}>
+              {meal.skipShoppingList
+                ? 'Ce repas est exclu de la liste.'
+                : 'Les ingrédients partent dans la liste.'}
+            </p>
+          </div>
+          <Button
+            variant={meal.skipShoppingList ? 'secondary' : 'primary'}
+            size="sm"
+            icon={ShoppingCart}
+            onClick={() => onEdit?.({ ...meal, skipShoppingList: !meal.skipShoppingList })}
+          >
+            {meal.skipShoppingList ? 'Exclu' : 'Inclus'}
+          </Button>
+        </div>
 
+        <Button
+          variant="danger"
+          size="md"
+          icon={Trash2}
+          fullWidth
+          onClick={() => {
+            setOptionsOpen(false);
+            onRemove?.();
+          }}
+        >
+          Retirer du planning
+        </Button>
+      </div>
+    </Modal>
+  );
+
+  const thumb = (
+    <span className={styles.thumbWrap}>
+      {isCustomMeal ? (
+        <span className={styles.customThumb}>
+          <Pencil size={variant === 'grid' ? 18 : 20} strokeWidth={2} />
+        </span>
+      ) : (
+        <OptimizedImage
+          src={meal.recipeImageUrl}
+          alt=""
+          asBackground
+          caption=""
+          placeholder={<span className={styles.thumbEmoji}>{type.icon}</span>}
+          className={styles.thumb}
+        />
+      )}
+      {meal.isMultiDay && (
+        <span className={styles.multiDay}>
+          <Pin size={10} strokeWidth={2.4} />
+          {meal.multiDayIndex}/{meal.multiDayCount}
+        </span>
+      )}
+    </span>
+  );
+
+  const meta = isCustomMeal
+    ? 'Repas libre'
+    : `${meal.servings || 2} pers.${meal.skipShoppingList ? ' · hors courses' : ''}`;
+
+  // ---------- Vue liste (mobile) ----------
+  if (variant === 'row') {
+    return (
+      <>
+        <div
+          className={`${styles.slot} ${styles.row} ${styles.filled} ${isPast ? styles.past : ''} ${isDragOver ? styles.dropTarget : ''}`}
+          {...dragHandlers}
+        >
+          <button type="button" className={styles.rowMain} onClick={openRecipe}>
+            {thumb}
+            <span className={styles.rowText}>
+              <span className={styles.name}>{meal.recipeName}</span>
+              <span className={styles.meta}>{meta}</span>
+            </span>
+          </button>
+          {!isPast && (
             <button
-              className={`${styles.actionBtn} ${meal.skipShoppingList ? styles.actionBtnInactive : styles.actionBtnActive}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit && onEdit({
-                  ...meal,
-                  skipShoppingList: !meal.skipShoppingList
-                });
-              }}
-              title={meal.skipShoppingList ? "Réactiver dans la liste de courses" : "Retirer de la liste de courses"}
+              type="button"
+              className={styles.rowOptions}
+              onClick={() => setOptionsOpen(true)}
+              aria-label={`Options du repas ${meal.recipeName}`}
             >
-              <span className={styles.actionIcon}>🛒</span>
-              <span className={styles.actionText}>{meal.skipShoppingList ? 'Off' : 'On'}</span>
+              <MoreVertical size={16} strokeWidth={2} />
+            </button>
+          )}
+        </div>
+        {options}
+      </>
+    );
+  }
+
+  // ---------- Vue grille (desktop) ----------
+  return (
+    <>
+      <div
+        className={`${styles.slot} ${styles.grid} ${styles.filled} ${isPast ? styles.past : ''} ${isCustomMeal ? styles.custom : ''} ${isDragging ? styles.dragSource : ''} ${isDragOver ? styles.dropTarget : ''}`}
+        draggable={!isPast}
+        onDragStart={(e) => {
+          if (isPast) return;
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', slotId);
+          setIsDragging(true);
+          onDragStart?.(slotId, meal);
+        }}
+        onDragEnd={() => {
+          setIsDragging(false);
+          setIsDragOver(false);
+          onDragEnd?.();
+        }}
+        {...dragHandlers}
+      >
+        <button type="button" className={styles.gridMain} onClick={openRecipe}>
+          {isCustomMeal ? (
+            <span className={styles.customBadge}>
+              <Pencil size={11} strokeWidth={2.4} />
+              Repas libre
+            </span>
+          ) : (
+            thumb
+          )}
+          <span className={styles.name}>{meal.recipeName}</span>
+          {!isCustomMeal && <span className={styles.meta}>{meta}</span>}
+        </button>
+
+        {!isPast && (
+          <div className={styles.hoverActions}>
+            <button
+              type="button"
+              className={styles.hoverButton}
+              onClick={() => setOptionsOpen(true)}
+              aria-label="Modifier les portions"
+            >
+              <Users size={16} strokeWidth={2} />
+            </button>
+            <button
+              type="button"
+              className={`${styles.hoverButton} ${meal.skipShoppingList ? styles.hoverOff : ''}`}
+              onClick={() => onEdit?.({ ...meal, skipShoppingList: !meal.skipShoppingList })}
+              aria-label={
+                meal.skipShoppingList
+                  ? 'Réintégrer dans la liste de courses'
+                  : 'Retirer de la liste de courses'
+              }
+            >
+              <ShoppingCart size={16} strokeWidth={2} />
+            </button>
+            <button
+              type="button"
+              className={`${styles.hoverButton} ${styles.hoverDanger}`}
+              onClick={onRemove}
+              aria-label="Retirer ce repas"
+            >
+              <Trash2 size={16} strokeWidth={2} />
             </button>
           </div>
         )}
-      </div>
 
-      {/* Modal d'édition du nombre de personnes - Rendu via portail */}
-      {showServingsEdit && createPortal(
-        <div className={styles.servingsModal} onClick={handleServingsCancel}>
-          <div className={styles.servingsModalContent} onClick={(e) => e.stopPropagation()}>
-            <label>Nombre de personnes :</label>
-            <input
-              type="number"
-              min="1"
-              max="20"
-              value={editedServings}
-              onChange={(e) => setEditedServings(Number(e.target.value))}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleServingsChange();
-                if (e.key === 'Escape') handleServingsCancel();
-              }}
-              autoFocus
-            />
-            <div className={styles.servingsModalButtons}>
-              <button onClick={handleServingsChange} className={styles.servingsSaveButton}>
-                ✓
-              </button>
-              <button onClick={handleServingsCancel} className={styles.servingsCancelButton}>
-                ✕
-              </button>
-            </div>
+        {isDragOver && (
+          <div className={styles.dropHint}>
+            <Plus size={20} strokeWidth={2.2} />
+            Déposer ici
           </div>
-        </div>,
-        document.body
-      )}
-    </div>
+        )}
+      </div>
+      {options}
+    </>
   );
 };
 
