@@ -6,17 +6,24 @@ import styles from './TagBadge.module.css';
  * Badge de tag de recette : point de couleur + libellé sur fond teinté.
  *
  * size    : sm (sur photo, grille dense) | md (par défaut)
- * variant : soft (par défaut) | overlay (posé sur une photo) | outlined (actif, retirable)
+ * variant : soft (par défaut) | overlay (posé sur une photo)
+ *
+ * Devient un bouton dès qu'un `onClick` ou un `onRemove` est fourni ;
+ * `selected` ajoute la bordure teintée de l'état actif.
  */
 const TagBadge = ({
   tag,
   size = 'md',
   variant = 'soft',
+  selected = false,
+  onClick,
   onRemove,
   className = '',
   ...props
 }) => {
   if (!tag) return null;
+
+  const interactive = onClick || onRemove;
 
   const content = (
     <>
@@ -26,18 +33,25 @@ const TagBadge = ({
     </>
   );
 
-  const classNames = [styles.badge, styles[size], styles[variant], className]
+  const classNames = [
+    styles.badge,
+    styles[size],
+    styles[variant],
+    selected ? styles.selected : '',
+    className
+  ]
     .filter(Boolean)
     .join(' ');
 
-  if (onRemove) {
+  if (interactive) {
     return (
       <button
         type="button"
         className={classNames}
         style={toneVars(tag.tone)}
-        onClick={onRemove}
-        aria-label={`Retirer le tag ${tag.label}`}
+        onClick={onRemove || onClick}
+        aria-pressed={onClick ? selected : undefined}
+        aria-label={onRemove ? `Retirer le tag ${tag.label}` : undefined}
         {...props}
       >
         {content}

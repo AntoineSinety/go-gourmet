@@ -1,0 +1,229 @@
+/* ==========================================================================
+   Navigation principale — desktop en haut, mobile en bas
+   ========================================================================== */
+
+.header {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: var(--z-nav);
+  align-items: center;
+  gap: var(--space-8);
+  height: var(--header-height);
+  padding: 0 var(--space-8);
+  background-color: rgba(26, 35, 50, 0.92);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: none;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: opacity var(--dur) var(--ease-out);
+}
+
+.logo:hover {
+  opacity: 0.85;
+}
+
+.logo:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-field);
+}
+
+.logoMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-control);
+  background-color: var(--accent-primary);
+  color: var(--text-on-accent);
+}
+
+.logoText {
+  font-family: var(--font-display);
+  font-size: 1.1875rem;
+  font-weight: 700;
+  letter-spacing: var(--tracking-display);
+  color: var(--text-primary);
+}
+
+/* ---------- Onglets desktop ---------- */
+.desktopNav {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.navItem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 40px;
+  padding: 0 var(--space-4);
+  border: none;
+  border-radius: var(--radius-field);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color var(--dur) var(--ease-out),
+    color var(--dur) var(--ease-out);
+}
+
+.navItem:hover:not(.active) {
+  background-color: var(--surface);
+  color: var(--text-primary);
+}
+
+.navItem:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.active {
+  background-color: var(--accent-primary-soft);
+  color: var(--accent-primary);
+  font-weight: 700;
+}
+
+.navBadge {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: var(--radius-pill);
+  background-color: var(--surface-raised);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}
+
+.active .navBadge {
+  background-color: var(--accent-primary);
+  color: var(--text-on-accent);
+}
+
+/* ---------- Foyer ---------- */
+.household {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-left: auto;
+  min-width: 0;
+}
+
+.householdName {
+  font: var(--text-body-sm);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.avatars {
+  display: flex;
+  flex: none;
+}
+
+.avatar + .avatar {
+  margin-left: -14px;
+  border: 2px solid var(--bg-primary);
+}
+
+/* ---------- Tab bar mobile ---------- */
+.mobileNav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-nav);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  height: calc(var(--bottom-nav-height) + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
+  background-color: rgba(26, 35, 50, 0.92);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.mobileItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--dur) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+
+.mobileItem:active {
+  transform: scale(0.94);
+}
+
+.mobileItem:focus-visible {
+  outline: none;
+  box-shadow: inset var(--focus-ring);
+}
+
+.mobileActive {
+  color: var(--accent-primary);
+}
+
+.mobileIcon {
+  position: relative;
+  display: inline-flex;
+}
+
+.mobileLabel {
+  font-family: var(--font-body);
+  font-size: 0.65625rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.mobileActive .mobileLabel {
+  font-weight: 700;
+}
+
+.mobileBadge {
+  position: absolute;
+  top: -5px;
+  left: 13px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: var(--radius-pill);
+  background-color: var(--accent-primary);
+  color: var(--text-on-accent);
+  font-family: var(--font-mono);
+  font-size: 0.65625rem;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+@media (min-width: 769px) {
+  .header {
+    display: flex;
+  }
+
+  .mobileNav {
+    display: none;
+  }
+}

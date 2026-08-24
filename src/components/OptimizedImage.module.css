@@ -1,34 +1,14 @@
 .container {
   position: relative;
   overflow: hidden;
+  background-color: var(--surface-raised);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
 }
 
-.skeleton {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.05) 25%,
-    rgba(255, 255, 255, 0.15) 50%,
-    rgba(255, 255, 255, 0.05) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
+.empty {
+  background-color: var(--surface-inset);
 }
 
 .image {
@@ -36,30 +16,44 @@
   height: 100%;
   object-fit: cover;
   opacity: 0;
-  transition: opacity 0.3s ease-in-out;
+  transition: opacity var(--dur-slow) var(--ease-out);
 }
 
 .imageLoaded {
   opacity: 1;
 }
 
-.fallback {
+.skeleton {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  inset: 0;
+  background: linear-gradient(100deg, var(--surface) 20%, var(--surface-raised) 40%, var(--surface) 60%);
+  background-size: 260% 100%;
+  animation: shimmer 1.4s var(--ease-in-out) infinite;
 }
 
-.fallbackIcon {
-  font-size: 3rem;
-  opacity: 0.5;
+@keyframes shimmer {
+  from {
+    background-position: 160% 0;
+  }
+  to {
+    background-position: -60% 0;
+  }
+}
+
+/* ---------- Placeholder « aucune photo » ---------- */
+.placeholder {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  color: var(--text-muted);
+}
+
+.caption {
+  font-family: var(--font-mono);
+  font-size: 0.65625rem;
+  letter-spacing: 0.02em;
 }

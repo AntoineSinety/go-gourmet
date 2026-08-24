@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { useHousehold } from '../contexts/HouseholdContext';
+import { useState, useEffect, useMemo } from 'react';
 import { useRecipes } from '../contexts/RecipeContext';
+import { useMealPlan } from '../contexts/MealPlanContext';
+import { usePermanentItems } from '../contexts/PermanentItemsContext';
 import { useUrlPersistedState } from '../hooks/useScrollRestoration';
-import { BookOpen, Calendar, ShoppingCart, MoreHorizontal } from 'lucide-react';
+import { buildShoppingList, countRemaining } from '../utils/shoppingList';
+import AppNav from '../components/AppNav';
+import SidePanel from '../components/ui/SidePanel';
 import Recipes from './Recipes';
 import RecipeForm from './RecipeForm';
 import RecipeDetail from './RecipeDetail';
@@ -15,21 +17,21 @@ import Settings from './Settings';
 import MigratePermanentItems from './MigratePermanentItems';
 import styles from './Home.module.css';
 
-const Home = () => {
-  const { user, signOut } = useAuth();
-  const { household } = useHousehold();
-  const { deleteRecipe } = useRecipes();
+/** Vues qui occupent tout l'écran, sans navigation ni gouttières. */
+const FULLSCREEN_VIEWS = ['cookingMode'];
 
-  // Fonctions pour synchroniser la navigation avec l'URL
+const Home = () => {
+  const { deleteRecipe, recipes } = useRecipes();
+  const { mealPlan } = useMealPlan();
+  const { permanentItems } = usePermanentItems();
+
   const serializeToUrl = (nav) => {
     const params = new URLSearchParams();
 
-    // Ajouter la vue courante si ce n'est pas 'recipes' (par défaut)
     if (nav.currentView && nav.currentView !== 'recipes') {
       params.set('view', nav.currentView);
     }
 
-    // Ajouter les autres états si nécessaire
     if (nav.selectedRecipe) {
       params.set('recipe', nav.selectedRecipe);
     }
@@ -50,7 +52,6 @@ const Home = () => {
     };
   };
 
-  // Récupérer l'état persisté de navigation avec synchronisation URL
   const [persistedNav, setPersistedNav] = useUrlPersistedState('navigation', {
     currentView: 'recipes',
     selectedRecipe: null,
@@ -66,7 +67,6 @@ const Home = () => {
   const [cookingRecipe, setCookingRecipe] = useState(persistedNav.cookingRecipe);
   const [recipeToEdit, setRecipeToEdit] = useState(persistedNav.recipeToEdit);
 
-  // Sauvegarder l'état de navigation quand il change
   useEffect(() => {
     setPersistedNav({
       currentView,
@@ -76,13 +76,14 @@ const Home = () => {
     });
   }, [currentView, selectedRecipe, cookingRecipe, recipeToEdit, setPersistedNav]);
 
-  const handleSelectRecipe = (recipeId) => {
-    setSelectedRecipe(recipeId);
-  };
-
-  const handleCloseRecipeDetail = () => {
-    setSelectedRecipe(null);
-  };
+  // Compteur de l'onglet Courses : articles restant à cocher.
+  const shoppingCount = useMemo(() => {
+    const checkedItems = mealPlan?.checkedItems || {};
+    return countRemaining(
+      buildShoppingList(mealPlan, recipes, permanentItems, checkedItems),
+      checkedItems
+    );
+  }, [mealPlan, recipes, permanentItems]);
 
   const handleCreateRecipe = () => {
     setRecipeToEdit(null);
@@ -105,87 +106,30 @@ const Home = () => {
     setCookingRecipe(null);
   };
 
+  const isFullscreen = FULLSCREEN_VIEWS.includes(currentView);
+
+  // Le Mode Cuisson prend tout l'écran, sans coque ni navigation.
+  if (isFullscreen && cookingRecipe) {
+    return <CookingMode recipe={cookingRecipe} onExit={handleExitCooking} />;
+  }
+
+  // L'onglet actif de la nav : les vues secondaires restent rattachées à leur onglet.
+  const activeTab = ['createRecipe', 'editRecipe'].includes(currentView)
+    ? 'recipes'
+    : ['ingredients', 'migrate'].includes(currentView)
+      ? 'settings'
+      : currentView;
+
   return (
-    <div className={styles.container}>
-      <header className={styles.header}>
-        <div className={styles.logo} onClick={() => setCurrentView('recipes')}>
-          <span className={styles.logoText}>Go Gourmet</span>
-        </div>
-
-        {/* Navigation desktop */}
-        <nav className={styles.desktopNav}>
-          <button
-            onClick={() => setCurrentView('recipes')}
-            className={`${styles.navButton} ${currentView === 'recipes' ? styles.active : ''}`}
-          >
-            <BookOpen size={20} strokeWidth={2} />
-            <span className={styles.navLabel}>Recettes</span>
-          </button>
-          <button
-            onClick={() => setCurrentView('planning')}
-            className={`${styles.navButton} ${currentView === 'planning' ? styles.active : ''}`}
-          >
-            <Calendar size={20} strokeWidth={2} />
-            <span className={styles.navLabel}>Planning</span>
-          </button>
-          <button
-            onClick={() => setCurrentView('shopping')}
-            className={`${styles.navButton} ${currentView === 'shopping' ? styles.active : ''}`}
-          >
-            <ShoppingCart size={20} strokeWidth={2} />
-            <span className={styles.navLabel}>Courses</span>
-          </button>
-          <button
-            onClick={() => setCurrentView('settings')}
-            className={`${styles.navButton} ${currentView === 'settings' ? styles.active : ''}`}
-          >
-            <MoreHorizontal size={20} strokeWidth={2} />
-            <span className={styles.navLabel}>Plus</span>
-          </button>
-        </nav>
-      </header>
-
-      {/* Bottom navbar mobile */}
-      <nav className={styles.mobileNav}>
-        <button
-          onClick={() => setCurrentView('recipes')}
-          className={`${styles.mobileNavButton} ${currentView === 'recipes' ? styles.mobileActive : ''}`}
-        >
-          <BookOpen size={22} strokeWidth={currentView === 'recipes' ? 2.5 : 1.5} />
-          <span className={styles.mobileNavLabel}>Recettes</span>
-        </button>
-        <button
-          onClick={() => setCurrentView('planning')}
-          className={`${styles.mobileNavButton} ${currentView === 'planning' ? styles.mobileActive : ''}`}
-        >
-          <Calendar size={22} strokeWidth={currentView === 'planning' ? 2.5 : 1.5} />
-          <span className={styles.mobileNavLabel}>Planning</span>
-        </button>
-        <button
-          onClick={() => setCurrentView('shopping')}
-          className={`${styles.mobileNavButton} ${currentView === 'shopping' ? styles.mobileActive : ''}`}
-        >
-          <ShoppingCart size={22} strokeWidth={currentView === 'shopping' ? 2.5 : 1.5} />
-          <span className={styles.mobileNavLabel}>Courses</span>
-        </button>
-        <button
-          onClick={() => setCurrentView('settings')}
-          className={`${styles.mobileNavButton} ${currentView === 'settings' ? styles.mobileActive : ''}`}
-        >
-          <MoreHorizontal size={22} strokeWidth={currentView === 'settings' ? 2.5 : 1.5} />
-          <span className={styles.mobileNavLabel}>Plus</span>
-        </button>
-      </nav>
+    <div className={styles.shell}>
+      <AppNav currentView={activeTab} onNavigate={setCurrentView} shoppingCount={shoppingCount} />
 
       <main className={styles.main}>
         {currentView === 'recipes' && (
-          <Recipes
-            onSelectRecipe={handleSelectRecipe}
-            onCreateRecipe={handleCreateRecipe}
-          />
+          <Recipes onSelectRecipe={setSelectedRecipe} onCreateRecipe={handleCreateRecipe} />
         )}
 
-        {currentView === 'ingredients' && <Ingredients />}
+        {currentView === 'ingredients' && <Ingredients onBack={() => setCurrentView('settings')} />}
 
         {currentView === 'planning' && <Planning />}
 
@@ -215,36 +159,26 @@ const Home = () => {
             }}
           />
         )}
-
-        {currentView === 'cookingMode' && cookingRecipe && (
-          <CookingMode
-            recipe={cookingRecipe}
-            onExit={handleExitCooking}
-          />
-        )}
       </main>
 
-      {/* Side Modal for Recipe Detail */}
-      {selectedRecipe && (
-        <>
-          <div
-            className={styles.modalOverlay}
-            onClick={handleCloseRecipeDetail}
+      <SidePanel
+        open={!!selectedRecipe}
+        onClose={() => setSelectedRecipe(null)}
+        label="Détail de la recette"
+      >
+        {selectedRecipe && (
+          <RecipeDetail
+            recipeId={selectedRecipe}
+            onClose={() => setSelectedRecipe(null)}
+            onStartCooking={handleStartCooking}
+            onEdit={(recipe) => {
+              handleEditRecipe(recipe);
+              setSelectedRecipe(null);
+            }}
+            onDelete={deleteRecipe}
           />
-          <div className={styles.sideModal}>
-            <RecipeDetail
-              recipeId={selectedRecipe}
-              onClose={handleCloseRecipeDetail}
-              onStartCooking={handleStartCooking}
-              onEdit={(recipe) => {
-                handleEditRecipe(recipe);
-                handleCloseRecipeDetail();
-              }}
-              onDelete={deleteRecipe}
-            />
-          </div>
-        </>
-      )}
+        )}
+      </SidePanel>
     </div>
   );
 };

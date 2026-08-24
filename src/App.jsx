@@ -4,6 +4,8 @@ import { IngredientProvider } from './contexts/IngredientContext';
 import { RecipeProvider } from './contexts/RecipeContext';
 import { MealPlanProvider } from './contexts/MealPlanContext';
 import { PermanentItemsProvider } from './contexts/PermanentItemsContext';
+import { ToastProvider } from './contexts/ToastContext';
+import AppSplash from './components/AppSplash';
 import Login from './pages/Login';
 import HouseholdSetup from './pages/HouseholdSetup';
 import Home from './pages/Home';
@@ -13,17 +15,7 @@ const AppContent = () => {
   const { household, loading: householdLoading } = useHousehold();
 
   if (authLoading || householdLoading) {
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh',
-        color: 'var(--text-primary)'
-      }}>
-        Chargement...
-      </div>
-    );
+    return <AppSplash message={authLoading ? 'Connexion…' : 'Chargement de votre foyer…'} />;
   }
 
   if (!user) {
@@ -39,19 +31,21 @@ const AppContent = () => {
 
 function App() {
   return (
-    <AuthProvider>
-      <HouseholdProvider>
-        <IngredientProvider>
-          <RecipeProvider>
-            <MealPlanProvider>
-              <PermanentItemsProvider>
-                <AppContent />
-              </PermanentItemsProvider>
-            </MealPlanProvider>
-          </RecipeProvider>
-        </IngredientProvider>
-      </HouseholdProvider>
-    </AuthProvider>
+    <ToastProvider>
+      <AuthProvider>
+        <HouseholdProvider>
+          <IngredientProvider>
+            <RecipeProvider>
+              <MealPlanProvider>
+                <PermanentItemsProvider>
+                  <AppContent />
+                </PermanentItemsProvider>
+              </MealPlanProvider>
+            </RecipeProvider>
+          </IngredientProvider>
+        </HouseholdProvider>
+      </AuthProvider>
+    </ToastProvider>
   );
 }
 

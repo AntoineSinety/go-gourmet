@@ -51,7 +51,7 @@
   backdrop-filter: blur(6px);
 }
 
-.outlined {
+.selected {
   border-color: var(--tone-border);
 }
 

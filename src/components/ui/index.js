@@ -15,6 +15,7 @@ export { default as SectionHeader } from './SectionHeader';
 export { default as Checkbox } from './Checkbox';
 export { default as StatsBar } from './StatsBar';
 export { default as Stepper } from './Stepper';
+export { default as Page } from './Page';
 export { default as PageHeader } from './PageHeader';
 export { Field, Input, Textarea, Select, TextField } from './Field';
 export { useOverlay } from './useOverlay';

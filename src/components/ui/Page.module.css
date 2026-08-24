@@ -1,0 +1,23 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-4) var(--space-8);
+}
+
+.default {
+  max-width: 1400px;
+}
+
+.narrow {
+  max-width: 760px;
+}
+
+@media (min-width: 769px) {
+  .page {
+    gap: var(--space-6);
+    padding: var(--space-8) var(--space-12) var(--space-12);
+  }
+}

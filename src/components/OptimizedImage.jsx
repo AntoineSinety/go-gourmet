@@ -1,24 +1,25 @@
 import { useState, useEffect, useRef } from 'react';
+import { ImageOff } from 'lucide-react';
 import styles from './OptimizedImage.module.css';
 
 /**
- * Composant d'image optimisé avec lazy loading et skeleton
+ * Image avec chargement différé, squelette de chargement et placeholder de marque.
+ *
+ * Quand la photo manque, on n'affiche plus un dégradé générique mais le
+ * placeholder du design system : aplat sourd, icône linéaire, mention discrète.
  *
  * @param {string} src - URL de l'image
  * @param {string} alt - Texte alternatif
- * @param {string} fallbackIcon - Emoji ou icône de fallback (défaut: '🍳')
- * @param {string} fallbackGradient - Gradient CSS de fallback
- * @param {string} className - Classes CSS additionnelles
- * @param {object} style - Styles inline additionnels
+ * @param {string} caption - Mention affichée sous l'icône du placeholder
+ * @param {React.ReactNode} placeholder - Placeholder personnalisé
  * @param {boolean} asBackground - Utiliser comme background-image au lieu de <img>
- * @param {function} onClick - Handler de clic
- * @param {React.ReactNode} children - Contenu enfant (pour mode background)
+ * @param {React.ReactNode} children - Contenu superposé (mode background)
  */
 const OptimizedImage = ({
   src,
   alt = '',
-  fallbackIcon = '🍳',
-  fallbackGradient = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  caption = 'aucune photo',
+  placeholder,
   className = '',
   style = {},
   asBackground = false,
@@ -29,9 +30,7 @@ const OptimizedImage = ({
   const [isInView, setIsInView] = useState(false);
   const [hasError, setHasError] = useState(false);
   const containerRef = useRef(null);
-  const imgRef = useRef(null);
 
-  // Observer pour le lazy loading
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -43,7 +42,7 @@ const OptimizedImage = ({
         });
       },
       {
-        rootMargin: '100px', // Précharger 100px avant d'être visible
+        rootMargin: '150px',
         threshold: 0.01
       }
     );
@@ -55,80 +54,66 @@ const OptimizedImage = ({
     return () => observer.disconnect();
   }, []);
 
-  // Charger l'image quand elle est dans le viewport
   useEffect(() => {
-    if (!isInView || !src || hasError) return;
+    if (!isInView || !src || hasError || !asBackground) return;
 
-    // Pour le mode background, on précharge l'image
-    if (asBackground) {
-      const img = new Image();
-      img.onload = () => setIsLoaded(true);
-      img.onerror = () => setHasError(true);
-      img.src = src;
-    }
+    const img = new Image();
+    img.onload = () => setIsLoaded(true);
+    img.onerror = () => setHasError(true);
+    img.src = src;
   }, [isInView, src, asBackground, hasError]);
-
-  const handleImageLoad = () => {
-    setIsLoaded(true);
-  };
-
-  const handleImageError = () => {
-    setHasError(true);
-  };
 
   const showFallback = !src || hasError;
   const showSkeleton = !isLoaded && !showFallback && isInView;
 
-  // Mode background-image
+  const fallbackContent =
+    placeholder !== undefined ? (
+      placeholder
+    ) : (
+      <div className={styles.placeholder}>
+        <ImageOff size={30} strokeWidth={1.5} />
+        {caption && <span className={styles.caption}>{caption}</span>}
+      </div>
+    );
+
   if (asBackground) {
     return (
       <div
         ref={containerRef}
-        className={`${styles.container} ${className}`}
+        className={`${styles.container} ${showFallback ? styles.empty : ''} ${className}`}
         style={{
           ...style,
-          backgroundImage: isLoaded && !showFallback ? `url(${src})` : fallbackGradient
+          backgroundImage: isLoaded && !showFallback ? `url(${src})` : undefined
         }}
         onClick={onClick}
       >
         {showSkeleton && <div className={styles.skeleton} />}
-        {showFallback && (
-          <div className={styles.fallbackIcon}>{fallbackIcon}</div>
-        )}
+        {showFallback && fallbackContent}
         {children}
       </div>
     );
   }
 
-  // Mode <img> standard
   return (
     <div
       ref={containerRef}
-      className={`${styles.container} ${className}`}
+      className={`${styles.container} ${showFallback ? styles.empty : ''} ${className}`}
       style={style}
       onClick={onClick}
     >
       {showSkeleton && <div className={styles.skeleton} />}
 
-      {showFallback ? (
-        <div
-          className={styles.fallback}
-          style={{ background: fallbackGradient }}
-        >
-          <div className={styles.fallbackIcon}>{fallbackIcon}</div>
-        </div>
-      ) : (
-        isInView && (
-          <img
-            ref={imgRef}
-            src={src}
-            alt={alt}
-            className={`${styles.image} ${isLoaded ? styles.imageLoaded : ''}`}
-            onLoad={handleImageLoad}
-            onError={handleImageError}
-          />
-        )
-      )}
+      {showFallback
+        ? fallbackContent
+        : isInView && (
+            <img
+              src={src}
+              alt={alt}
+              className={`${styles.image} ${isLoaded ? styles.imageLoaded : ''}`}
+              onLoad={() => setIsLoaded(true)}
+              onError={() => setHasError(true)}
+            />
+          )}
       {children}
     </div>
   );

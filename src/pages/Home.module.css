@@ -1,227 +1,26 @@
-.container {
-  min-height: 100vh;
+.shell {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: var(--bg-canvas);
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  /* La tab bar mobile flotte au-dessus du contenu : on lui réserve sa place. */
+  padding-bottom: calc(var(--bottom-nav-height) + var(--safe-bottom));
+}
+
+/* Les vues plein écran (Mode Cuisson, Mode Course) sortent de la coque. */
+.fullscreen .main {
   padding-bottom: 0;
 }
 
-/* ========== HEADER DESKTOP ========== */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 2rem;
-  background-color: rgba(22, 27, 34, 0.8);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-subtle);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  transition: opacity 0.2s ease;
-}
-
-.logo:hover {
-  opacity: 0.8;
-}
-
-.logoText {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.02em;
-}
-
-/* Navigation Desktop */
-.desktopNav {
-  display: flex;
-  gap: 0.25rem;
-}
-
-.navButton {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background-color: transparent;
-  border: none;
-  border-radius: 8px;
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.navButton:hover {
-  color: var(--text-primary);
-  background-color: var(--bg-tertiary);
-  transform: none;
-}
-
-.navButton.active {
-  color: var(--accent-primary);
-  background-color: transparent;
-}
-
-.navButton.active::after {
-  content: '';
-  position: absolute;
-  bottom: -0.75rem;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 24px;
-  height: 2px;
-  background-color: var(--accent-primary);
-  border-radius: 1px;
-}
-
-.navLabel {
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-/* Mobile Navigation (Bottom Bar) */
-.mobileNav {
-  display: none;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-color: rgba(22, 27, 34, 0.95);
-  backdrop-filter: blur(12px);
-  border-top: 1px solid var(--border-subtle);
-  padding: 0.5rem 0.5rem 0.75rem;
-  z-index: 1000;
-}
-
-.mobileNavButton {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.25rem;
-  padding: 0.5rem 0.25rem;
-  background-color: transparent;
-  border: none;
-  border-radius: 12px;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.mobileNavButton:active {
-  transform: scale(0.95);
-}
-
-.mobileNavButton.mobileActive {
-  color: var(--accent-primary);
-  background-color: transparent;
-}
-
-.mobileNavButton.mobileActive .mobileNavLabel {
-  color: var(--accent-primary);
-  font-weight: 600;
-}
-
-.mobileNavLabel {
-  font-size: 0.65rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-}
-
-/* Main Content */
-.main {
-  flex: 1;
-  overflow-y: auto;
-}
-
-/* Side Modal */
-.modalOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  z-index: 999;
-  animation: fadeIn 0.2s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.sideModal {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: min(560px, 90vw);
-  background-color: var(--bg-primary);
-  border-left: 1px solid var(--border-subtle);
-  z-index: 1000;
-  overflow-y: auto;
-  animation: slideIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
-/* ========== RESPONSIVE MOBILE ========== */
-@media (max-width: 768px) {
-  .container {
-    padding-bottom: 80px;
-  }
-
-  .header {
-    display: none;
-  }
-
-  .mobileNav {
-    display: flex;
-  }
-
-  .sideModal {
-    width: 100vw;
-    bottom: 80px;
-    border-left: none;
-  }
-}
-
 @media (min-width: 769px) {
-  .mobileNav {
-    display: none;
-  }
-}
-
-/* Tablets */
-@media (min-width: 768px) and (max-width: 1024px) {
-  .header {
-    padding: 0.75rem 1.5rem;
-  }
-
-  .navButton {
-    padding: 0.5rem 0.75rem;
+  .main {
+    padding-bottom: 0;
   }
 }
