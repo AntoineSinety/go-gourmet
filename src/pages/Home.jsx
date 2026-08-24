@@ -110,7 +110,16 @@ const Home = () => {
 
   // Le Mode Cuisson prend tout l'écran, sans coque ni navigation.
   if (isFullscreen && cookingRecipe) {
-    return <CookingMode recipe={cookingRecipe} onExit={handleExitCooking} />;
+    return (
+      <CookingMode
+        recipe={cookingRecipe}
+        onExit={handleExitCooking}
+        onGoToPlanning={() => {
+          setCookingRecipe(null);
+          setCurrentView('planning');
+        }}
+      />
+    );
   }
 
   // L'onglet actif de la nav : les vues secondaires restent rattachées à leur onglet.

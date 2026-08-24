@@ -144,3 +144,17 @@ export const getUnitsByCategory = () => {
 
   return grouped;
 };
+
+/**
+ * Formate une quantité pour l'affichage : au plus deux décimales, séparateur
+ * décimal français, et pas de « .0 » superflu (1,5 kg — 300 g — 2 c. à soupe).
+ */
+export const formatQuantity = (quantity) => {
+  if (quantity === null || quantity === undefined || quantity === '') return '';
+  const value = Math.round((parseFloat(quantity) || 0) * 100) / 100;
+  return value.toLocaleString('fr-FR', { maximumFractionDigits: 2 });
+};
+
+/** Libellé court d'une unité, tel qu'affiché dans les listes. */
+export const getUnitLabel = (unitId) =>
+  UNITS.find(u => u.id === unitId)?.label || unitId || '';
