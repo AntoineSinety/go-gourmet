@@ -69,6 +69,10 @@
   color: var(--accent-primary-light);
 }
 
+.progressPercent {
+  color: var(--text-muted);
+}
+
 /* ---------- Corps ---------- */
 .body {
   flex: 1;

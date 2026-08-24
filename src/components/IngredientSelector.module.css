@@ -16,6 +16,10 @@
   transition: border-color var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
 }
 
+.fieldOpen {
+  border-color: var(--accent-primary);
+}
+
 .field:focus-within {
   border-color: var(--accent-primary);
   box-shadow: var(--focus-ring);

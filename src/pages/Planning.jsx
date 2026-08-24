@@ -185,7 +185,6 @@ const Planning = () => {
   const slotProps = (day, slotType) => {
     const slotId = getMealSlotId(day.dayKey, slotType);
     return {
-      key: slotId,
       slotId,
       slotType,
       meal: mealPlan.meals[slotId],
@@ -318,7 +317,11 @@ const Planning = () => {
             <div key={slot.type} className={styles.gridRow}>
               <div className={styles.rowLabel}>{slot.label}</div>
               {weekDays.map((day) => (
-                <MealSlot {...slotProps(day, slot.type)} variant="grid" />
+                <MealSlot
+                  key={getMealSlotId(day.dayKey, slot.type)}
+                  {...slotProps(day, slot.type)}
+                  variant="grid"
+                />
               ))}
             </div>
           ))}

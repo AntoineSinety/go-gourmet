@@ -222,7 +222,7 @@ const RecipeForm = ({ onCancel, onSuccess, recipeToEdit = null }) => {
         </button>
         <h1 className={styles.title}>{isEditing ? 'Modifier la recette' : 'Nouvelle recette'}</h1>
         <div className={styles.headerActions}>
-          <Button variant="secondary" onClick={onCancel} disabled={loading} className={styles.cancelDesktop}>
+          <Button variant="secondary" onClick={onCancel} disabled={loading}>
             Annuler
           </Button>
           <Button type="submit" variant="primary" loading={loading}>

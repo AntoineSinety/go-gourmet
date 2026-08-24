@@ -178,6 +178,11 @@
   grid-column: span 2;
 }
 
+.addQuantity,
+.addUnit {
+  min-width: 0;
+}
+
 .addHint {
   font: var(--text-body-sm);
   color: var(--text-muted);

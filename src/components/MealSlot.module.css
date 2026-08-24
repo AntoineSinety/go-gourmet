@@ -6,6 +6,7 @@
 .slot {
   position: relative;
   min-width: 0;
+  overflow: hidden;
   background-color: var(--surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-card);
@@ -180,12 +181,15 @@
 /* ==========================================================================
    Variante grille (desktop)
    ========================================================================== */
+/* Hauteur plancher : les cellules d'une même ligne de grille s'égalisent
+   toutes seules, donc un nom long fait grandir la ligne entière plutôt que
+   de déborder de sa cellule. */
 .grid {
-  height: 118px;
+  min-height: 118px;
 }
 
 .grid.empty {
-  height: 118px;
+  min-height: 118px;
 }
 
 .gridMain {

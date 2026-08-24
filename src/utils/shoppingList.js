@@ -1,4 +1,4 @@
-import { AISLE_NAMES } from './shoppingAisles';
+import { AISLE_NAMES, toAisle } from './shoppingAisles';
 
 const DAY_KEYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
@@ -65,7 +65,7 @@ export const buildShoppingList = (mealPlan, recipes, permanentItems, checkedItem
           name: ingredient.name,
           unit: ingredient.unit || '',
           quantity: 0,
-          category: ingredient.category || 'Autres',
+          category: toAisle(ingredient.category),
           fromRecipes: []
         };
       }
@@ -83,7 +83,8 @@ export const buildShoppingList = (mealPlan, recipes, permanentItems, checkedItem
   const permanent = permanentItems || [];
 
   permanent.forEach(item => {
-    (grouped[item.category] ||= []).push({ ...item, isPermanent: true, fromRecipes: [] });
+    const aisle = toAisle(item.category);
+    (grouped[aisle] ||= []).push({ ...item, category: aisle, isPermanent: true, fromRecipes: [] });
   });
 
   const orderOf = (category) => {
