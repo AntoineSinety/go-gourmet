@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { db } from '../services/firebase';
 import {
   collection,
@@ -12,6 +12,7 @@ import {
   where,
   orderBy,
   getDocs,
+  onSnapshot,
   FieldPath
 } from 'firebase/firestore';
 import { useHousehold } from './HouseholdContext';
@@ -32,6 +33,10 @@ export const MealPlanProvider = ({ children }) => {
   const [mealPlan, setMealPlan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [weekCache, setWeekCache] = useState({}); // Cache des 3 dernières semaines
+  const unsubscribeRef = useRef(null);
+
+  // Couper l'écoute au démontage du provider.
+  useEffect(() => () => unsubscribeRef.current?.(), []);
 
   // Charger le plan de la semaine courante au montage
   useEffect(() => {
@@ -97,30 +102,24 @@ export const MealPlanProvider = ({ children }) => {
 
     setLoading(true);
 
+    const planId = getMealPlanId(weekNumber, year, household.id);
+    const planRef = doc(db, 'mealPlans', planId);
+    const cacheKey = `${year}_W${weekNumber}`;
+
+    // On ne suit qu'une semaine à la fois : couper l'écoute précédente.
+    unsubscribeRef.current?.();
+    unsubscribeRef.current = null;
+
     try {
-      const planId = getMealPlanId(weekNumber, year, household.id);
-      const planRef = doc(db, 'mealPlans', planId);
+      // La semaine peut ne pas exister encore : on l'amorce, en reprenant les
+      // articles permanents de la dernière semaine renseignée.
       const planSnap = await getDoc(planRef);
 
-      const cacheKey = `${year}_W${weekNumber}`;
-
-      if (planSnap.exists()) {
-        const data = { id: planSnap.id, ...planSnap.data() };
-        setMealPlan(data);
-
-        // Ajouter au cache
-        setWeekCache(prev => ({
-          ...prev,
-          [cacheKey]: data
-        }));
-      } else {
-        // Créer un plan vide mais copier les permanentItems du plan le plus récent
+      if (!planSnap.exists()) {
         const { startDate, endDate } = getWeekDates(weekNumber, year);
-
-        // Récupérer les permanentItems existants
         const existingPermanentItems = await getLatestPermanentItems();
 
-        const emptyPlan = {
+        await setDoc(planRef, {
           householdId: household.id,
           weekNumber,
           year,
@@ -132,23 +131,30 @@ export const MealPlanProvider = ({ children }) => {
           checkedItems: {},
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-        };
-
-        await setDoc(planRef, emptyPlan);
-        const newPlan = { id: planId, ...emptyPlan };
-        setMealPlan(newPlan);
-
-        // Ajouter au cache
-        setWeekCache(prev => ({
-          ...prev,
-          [cacheKey]: newPlan
-        }));
+        });
       }
     } catch (error) {
-      console.error('Error loading meal plan:', error);
-    } finally {
+      console.error('Error preparing meal plan:', error);
       setLoading(false);
+      return;
     }
+
+    // Écoute en direct : le planning et les articles cochés sont la donnée la
+    // plus disputée du foyer — deux personnes cochent en même temps en magasin.
+    unsubscribeRef.current = onSnapshot(
+      planRef,
+      (snap) => {
+        if (!snap.exists()) return;
+        const data = { id: snap.id, ...snap.data() };
+        setMealPlan(data);
+        setWeekCache(prev => ({ ...prev, [cacheKey]: data }));
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Error listening to meal plan:', error);
+        setLoading(false);
+      }
+    );
   }, [household]);
 
   /**

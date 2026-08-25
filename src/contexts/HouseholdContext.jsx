@@ -3,6 +3,7 @@ import { db } from '../services/firebase';
 import {
   doc,
   getDoc,
+  onSnapshot,
   setDoc,
   updateDoc,
   collection,
@@ -28,38 +29,58 @@ export const HouseholdProvider = ({ children }) => {
   const [household, setHousehold] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Deux écoutes chaînées : la fiche utilisateur donne le foyer courant, et le
+  // foyer lui-même évolue (renommage, membres, portions par défaut). Le
+  // chaînage fait aussi que rejoindre un foyer bascule l'app sans rechargement.
   useEffect(() => {
-    const loadHousehold = async () => {
-      if (!user) {
-        setHousehold(null);
-        setLoading(false);
-        return;
-      }
+    if (!user) {
+      setHousehold(null);
+      setLoading(false);
+      return undefined;
+    }
 
-      try {
-        const userRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userRef);
-        const userData = userDoc.data();
+    let unsubscribeHousehold = null;
 
-        if (userData?.householdId) {
-          const householdRef = doc(db, 'households', userData.householdId);
-          const householdDoc = await getDoc(householdRef);
+    const unsubscribeUser = onSnapshot(
+      doc(db, 'users', user.uid),
+      (userSnap) => {
+        const householdId = userSnap.data()?.householdId;
 
-          if (householdDoc.exists()) {
-            setHousehold({
-              id: householdDoc.id,
-              ...householdDoc.data()
-            });
-          }
+        unsubscribeHousehold?.();
+        unsubscribeHousehold = null;
+
+        if (!householdId) {
+          setHousehold(null);
+          setLoading(false);
+          return;
         }
-      } catch (error) {
-        console.error('Error loading household:', error);
-      } finally {
+
+        unsubscribeHousehold = onSnapshot(
+          doc(db, 'households', householdId),
+          (householdSnap) => {
+            setHousehold(
+              householdSnap.exists()
+                ? { id: householdSnap.id, ...householdSnap.data() }
+                : null
+            );
+            setLoading(false);
+          },
+          (error) => {
+            console.error('Error listening to household:', error);
+            setLoading(false);
+          }
+        );
+      },
+      (error) => {
+        console.error('Error listening to user document:', error);
         setLoading(false);
       }
-    };
+    );
 
-    loadHousehold();
+    return () => {
+      unsubscribeUser();
+      unsubscribeHousehold?.();
+    };
   }, [user]);
 
   const createHousehold = async (householdName) => {

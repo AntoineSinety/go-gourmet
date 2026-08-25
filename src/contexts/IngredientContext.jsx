@@ -5,6 +5,7 @@ import {
   query,
   where,
   getDocs,
+  onSnapshot,
   addDoc,
   doc,
   updateDoc,
@@ -42,55 +43,52 @@ export const IngredientProvider = ({ children }) => {
   const [ingredients, setIngredients] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Deux écoutes en parallèle — le catalogue du foyer et le catalogue global —
+  // recombinées à chaque notification de l'une ou l'autre.
   useEffect(() => {
-    const loadIngredients = async () => {
-      if (!household) {
-        setIngredients([]);
-        setLoading(false);
-        return;
-      }
+    if (!household) {
+      setIngredients([]);
+      setLoading(false);
+      return undefined;
+    }
 
-      try {
-        // Charger les ingrédients du household
-        const householdQuery = query(
-          collection(db, 'ingredients'),
-          where('householdId', '==', household.id)
-        );
+    setLoading(true);
 
-        // Charger les ingrédients globaux
-        const globalQuery = query(
-          collection(db, 'ingredients'),
-          where('householdId', '==', 'global')
-        );
+    const sources = { household: null, global: null };
 
-        const [householdSnapshot, globalSnapshot] = await Promise.all([
-          getDocs(householdQuery),
-          getDocs(globalQuery)
-        ]);
+    const publish = () => {
+      // Tant que les deux écoutes n'ont pas répondu, on garde l'état de
+      // chargement : afficher un demi-catalogue serait pire que d'attendre.
+      if (sources.household === null || sources.global === null) return;
 
-        const householdIngredients = householdSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-
-        const globalIngredients = globalSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-
-        // Combiner et trier par nom
-        const allIngredients = [...householdIngredients, ...globalIngredients]
-          .sort((a, b) => a.name.localeCompare(b.name));
-
-        setIngredients(allIngredients);
-      } catch (error) {
-        console.error('Error loading ingredients:', error);
-      } finally {
-        setLoading(false);
-      }
+      setIngredients(
+        [...sources.household, ...sources.global].sort((a, b) =>
+          a.name.localeCompare(b.name, 'fr')
+        )
+      );
+      setLoading(false);
     };
 
-    loadIngredients();
+    const listen = (householdId, bucket) =>
+      onSnapshot(
+        query(collection(db, 'ingredients'), where('householdId', '==', householdId)),
+        (snapshot) => {
+          sources[bucket] = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+          publish();
+        },
+        (error) => {
+          console.error(`Error listening to ${bucket} ingredients:`, error);
+          sources[bucket] = [];
+          publish();
+        }
+      );
+
+    const unsubscribes = [
+      listen(household.id, 'household'),
+      listen('global', 'global')
+    ];
+
+    return () => unsubscribes.forEach((u) => u());
   }, [household]);
 
   const addIngredient = async (ingredientData, imageFile = null) => {

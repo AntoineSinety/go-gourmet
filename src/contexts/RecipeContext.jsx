@@ -6,6 +6,7 @@ import {
   where,
   getDocs,
   getDoc,
+  onSnapshot,
   addDoc,
   doc,
   updateDoc,
@@ -30,36 +31,37 @@ export const RecipeProvider = ({ children }) => {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Écoute en direct : une recette ajoutée par l'autre membre du foyer doit
+  // apparaître sans recharger la page. Firestore compense aussi la latence en
+  // local, donc les écritures se voient immédiatement côté auteur.
   useEffect(() => {
-    const loadRecipes = async () => {
-      if (!household) {
-        setRecipes([]);
+    if (!household) {
+      setRecipes([]);
+      setLoading(false);
+      return undefined;
+    }
+
+    setLoading(true);
+
+    const q = query(
+      collection(db, 'recipes'),
+      where('householdId', '==', household.id),
+      orderBy('createdAt', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        setRecipes(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })));
         setLoading(false);
-        return;
-      }
-
-      try {
-        const q = query(
-          collection(db, 'recipes'),
-          where('householdId', '==', household.id),
-          orderBy('createdAt', 'desc')
-        );
-
-        const snapshot = await getDocs(q);
-        const recipesList = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-
-        setRecipes(recipesList);
-      } catch (error) {
-        console.error('Error loading recipes:', error);
-      } finally {
+      },
+      (error) => {
+        console.error('Error listening to recipes:', error);
         setLoading(false);
       }
-    };
+    );
 
-    loadRecipes();
+    return () => unsubscribe();
   }, [household]);
 
   // Nettoyer les valeurs undefined qui ne sont pas acceptées par Firestore
