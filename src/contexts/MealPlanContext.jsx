@@ -7,10 +7,12 @@ import {
   setDoc,
   updateDoc,
   deleteDoc,
+  deleteField,
   query,
   where,
   orderBy,
-  getDocs
+  getDocs,
+  FieldPath
 } from 'firebase/firestore';
 import { useHousehold } from './HouseholdContext';
 import { getCurrentWeek, getWeekDates } from '../utils/weekHelpers';
@@ -155,89 +157,47 @@ export const MealPlanProvider = ({ children }) => {
    * @param {Object} mealData - Données du repas
    */
   const updateMealSlot = async (slotId, mealData) => {
-    if (!mealPlan) return;
-
-    try {
-      const planRef = doc(db, 'mealPlans', mealPlan.id);
-
-      const updatedMeals = { ...mealPlan.meals };
-
-      if (mealData) {
-        // Ajouter ou mettre à jour le meal
-        updatedMeals[slotId] = mealData;
-      } else {
-        // Supprimer le meal
-        delete updatedMeals[slotId];
-      }
-
-      await updateDoc(planRef, {
-        meals: updatedMeals,
-        updatedAt: new Date().toISOString(),
-      });
-
-      const updatedPlan = {
-        ...mealPlan,
-        meals: updatedMeals,
-        updatedAt: new Date().toISOString(),
-      };
-
-      setMealPlan(updatedPlan);
-
-      // Mettre à jour le cache
-      const cacheKey = `${mealPlan.year}_W${mealPlan.weekNumber}`;
-      setWeekCache(prev => ({
-        ...prev,
-        [cacheKey]: updatedPlan
-      }));
-    } catch (error) {
-      console.error('Error updating meal slot:', error);
-      throw error;
-    }
+    await updateMultipleMealSlots([{ slotId, mealData }]);
   };
 
   /**
-   * Met à jour plusieurs créneaux de repas en une seule opération atomique
-   * @param {Array} updates - Tableau d'objets { slotId, mealData }
+   * Écrit les créneaux touchés, et eux seuls.
+   *
+   * @param {Array} updates - { slotId, mealData } ; mealData null pour vider
+   *
+   * Réécrire la map `meals` entière depuis l'état local faisait disparaître
+   * silencieusement les modifications de l'autre membre du foyer : la dernière
+   * écriture gagnait. En ciblant `meals.<slotId>`, Firestore fusionne les
+   * écritures concurrentes au lieu de les écraser.
    */
   const updateMultipleMealSlots = async (updates) => {
-    if (!mealPlan) return;
+    if (!mealPlan || !updates.length) return;
 
     try {
       const planRef = doc(db, 'mealPlans', mealPlan.id);
+      const now = new Date().toISOString();
 
-      const updatedMeals = { ...mealPlan.meals };
-
-      // Appliquer tous les changements à la fois
+      const fields = [];
       updates.forEach(({ slotId, mealData }) => {
-        if (mealData) {
-          updatedMeals[slotId] = mealData;
-        } else {
-          delete updatedMeals[slotId];
-        }
+        fields.push(new FieldPath('meals', slotId), mealData ?? deleteField());
       });
 
-      // Une seule mise à jour Firestore
-      await updateDoc(planRef, {
-        meals: updatedMeals,
-        updatedAt: new Date().toISOString(),
+      await updateDoc(planRef, ...fields, 'updatedAt', now);
+
+      // Miroir local du même delta.
+      const updatedMeals = { ...mealPlan.meals };
+      updates.forEach(({ slotId, mealData }) => {
+        if (mealData) updatedMeals[slotId] = mealData;
+        else delete updatedMeals[slotId];
       });
 
-      const updatedPlan = {
-        ...mealPlan,
-        meals: updatedMeals,
-        updatedAt: new Date().toISOString(),
-      };
-
+      const updatedPlan = { ...mealPlan, meals: updatedMeals, updatedAt: now };
       setMealPlan(updatedPlan);
 
-      // Mettre à jour le cache
       const cacheKey = `${mealPlan.year}_W${mealPlan.weekNumber}`;
-      setWeekCache(prev => ({
-        ...prev,
-        [cacheKey]: updatedPlan
-      }));
+      setWeekCache(prev => ({ ...prev, [cacheKey]: updatedPlan }));
     } catch (error) {
-      console.error('Error updating multiple meal slots:', error);
+      console.error('Error updating meal slots:', error);
       throw error;
     }
   };
@@ -406,31 +366,45 @@ export const MealPlanProvider = ({ children }) => {
    * Met à jour l'état des items cochés dans la liste de courses
    * @param {Object} checkedItems - Objet avec les états cochés {itemKey: true/false}
    */
-  const updateCheckedItems = async (checkedItems) => {
-    if (!mealPlan) return;
+  /**
+   * Coche ou décoche des articles, un par un.
+   *
+   * @param {Object} changes - { [clé d'article]: true pour cocher, null pour décocher }
+   *
+   * Même raison que pour les créneaux : deux personnes qui cochent en même
+   * temps dans le magasin sont le cas nominal du Mode Course. On n'envoie que
+   * les articles touchés.
+   *
+   * Les clés d'article contiennent espaces, accents et « & » — d'où FieldPath
+   * plutôt qu'une chaîne pointée, où un point dans la clé serait pris pour un
+   * séparateur.
+   */
+  const setCheckedItems = async (changes) => {
+    const entries = Object.entries(changes);
+    if (!mealPlan || !entries.length) return;
 
     try {
       const planRef = doc(db, 'mealPlans', mealPlan.id);
+      const now = new Date().toISOString();
 
-      await updateDoc(planRef, {
-        checkedItems,
-        updatedAt: new Date().toISOString(),
+      const fields = [];
+      entries.forEach(([key, value]) => {
+        fields.push(new FieldPath('checkedItems', key), value ? true : deleteField());
       });
 
-      const updatedPlan = {
-        ...mealPlan,
-        checkedItems,
-        updatedAt: new Date().toISOString(),
-      };
+      await updateDoc(planRef, ...fields, 'updatedAt', now);
 
+      const updated = { ...(mealPlan.checkedItems || {}) };
+      entries.forEach(([key, value]) => {
+        if (value) updated[key] = true;
+        else delete updated[key];
+      });
+
+      const updatedPlan = { ...mealPlan, checkedItems: updated, updatedAt: now };
       setMealPlan(updatedPlan);
 
-      // Mettre à jour le cache
       const cacheKey = `${mealPlan.year}_W${mealPlan.weekNumber}`;
-      setWeekCache(prev => ({
-        ...prev,
-        [cacheKey]: updatedPlan
-      }));
+      setWeekCache(prev => ({ ...prev, [cacheKey]: updatedPlan }));
     } catch (error) {
       console.error('Error updating checked items:', error);
       throw error;
@@ -588,7 +562,7 @@ export const MealPlanProvider = ({ children }) => {
     deleteExtra,
     addPermanentItem,
     deletePermanentItem,
-    updateCheckedItems,
+    setCheckedItems,
     createTemplate,
     getTemplates,
     applyTemplate,

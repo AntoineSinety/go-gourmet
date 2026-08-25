@@ -37,7 +37,7 @@ import styles from './ShoppingList.module.css';
 const emptyItem = () => ({ name: '', category: 'Autres', quantity: '', unit: 'piece' });
 
 const ShoppingList = () => {
-  const { mealPlan, loading: mealPlanLoading, updateCheckedItems } = useMealPlan();
+  const { mealPlan, loading: mealPlanLoading, setCheckedItems } = useMealPlan();
   const { recipes, loading: recipesLoading } = useRecipes();
   const {
     permanentItems,
@@ -47,7 +47,7 @@ const ShoppingList = () => {
   } = usePermanentItems();
   const toast = useToast();
 
-  const [checkedItems, setCheckedItems] = useState({});
+  const [checkedItems, setLocalChecked] = useState({});
   const [showAddForm, setShowAddForm] = useState(false);
   const [newItem, setNewItem] = useState(emptyItem);
   const [shoppingMode, setShoppingMode] = useState(false);
@@ -56,7 +56,7 @@ const ShoppingList = () => {
   const menuRef = useRef(null);
 
   useEffect(() => {
-    if (mealPlan?.checkedItems) setCheckedItems(mealPlan.checkedItems);
+    if (mealPlan?.checkedItems) setLocalChecked(mealPlan.checkedItems);
   }, [mealPlan]);
 
   useEffect(() => {
@@ -97,10 +97,25 @@ const ShoppingList = () => {
   const percent = totalItems > 0 ? Math.round((checkedCount / totalItems) * 100) : 0;
   const remainingCount = totalItems - checkedCount;
 
-  const persist = async (next) => {
-    setCheckedItems(next);
+  /**
+   * N'envoie que les articles touchés : deux personnes qui cochent en même
+   * temps dans le magasin ne s'effacent plus mutuellement.
+   *
+   * @param {Object} changes - { [clé] : true pour cocher, null pour décocher }
+   */
+  const persist = async (changes) => {
+    // Affichage optimiste, puis écriture du seul delta.
+    setLocalChecked((current) => {
+      const next = { ...current };
+      Object.entries(changes).forEach(([key, value]) => {
+        if (value) next[key] = true;
+        else delete next[key];
+      });
+      return next;
+    });
+
     try {
-      await updateCheckedItems(next);
+      await setCheckedItems(changes);
     } catch (error) {
       console.error('Error updating checked items:', error);
       toast.error('Les coches n’ont pas pu être enregistrées');
@@ -109,23 +124,24 @@ const ShoppingList = () => {
 
   const toggleItem = (category, item) => {
     const key = itemKey(category, item);
-    persist({ ...checkedItems, [key]: !checkedItems[key] });
+    persist({ [key]: checkedItems[key] ? null : true });
   };
 
   const setAll = (value, onlyPermanent = false) => {
-    const next = { ...checkedItems };
+    const changes = {};
 
     shoppingList.forEach(({ category, items }) => {
       items.forEach((item) => {
         if (onlyPermanent && !item.isPermanent) return;
         const key = itemKey(category, item);
-        if (value) next[key] = true;
-        else delete next[key];
+        // Inutile d'écrire ce qui est déjà dans l'état voulu.
+        if (value && !checkedItems[key]) changes[key] = true;
+        if (!value && checkedItems[key]) changes[key] = null;
       });
     });
 
     setMenuOpen(false);
-    persist(next);
+    if (Object.keys(changes).length) persist(changes);
   };
 
   const handleAddItem = async (e) => {
@@ -151,7 +167,7 @@ const ShoppingList = () => {
   const handleDeletePermanent = async (item) => {
     try {
       await deletePermanentItem(item.id);
-      setCheckedItems((prev) => {
+      setLocalChecked((prev) => {
         const next = { ...prev };
         delete next[item.id];
         return next;
