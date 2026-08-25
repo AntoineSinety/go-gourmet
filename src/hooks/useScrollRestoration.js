@@ -1,6 +1,30 @@
 import { useEffect, useRef } from 'react';
 
 /**
+ * sessionStorage peut lever, pas seulement renvoyer null : navigation privée
+ * Safari, réglages restrictifs, quota dépassé. Et une valeur corrompue fait
+ * échouer JSON.parse. Dans les deux cas on repart d'un état vide plutôt que
+ * de laisser l'exception remonter jusqu'au rendu.
+ */
+const readStore = (key, fallback) => {
+  try {
+    const raw = sessionStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+const writeStore = (key, value) => {
+  try {
+    sessionStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Stockage indisponible ou plein : la restauration de scroll est un
+    // confort, jamais une raison de casser la page.
+  }
+};
+
+/**
  * Hook pour sauvegarder et restaurer automatiquement la position de scroll
  * @param {string} key - Clé unique pour identifier la position (ex: 'recipes', 'ingredients')
  * @param {Array} deps - Dépendances pour déclencher la restauration
@@ -11,13 +35,13 @@ export const useScrollRestoration = (key, deps = []) => {
   // Sauvegarder la position avant le rafraîchissement
   useEffect(() => {
     const saveScrollPosition = () => {
-      const scrollPositions = JSON.parse(sessionStorage.getItem('scrollPositions') || '{}');
+      const scrollPositions = readStore('scrollPositions', {});
       scrollPositions[key] = {
         x: window.scrollX,
         y: window.scrollY,
         timestamp: Date.now()
       };
-      sessionStorage.setItem('scrollPositions', JSON.stringify(scrollPositions));
+      writeStore('scrollPositions', scrollPositions);
     };
 
     // Sauvegarder à chaque scroll (avec debounce via passive)
@@ -41,7 +65,7 @@ export const useScrollRestoration = (key, deps = []) => {
   useEffect(() => {
     if (isRestoredRef.current) return;
 
-    const scrollPositions = JSON.parse(sessionStorage.getItem('scrollPositions') || '{}');
+    const scrollPositions = readStore('scrollPositions', {});
     const savedPosition = scrollPositions[key];
 
     if (savedPosition) {
@@ -59,7 +83,7 @@ export const useScrollRestoration = (key, deps = []) => {
       } else {
         // Nettoyer les anciennes positions
         delete scrollPositions[key];
-        sessionStorage.setItem('scrollPositions', JSON.stringify(scrollPositions));
+        writeStore('scrollPositions', scrollPositions);
       }
     }
   }, deps); // eslint-disable-line react-hooks/exhaustive-deps

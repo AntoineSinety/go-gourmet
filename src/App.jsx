@@ -6,6 +6,7 @@ import { MealPlanProvider } from './contexts/MealPlanContext';
 import { PermanentItemsProvider } from './contexts/PermanentItemsContext';
 import { ToastProvider } from './contexts/ToastContext';
 import AppSplash from './components/AppSplash';
+import ErrorBoundary from './components/ErrorBoundary';
 import Login from './pages/Login';
 import HouseholdSetup from './pages/HouseholdSetup';
 import Home from './pages/Home';
@@ -31,21 +32,25 @@ const AppContent = () => {
 
 function App() {
   return (
-    <ToastProvider>
-      <AuthProvider>
-        <HouseholdProvider>
-          <IngredientProvider>
-            <RecipeProvider>
-              <MealPlanProvider>
-                <PermanentItemsProvider>
-                  <AppContent />
-                </PermanentItemsProvider>
-              </MealPlanProvider>
-            </RecipeProvider>
-          </IngredientProvider>
-        </HouseholdProvider>
-      </AuthProvider>
-    </ToastProvider>
+    // La barrière englobe les providers : une erreur dans l'un d'eux (données
+    // Firestore malformées, champ absent) doit rester rattrapable.
+    <ErrorBoundary>
+      <ToastProvider>
+        <AuthProvider>
+          <HouseholdProvider>
+            <IngredientProvider>
+              <RecipeProvider>
+                <MealPlanProvider>
+                  <PermanentItemsProvider>
+                    <AppContent />
+                  </PermanentItemsProvider>
+                </MealPlanProvider>
+              </RecipeProvider>
+            </IngredientProvider>
+          </HouseholdProvider>
+        </AuthProvider>
+      </ToastProvider>
+    </ErrorBoundary>
   );
 }
 
