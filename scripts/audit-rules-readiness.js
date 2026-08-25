@@ -14,22 +14,11 @@ import admin from 'firebase-admin';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
+import { loadServiceAccount } from './service-account.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const { serviceAccount } = loadServiceAccount();
 
-const keyPath =
-  process.env.GOOGLE_APPLICATION_CREDENTIALS ||
-  path.join(__dirname, 'serviceAccountKey.json');
-
-if (!fs.existsSync(keyPath)) {
-  console.error(`Clé de service introuvable : ${keyPath}`);
-  console.error('Définissez GOOGLE_APPLICATION_CREDENTIALS ou placez la clé dans scripts/.');
-  process.exit(1);
-}
-
-admin.initializeApp({
-  credential: admin.credential.cert(JSON.parse(fs.readFileSync(keyPath, 'utf8')))
-});
+admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
 
 const db = admin.firestore();
 

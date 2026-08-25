@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import { resolveServiceAccountPath, HOME_KEY_PATH } from './service-account.js';
 
 // Load environment variables
 dotenv.config();
@@ -11,9 +12,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Initialize Firebase Admin
-const serviceAccountPath = path.join(__dirname, 'serviceAccountKey.json');
+const serviceAccountPath = resolveServiceAccountPath();
 
-if (!fs.existsSync(serviceAccountPath)) {
+if (!serviceAccountPath) {
   console.error('❌ Service account key not found!');
   process.exit(1);
 }

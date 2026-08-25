@@ -14,15 +14,11 @@ import admin from 'firebase-admin';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
+import { loadServiceAccount } from './service-account.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const root = path.join(__dirname, '..');
+const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-const keyPath =
-  process.env.GOOGLE_APPLICATION_CREDENTIALS ||
-  path.join(__dirname, 'serviceAccountKey.json');
-
-const serviceAccount = JSON.parse(fs.readFileSync(keyPath, 'utf8'));
+const { serviceAccount } = loadServiceAccount();
 const projectId = serviceAccount.project_id;
 
 // La clé API web n'est pas un secret : elle est déjà dans le bundle client.

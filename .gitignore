@@ -25,3 +25,12 @@ serviceAccountKey.json
 *.njsproj
 *.sln
 *.sw?
+
+# Exports de comptes et clés de service — jamais versionnés
+user-data.json
+serviceAccountKey.json
+**/serviceAccountKey.json
+
+# Réglages locaux d'outils (le suffixe .local signifie « non partagé »)
+settings.local.json
+.claude/settings.local.json

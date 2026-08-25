@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import { resolveServiceAccountPath, HOME_KEY_PATH } from './service-account.js';
 
 // Load environment variables
 dotenv.config();
@@ -13,17 +14,17 @@ const __dirname = path.dirname(__filename);
 // Initialize Firebase Admin
 // You need to download your service account key from Firebase Console:
 // Project Settings > Service Accounts > Generate new private key
-const serviceAccountPath = path.join(__dirname, 'serviceAccountKey.json');
+const serviceAccountPath = resolveServiceAccountPath();
 
-if (!fs.existsSync(serviceAccountPath)) {
+if (!serviceAccountPath) {
   console.error('❌ Service account key not found!');
   console.error('Please download your Firebase service account key and save it as:');
-  console.error(`   ${serviceAccountPath}`);
+  console.error(`   ${HOME_KEY_PATH}`);
   console.error('\nTo get your service account key:');
   console.error('1. Go to Firebase Console');
   console.error('2. Project Settings > Service Accounts');
   console.error('3. Click "Generate new private key"');
-  console.error('4. Save the file as "serviceAccountKey.json" in the scripts/ folder');
+  console.error('4. Save it as serviceAccountKey.json in ~/.go-gourmet/');
   process.exit(1);
 }
 

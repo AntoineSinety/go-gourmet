@@ -16,7 +16,12 @@ Pour que le script puisse accéder à Firebase, vous devez télécharger une cl�
 6. Confirmez en cliquant sur **Générer la clé**
 7. Un fichier JSON sera téléchargé
 8. **Renommez ce fichier en `serviceAccountKey.json`**
-9. **Déplacez-le dans le dossier `scripts/`** (à côté de ce README)
+9. **Déplacez-le dans `~/.go-gourmet/`** — hors du dépôt, pour qu’aucune archive ni synchronisation ne l’emporte
+
+   Autre possibilité : pointer `GOOGLE_APPLICATION_CREDENTIALS` dessus.
+
+   > Cette clé donne un accès **administrateur complet** au projet et contourne
+   > toutes les règles de sécurité. Elle ne doit jamais être versionnée.
 
 ⚠️ **IMPORTANT** : Ne partagez JAMAIS ce fichier ! Il contient des credentials sensibles. Le fichier est déjà dans `.gitignore`.
 
