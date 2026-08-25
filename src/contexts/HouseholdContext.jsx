@@ -7,9 +7,6 @@ import {
   setDoc,
   updateDoc,
   collection,
-  query,
-  where,
-  getDocs,
   arrayUnion
 } from 'firebase/firestore';
 import { useAuth } from './AuthContext';

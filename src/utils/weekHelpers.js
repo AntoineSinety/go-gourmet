@@ -6,7 +6,6 @@ import {
   getISOWeek,
   getISOWeekYear,
   parse,
-  isAfter,
   isBefore,
   startOfDay,
   endOfDay

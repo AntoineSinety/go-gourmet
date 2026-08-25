@@ -74,60 +74,6 @@ const compressImage = (file) => {
   });
 };
 
-// Cache IndexedDB pour les images
-const DB_NAME = 'go-gourmet-images';
-const DB_VERSION = 1;
-const STORE_NAME = 'images';
-
-const openDB = () => {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-
-    request.onupgradeneeded = (event) => {
-      const db = event.target.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME, { keyPath: 'url' });
-      }
-    };
-  });
-};
-
-const getCachedImage = async (url) => {
-  try {
-    const db = await openDB();
-    const transaction = db.transaction([STORE_NAME], 'readonly');
-    const store = transaction.objectStore(STORE_NAME);
-
-    return new Promise((resolve, reject) => {
-      const request = store.get(url);
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-  } catch (error) {
-    console.error('Error getting cached image:', error);
-    return null;
-  }
-};
-
-const cacheImage = async (url, blob) => {
-  try {
-    const db = await openDB();
-    const transaction = db.transaction([STORE_NAME], 'readwrite');
-    const store = transaction.objectStore(STORE_NAME);
-
-    return new Promise((resolve, reject) => {
-      const request = store.put({ url, blob, timestamp: Date.now() });
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
-  } catch (error) {
-    console.error('Error caching image:', error);
-  }
-};
-
 /**
  * Upload une image vers Firebase Storage
  * @param {File} file - Le fichier image à uploader
@@ -188,42 +134,15 @@ export const deleteImage = async (imageUrl) => {
 };
 
 /**
- * Charge une image avec cache
- * @param {string} url - URL de l'image
- * @returns {Promise<string>} URL de l'image
+ * Renvoie l'URL d'affichage d'une image.
+ *
+ * Le nom a gardé « WithCache » pour ne pas casser les appels, mais le cache
+ * ne se fait plus ici : les URL de téléchargement Firebase portent un jeton et
+ * un cache IndexedDB local butait sur CORS. La mise en cache réelle est faite
+ * par le service worker (CacheFirst sur firebasestorage.googleapis.com,
+ * 30 jours), configuré dans vite.config.js.
+ *
+ * @param {string} url
+ * @returns {Promise<string|null>}
  */
-export const loadImageWithCache = async (url) => {
-  if (!url) return null;
-
-  // Pour Firebase Storage, on retourne directement l'URL
-  // Firebase gère déjà le caching et les URLs contiennent des tokens d'auth
-  // Le cache IndexedDB cause des problèmes CORS avec Firebase Storage
-  return url;
-};
-
-/**
- * Nettoie le cache des images (supprime les entrées de plus de 7 jours)
- */
-export const cleanImageCache = async () => {
-  try {
-    const db = await openDB();
-    const transaction = db.transaction([STORE_NAME], 'readwrite');
-    const store = transaction.objectStore(STORE_NAME);
-
-    const request = store.openCursor();
-    const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 jours
-
-    request.onsuccess = (event) => {
-      const cursor = event.target.result;
-      if (cursor) {
-        const data = cursor.value;
-        if (Date.now() - data.timestamp > maxAge) {
-          cursor.delete();
-        }
-        cursor.continue();
-      }
-    };
-  } catch (error) {
-    console.error('Error cleaning cache:', error);
-  }
-};
+export const loadImageWithCache = async (url) => url || null;

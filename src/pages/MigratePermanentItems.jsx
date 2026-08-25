@@ -7,8 +7,6 @@ import {
   getDocs,
   doc,
   setDoc,
-  deleteField,
-  updateDoc
 } from 'firebase/firestore';
 import { useHousehold } from '../contexts/HouseholdContext';
 import { useToast } from '../contexts/ToastContext';

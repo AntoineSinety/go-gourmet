@@ -11,9 +11,6 @@
  *   node scripts/audit-rules-readiness.js
  */
 import admin from 'firebase-admin';
-import * as fs from 'fs';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
 import { loadServiceAccount } from './service-account.js';
 
 const { serviceAccount } = loadServiceAccount();

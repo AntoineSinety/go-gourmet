@@ -71,8 +71,8 @@ const ShoppingList = () => {
   const loading = mealPlanLoading || recipesLoading || permanentItemsLoading;
 
   const shoppingList = useMemo(
-    () => buildShoppingList(mealPlan, recipes, permanentItems, checkedItems),
-    [mealPlan, recipes, permanentItems, checkedItems]
+    () => buildShoppingList(mealPlan, recipes, permanentItems),
+    [mealPlan, recipes, permanentItems]
   );
 
   // Les articles cochés quittent leur rayon pour la section « Cochés » en fin de liste.

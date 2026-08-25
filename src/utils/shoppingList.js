@@ -15,7 +15,7 @@ const DAY_KEYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'satur
  *
  * @returns {Array<{ category: string, items: Array }>} rayons triés dans l'ordre du magasin
  */
-export const buildShoppingList = (mealPlan, recipes, permanentItems, checkedItems = {}) => {
+export const buildShoppingList = (mealPlan, recipes, permanentItems) => {
   if (!mealPlan || !recipes?.length) return [];
 
   const today = new Date();

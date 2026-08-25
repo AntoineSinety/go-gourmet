@@ -80,7 +80,7 @@ const Home = () => {
   const shoppingCount = useMemo(() => {
     const checkedItems = mealPlan?.checkedItems || {};
     return countRemaining(
-      buildShoppingList(mealPlan, recipes, permanentItems, checkedItems),
+      buildShoppingList(mealPlan, recipes, permanentItems),
       checkedItems
     );
   }, [mealPlan, recipes, permanentItems]);
