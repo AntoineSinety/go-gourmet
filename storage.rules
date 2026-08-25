@@ -1,22 +1,40 @@
 rules_version = '2';
 
+// ============================================================================
+// Go Gourmet — règles Storage
+//
+// Les photos vivent dans households/{householdId}/{type}/{fichier}.
+// La lecture était ouverte à tout compte connecté ; elle est désormais
+// cloisonnée par foyer, en interrogeant Firestore depuis les règles.
+// ============================================================================
+
 service firebase.storage {
   match /b/{bucket}/o {
 
-    // Images stored in household folders
     match /households/{householdId}/{type}/{fileName} {
-      // Allow read for authenticated users
-      // (household access is controlled at the application level)
-      allow read: if request.auth != null;
 
-      // Allow write (upload/update) for authenticated users with validation
-      allow write: if request.auth != null &&
-                      (type == 'recipes' || type == 'ingredients') &&
-                      request.resource.size < 5 * 1024 * 1024 && // Max 5MB
-                      request.resource.contentType.matches('image/.*'); // Only images
+      function belongsToHousehold() {
+        let userDoc = firestore.get(
+          /databases/(default)/documents/users/$(request.auth.uid)
+        );
+        return request.auth != null
+               && userDoc != null
+               && userDoc.data.householdId == householdId;
+      }
 
-      // Allow delete for authenticated users
-      allow delete: if request.auth != null;
+      allow read: if belongsToHousehold();
+
+      allow write: if belongsToHousehold()
+                   && (type == 'recipes' || type == 'ingredients')
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+
+      allow delete: if belongsToHousehold();
+    }
+
+    // Tout le reste du bucket est fermé.
+    match /{allPaths=**} {
+      allow read, write: if false;
     }
   }
 }
