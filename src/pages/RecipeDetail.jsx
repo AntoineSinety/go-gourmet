@@ -161,6 +161,16 @@ const RecipeDetail = ({ recipeId, onClose, onStartCooking, onEdit, onDelete }) =
         </div>
       </header>
 
+      {recipe.imageCredit && (
+        <p className={styles.imageCredit}>
+          Photo :{' '}
+          <a href={recipe.imageCredit.source} target="_blank" rel="noreferrer noopener">
+            {recipe.imageCredit.author}
+          </a>{' '}
+          · {recipe.imageCredit.license} · Wikimedia Commons
+        </p>
+      )}
+
       <div className={styles.servingsRow}>
         <div>
           <div className={styles.servingsLabel}>Portions</div>

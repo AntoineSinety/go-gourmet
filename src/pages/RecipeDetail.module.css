@@ -335,3 +335,30 @@
     padding: var(--space-4) var(--space-6);
   }
 }
+
+/* Attribution de la photo — obligatoire pour les licences CC BY-SA. */
+.imageCredit {
+  flex: none;
+  padding: var(--space-2) var(--space-4);
+  background-color: var(--bg-primary);
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.imageCredit a {
+  color: var(--text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.imageCredit a:hover {
+  color: var(--accent-primary-light);
+}
+
+@media (min-width: 769px) {
+  .imageCredit {
+    padding: var(--space-2) var(--space-6);
+  }
+}
