@@ -9,6 +9,8 @@
  * Les licences CC BY-SA imposent l'attribution : elle est stockée sur la
  * recette dans `imageCredit` et affichée sous la photo.
  *
+ * Le lot est choisi par `--batch=N` ; sans lui, c'est le dernier.
+ *
  *   node scripts/import-recipe-batch.js              # simulation
  *   node scripts/import-recipe-batch.js --photos     # simulation + photos trouvées
  *   node scripts/import-recipe-batch.js --apply      # exécution
@@ -16,7 +18,7 @@
 import admin from 'firebase-admin';
 import { randomUUID } from 'crypto';
 import { loadServiceAccount } from './service-account.js';
-import { RECIPES, NEW_INGREDIENTS } from './data/recipes-batch-1.js';
+import { loadBatch } from './data/index.js';
 
 const { serviceAccount } = loadServiceAccount();
 admin.initializeApp({
@@ -50,10 +52,12 @@ const UA = 'GoGourmet/1.0 (application de recettes familiale ; contact via githu
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /**
- * Titres à écarter : Commons contient beaucoup de photos de la plante ou de
- * l'animal vivant, qui n'ont rien à faire sur une carte de recette.
+ * Titres à écarter : Commons est une banque généraliste. Une recherche
+ * culinaire y ramène volontiers la plante vivante, une œuvre de musée ou un
+ * bâtiment homonyme — rien qui ait sa place sur une carte de recette.
  */
-const REJECT = /\b(flower|plant|leaf|leaves|field|farm|seed|blossom|tree|garden|logo|map|diagram|chart|stamp|coin|label|packaging|recall)\b/i;
+const REJECT =
+  /\b(flower|plant|leaf|leaves|field|farm|seedling|blossom|tree|garden|sprout|slips|logo|map|diagram|chart|stamp|coin|label|packaging|recall|painting|drawing|museum|virus|mosque|church)\b/i;
 
 /**
  * Cherche une image libre sur Commons.
@@ -157,6 +161,8 @@ const uploadPhoto = async (imageUrl, targetPath, attempt = 0) => {
 // ---------------------------------------------------------------------------
 
 const run = async () => {
+  const { number, RECIPES, NEW_INGREDIENTS } = await loadBatch();
+
   const [household] = (await db.collection('households').limit(1).get()).docs;
   if (!household) throw new Error('aucun foyer en base');
 
@@ -171,7 +177,7 @@ const run = async () => {
     if (!byName.has(key(i.name))) byName.set(key(i.name), i);
   });
 
-  console.log(bold(`\n${RECIPES.length} recettes · ${NEW_INGREDIENTS.length} ingrédients à créer\n`));
+  console.log(bold(`\nLot ${number} — ${RECIPES.length} recettes · ${NEW_INGREDIENTS.length} ingrédients à créer\n`));
   if (!APPLY) console.log(yellow('SIMULATION — rien ne sera écrit. Ajoutez --apply pour exécuter.\n'));
 
   // ---- 1. Ingrédients manquants -------------------------------------------

@@ -11,7 +11,7 @@
 import admin from 'firebase-admin';
 import { randomUUID } from 'crypto';
 import { loadServiceAccount } from './service-account.js';
-import { RECIPES, NEW_INGREDIENTS } from './data/recipes-batch-1.js';
+import { loadAllBatches } from './data/index.js';
 
 const { serviceAccount } = loadServiceAccount();
 admin.initializeApp({
@@ -32,7 +32,8 @@ const UA = 'GoGourmet/1.0 (application de recettes familiale ; contact via githu
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const COMMONS = 'https://commons.wikimedia.org/w/api.php';
 
-const REJECT = /\b(flower|plant|leaf|leaves|field|farm|blossom|tree|garden|sprout|sprouting|slips|seedling|logo|map|diagram|chart|stamp|coin|label|packaging|recall)\b/i;
+const REJECT =
+  /\b(flower|plant|leaf|leaves|field|farm|seedling|blossom|tree|garden|sprout|slips|logo|map|diagram|chart|stamp|coin|label|packaging|recall|painting|drawing|museum|virus|mosque|church)\b/i;
 
 const findPhoto = async (query, width, attempt = 0) => {
   const url =
@@ -99,6 +100,8 @@ const uploadPhoto = async (imageUrl, targetPath, attempt = 0) => {
 };
 
 const run = async () => {
+  const { RECIPES, NEW_INGREDIENTS } = await loadAllBatches();
+
   const [household] = (await db.collection('households').limit(1).get()).docs;
 
   const queryByName = new Map([
