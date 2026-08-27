@@ -349,3 +349,10 @@
     display: none;
   }
 }
+
+/* Repères nutritionnels : deux champs courts côte à côte. */
+.nutritionRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}

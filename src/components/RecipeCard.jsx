@@ -3,6 +3,7 @@ import { getRecipeTypeById } from '../utils/recipeTypes';
 import { getTagsByIds } from '../utils/recipeTags';
 import OptimizedImage from './OptimizedImage';
 import TagBadge from './ui/TagBadge';
+import NutritionBadge from './NutritionBadge';
 import styles from './RecipeCard.module.css';
 
 const MAX_TAGS = 2;
@@ -58,6 +59,8 @@ const RecipeCard = ({ recipe, onClick }) => {
             {steps} étape{steps > 1 ? 's' : ''}
           </span>
         </div>
+
+        <NutritionBadge calories={recipe.calories} protein={recipe.protein} />
       </div>
     </article>
   );

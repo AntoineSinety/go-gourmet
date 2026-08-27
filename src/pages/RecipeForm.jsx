@@ -32,6 +32,8 @@ const emptyRecipe = () => ({
   name: '',
   type: 'plat',
   servings: 4,
+  calories: '',
+  protein: '',
   ingredients: [],
   steps: withStepIds([{ order: 0, instruction: '', ingredientIds: [] }]),
   tags: []
@@ -190,7 +192,9 @@ const RecipeForm = ({ onCancel, onSuccess, recipeToEdit = null }) => {
       ingredients: recipe.ingredients.map((ing) => ({
         ...ing,
         quantity: parseFloat(ing.quantity) || 0
-      }))
+      })),
+      calories: recipe.calories === '' || recipe.calories == null ? null : Number(recipe.calories),
+      protein: recipe.protein === '' || recipe.protein == null ? null : Number(recipe.protein)
     };
 
     try {
@@ -270,6 +274,32 @@ const RecipeForm = ({ onCancel, onSuccess, recipeToEdit = null }) => {
               />
             </Field>
           </div>
+
+          <Field
+            label="Repères par portion"
+            hint="Estimations de cuisine, facultatives. Affichées sur la carte et le détail."
+          >
+            <div className={styles.nutritionRow}>
+              <Input
+                type="number"
+                min="0"
+                inputMode="numeric"
+                value={recipe.calories ?? ''}
+                onChange={(e) => setRecipe({ ...recipe, calories: e.target.value })}
+                placeholder="kcal"
+                aria-label="Calories par portion"
+              />
+              <Input
+                type="number"
+                min="0"
+                inputMode="numeric"
+                value={recipe.protein ?? ''}
+                onChange={(e) => setRecipe({ ...recipe, protein: e.target.value })}
+                placeholder="g de protéines"
+                aria-label="Protéines par portion, en grammes"
+              />
+            </div>
+          </Field>
 
           <ImageUpload
             currentImage={recipeToEdit?.imageUrl}

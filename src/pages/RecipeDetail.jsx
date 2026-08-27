@@ -7,6 +7,7 @@ import { getTagsByIds } from '../utils/recipeTags';
 import { X, Pencil, ChefHat, Trash2, AlertTriangle } from 'lucide-react';
 import OptimizedImage from '../components/OptimizedImage';
 import IngredientRow from '../components/IngredientRow';
+import NutritionBadge from '../components/NutritionBadge';
 import { Button, TagBadge, Stepper, Modal, Skeleton, EmptyState } from '../components/ui';
 import styles from './RecipeDetail.module.css';
 
@@ -171,6 +172,14 @@ const RecipeDetail = ({ recipeId, onClose, onStartCooking, onEdit, onDelete }) =
       </div>
 
       <div className={styles.content}>
+        <NutritionBadge
+          calories={recipe.calories}
+          protein={recipe.protein}
+          servings={baseServings}
+          ratio={ratio}
+          variant="block"
+        />
+
         {ingredients.length > 0 && (
           <section className={styles.section}>
             <div className={styles.sectionHead}>
