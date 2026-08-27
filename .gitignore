@@ -34,3 +34,6 @@ serviceAccountKey.json
 # Réglages locaux d'outils (le suffixe .local signifie « non partagé »)
 settings.local.json
 .claude/settings.local.json
+
+# Sauvegardes produites par les scripts de migration
+backup-*.json

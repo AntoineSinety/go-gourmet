@@ -33,9 +33,15 @@ service firebase.storage {
       allow delete: if request.auth != null;
     }
 
+    // Catalogue d'ingrédients partagé par tous les foyers : lecture pour les
+    // utilisateurs connectés, écriture réservée aux scripts d'administration
+    // (le SDK admin ne passe pas par ces règles).
+    match /global/ingredients/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
     // Tout le reste du bucket est fermé à l'API Storage.
-    // Note : les objets rendus publics par le script d'import sont servis par
-    // storage.googleapis.com et échappent à ces règles.
     match /{allPaths=**} {
       allow read, write: if false;
     }
