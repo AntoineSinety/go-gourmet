@@ -59,7 +59,9 @@ const findPhoto = async (query, width, attempt = 0) => {
       const title = page.title.replace('File:', '');
       if (REJECT.test(title)) return null;
       const hits = words.filter((w) => title.toLowerCase().includes(w)).length;
-      return { page, info, title, score: hits * 2 + (info.width >= info.height ? 1 : 0) };
+      // Paysage et bonne définition : un original de 450 px est flou en bandeau.
+      const quality = (info.width >= info.height ? 1 : 0) + (info.width >= 1000 ? 2 : 0);
+      return { page, info, title, score: hits * 2 + quality };
     })
     .filter(Boolean)
     .sort((a, b) => b.score - a.score);
@@ -80,11 +82,18 @@ const findPhoto = async (query, width, attempt = 0) => {
   };
 };
 
+/**
+ * upload.wikimedia.org bride par adresse IP et annonce la durée dans
+ * `Retry-After` — souvent 600 secondes. Réessayer avant l'échéance ne fait que
+ * consommer les tentatives : on attend ce que le serveur demande.
+ */
 const uploadPhoto = async (imageUrl, targetPath, attempt = 0) => {
   const res = await fetch(imageUrl, { headers: { 'User-Agent': UA } });
   if (res.status === 429 || res.status === 503) {
-    if (attempt >= 5) throw new Error(`HTTP ${res.status} après 6 tentatives`);
-    await sleep(4000 * (attempt + 1));
+    if (attempt >= 2) throw new Error(`HTTP ${res.status} après 3 tentatives`);
+    const wait = Math.min(Number(res.headers.get('retry-after')) || 30, 900);
+    console.log(dim(`        HTTP ${res.status}, pause de ${wait} s comme demandé`));
+    await sleep(wait * 1000 + 2000);
     return uploadPhoto(imageUrl, targetPath, attempt + 1);
   }
   if (!res.ok) throw new Error(`HTTP ${res.status}`);

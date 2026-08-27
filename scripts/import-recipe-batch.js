@@ -99,8 +99,10 @@ const findPhoto = async (query, width, { attempt = 0 } = {}) => {
       const hits = words.filter((w) => lower.includes(w)).length;
       // Le paysage cadre mieux une carte 16:9 que le portrait.
       const landscape = info.width >= info.height ? 1 : 0;
+      // Commons héberge de vieilles photos de 450 px, floues en bandeau.
+      const sharp = info.width >= 1000 ? 2 : 0;
 
-      return { page, info, title, score: hits * 2 + landscape };
+      return { page, info, title, score: hits * 2 + landscape + sharp };
     })
     .filter(Boolean)
     .sort((a, b) => b.score - a.score);
@@ -129,15 +131,18 @@ const findPhoto = async (query, width, { attempt = 0 } = {}) => {
 /**
  * Téléverse une image dans Storage et renvoie son URL de téléchargement.
  *
- * upload.wikimedia.org limite le débit indépendamment de l'API : on réessaie
- * avec une attente croissante plutôt que d'abandonner la photo.
+ * upload.wikimedia.org bride par adresse IP, indépendamment de l'API, et
+ * annonce la durée dans `Retry-After` — souvent 600 secondes. Réessayer avant
+ * l'échéance ne fait que consommer les tentatives : on attend ce qu'il demande.
  */
 const uploadPhoto = async (imageUrl, targetPath, attempt = 0) => {
   const res = await fetch(imageUrl, { headers: { 'User-Agent': UA } });
 
   if (res.status === 429 || res.status === 503) {
-    if (attempt >= 4) throw new Error(`téléchargement HTTP ${res.status} après 5 tentatives`);
-    await sleep(3000 * (attempt + 1));
+    if (attempt >= 2) throw new Error(`téléchargement HTTP ${res.status} après 3 tentatives`);
+    const wait = Math.min(Number(res.headers.get('retry-after')) || 30, 900);
+    console.log(dim(`        HTTP ${res.status}, pause de ${wait} s comme demandé`));
+    await sleep(wait * 1000 + 2000);
     return uploadPhoto(imageUrl, targetPath, attempt + 1);
   }
   if (!res.ok) throw new Error(`téléchargement HTTP ${res.status}`);
