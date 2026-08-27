@@ -3,9 +3,19 @@ rules_version = '2';
 // ============================================================================
 // Go Gourmet — règles Storage
 //
-// Les photos vivent dans households/{householdId}/{type}/{fichier}.
-// La lecture était ouverte à tout compte connecté ; elle est désormais
-// cloisonnée par foyer, en interrogeant Firestore depuis les règles.
+// Une tentative de cloisonnement par foyer via `firestore.get()` a été
+// retirée : les lectures inter-services (Storage → Firestore) exigent une
+// autorisation IAM supplémentaire sur l'agent de service Firebase Rules. Sans
+// elle, l'appel échoue et la règle refuse TOUT — y compris les membres
+// légitimes, ce qui cassait l'envoi de photos.
+//
+// Le cloisonnement des photos par foyer reste souhaitable, mais il passe par
+// un custom claim `householdId` sur le jeton d'authentification (via une
+// Cloud Function), pas par une lecture Firestore depuis ces règles.
+//
+// À savoir de toute façon : les URL rendues par getDownloadURL() portent un
+// jeton et sont servies sans passer par ces règles. Elles protègent l'accès
+// par chemin et les écritures, pas une URL déjà connue.
 // ============================================================================
 
 service firebase.storage {
@@ -13,26 +23,19 @@ service firebase.storage {
 
     match /households/{householdId}/{type}/{fileName} {
 
-      function belongsToHousehold() {
-        let userDoc = firestore.get(
-          /databases/(default)/documents/users/$(request.auth.uid)
-        );
-        return request.auth != null
-               && userDoc != null
-               && userDoc.data.householdId == householdId;
-      }
+      allow read: if request.auth != null;
 
-      allow read: if belongsToHousehold();
-
-      allow write: if belongsToHousehold()
+      allow write: if request.auth != null
                    && (type == 'recipes' || type == 'ingredients')
                    && request.resource.size < 5 * 1024 * 1024
                    && request.resource.contentType.matches('image/.*');
 
-      allow delete: if belongsToHousehold();
+      allow delete: if request.auth != null;
     }
 
-    // Tout le reste du bucket est fermé.
+    // Tout le reste du bucket est fermé à l'API Storage.
+    // Note : les objets rendus publics par le script d'import sont servis par
+    // storage.googleapis.com et échappent à ces règles.
     match /{allPaths=**} {
       allow read, write: if false;
     }
